@@ -1,7 +1,7 @@
-import { store, evaluateRoadmapScore, speakKoreanTTS } from "../store.js?v=20261126-10";
-import { ico } from "../icons.js?v=20261126-10";
-import { analyzePronunciationRules, conjugateKoreanPredicate } from "../korean-engine.js?v=20261126-10";
-import { renderRoadmapScoreCardHTML } from "./roadmap.js?v=20261126-10";
+import { store, evaluateRoadmapScore, speakKoreanTTS } from "../store.js?v=20261126-12";
+import { ico } from "../icons.js?v=20261126-12";
+import { analyzePronunciationRules, conjugateKoreanPredicate } from "../korean-engine.js?v=20261126-12";
+import { renderRoadmapScoreCardHTML } from "./roadmap.js?v=20261126-12";
 
 const PARTICLE_NOTES = [
   { suffix: "에서는", role: "Tiểu từ Nơi diễn ra hành động + Nhấn mạnh chủ đề" },
@@ -256,26 +256,37 @@ export function renderCheckAndToolsView(root, db, navigate, params = {}) {
         });
       });
     } else if (tab === "xray") {
-      const tokens = xrayKoreanSentence(sentenceInput, allVocab);
-      const pron = analyzePronunciationRules(sentenceInput);
-      const conj = conjugateKoreanPredicate(verbQuery);
-
       body.innerHTML = `
         <div class="outline-ai" style="margin-bottom:22px;">
           <h3 style="margin:0 0 8px;">🔬 Giải phẫu câu tiếng Hàn X-Ray (D ● TOPIK Studio)</h3>
           <p style="margin:0 0 10px;font-size:14px;color:var(--text-muted);">
             Dán bất kỳ câu tiếng Hàn nào để tách từng thành phần tiểu từ, đuôi câu kính ngữ, tra từ vựng và soi biến âm:
           </p>
-          <div style="display:flex;gap:10px;margin-bottom:14px;">
-            <input id="xray-inp" class="ko" value="${sentenceInput}" style="flex:1;padding:11px 16px;border-radius:99px;border:1.5px solid var(--primary);font-size:17px;font-weight:700;" />
-            <button class="btn-primary" id="xray-speak">🔊 Đọc câu</button>
+          <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
+            <input id="xray-inp" class="ko" value="${sentenceInput.replace(/"/g, "&quot;")}" style="flex:1;min-width:200px;padding:11px 16px;border-radius:99px;border:1.5px solid var(--primary);font-size:17px;font-weight:700;" />
+            <button type="button" class="btn-primary" id="xray-speak">🔊 Đọc câu</button>
           </div>
+          <div id="xray-live-results"></div>
+        </div>
 
-          ${pron.hasChange ? `<div class="ko" style="margin-bottom:12px;font-size:15px;color:#C26A00;font-weight:700;">🔊 Phát âm nối/biến âm toàn câu: [${pron.pronounced}]</div>` : ""}
+        <div class="box-kind">
+          <h3 style="margin:0 0 10px;">⚙️ Máy chia Động/Tính từ Bất quy tắc nhanh</h3>
+          <input id="tool-verb-inp" class="ko" value="${verbQuery.replace(/"/g, "&quot;")}" placeholder="Nhập động/tính từ nguyên thể (VD: 춥다, 듣다, 모르다, 쓰다, 짓다)..." style="max-width:420px;width:100%;padding:9px 16px;border-radius:99px;border:1.5px solid var(--primary);font-size:17px;font-weight:700;margin-bottom:12px;" />
+          <div id="verb-live-results"></div>
+        </div>
+      `;
 
+      const xrayOut = body.querySelector("#xray-live-results");
+      const verbOut = body.querySelector("#verb-live-results");
+
+      const updateXrayDOM = () => {
+        const tokens = xrayKoreanSentence(sentenceInput, allVocab);
+        const pron = analyzePronunciationRules(sentenceInput);
+        xrayOut.innerHTML = `
+          ${pron.hasChange ? `<div class="ko" style="margin-bottom:12px;font-size:15px;color:var(--primary-1);font-weight:700;">🔊 Phát âm nối/biến âm toàn câu: [${pron.pronounced}]</div>` : ""}
           <div class="grid-3">
             ${tokens.map((t) => `
-              <div style="background:#F8FAFB;border-radius:10px;padding:12px;border-top:3px solid var(--primary);">
+              <div style="background:var(--bg-body);border-radius:10px;padding:12px;border-top:3px solid var(--primary);">
                 <strong class="ko" style="font-size:19px;color:var(--primary-1);display:block;">${t.surface}</strong>
                 <div style="font-size:13px;color:var(--yellow-2);font-weight:700;margin-top:3px;">Gốc: <span class="ko">${t.stem}</span></div>
                 <div style="font-size:13px;color:var(--text-muted);margin-top:3px;">${t.grammarRole}</div>
@@ -283,42 +294,35 @@ export function renderCheckAndToolsView(root, db, navigate, params = {}) {
               </div>
             `).join("")}
           </div>
-        </div>
+        `;
+      };
 
-        <div class="box-kind">
-          <h3 style="margin:0 0 10px;">⚙️ Máy chia Động/Tính từ Bất quy tắc nhanh</h3>
-          <input id="tool-verb-inp" class="ko" value="${verbQuery}" placeholder="Nhập động/tính từ nguyên thể (VD: 춥다, 듣다, 모르다, 쓰다, 짓다)..." style="max-width:420px;width:100%;padding:9px 16px;border-radius:99px;border:1.5px solid var(--primary);font-size:17px;font-weight:700;margin-bottom:12px;" />
-          ${conj ? `
-            <div style="font-size:13.5px;color:var(--yellow-2);font-weight:700;margin-bottom:10px;">⚡ ${conj.irregularNote}</div>
-            <div class="grid-3">
-              ${conj.forms.map((f) => `
-                <div style="background:#F8FAFB;padding:10px 12px;border-radius:10px;">
-                  <div style="font-size:12.5px;color:var(--text-muted);">${f.label}</div>
-                  <strong class="ko" style="font-size:17px;color:var(--primary-1);">${f.ko}</strong>
-                </div>
-              `).join("")}
-            </div>
-          ` : ""}
-        </div>
-      `;
+      const updateVerbDOM = () => {
+        const conj = conjugateKoreanPredicate(verbQuery);
+        verbOut.innerHTML = conj ? `
+          <div style="font-size:13.5px;color:var(--primary-1);font-weight:700;margin-bottom:10px;">⚡ ${conj.irregularNote}</div>
+          <div class="grid-3">
+            ${conj.forms.map((f) => `
+              <div style="background:var(--bg-body);padding:10px 12px;border-radius:10px;">
+                <div style="font-size:12.5px;color:var(--text-muted);">${f.label}</div>
+                <strong class="ko" style="font-size:17px;color:var(--primary-1);">${f.ko}</strong>
+              </div>
+            `).join("")}
+          </div>
+        ` : `<div style="font-size:13.5px;color:var(--text-muted);">Nhập động/tính từ kết thúc bằng -다 (VD: 듣다, 춥다, 가다) để chia tự động.</div>`;
+      };
 
-      const xInp = body.querySelector("#xray-inp");
-      xInp.addEventListener("input", (e) => {
+      updateXrayDOM();
+      updateVerbDOM();
+
+      body.querySelector("#xray-inp").addEventListener("input", (e) => {
         sentenceInput = e.target.value;
-        render();
-        const el = body.querySelector("#xray-inp");
-        el.focus();
-        el.setSelectionRange(el.value.length, el.value.length);
+        updateXrayDOM();
       });
       body.querySelector("#xray-speak").addEventListener("click", () => speakKoreanTTS(sentenceInput));
-
-      const vInp = body.querySelector("#tool-verb-inp");
-      vInp.addEventListener("input", (e) => {
+      body.querySelector("#tool-verb-inp").addEventListener("input", (e) => {
         verbQuery = e.target.value;
-        render();
-        const el = body.querySelector("#tool-verb-inp");
-        el.focus();
-        el.setSelectionRange(el.value.length, el.value.length);
+        updateVerbDOM();
       });
     } else if (tab === "import") {
       body.innerHTML = `

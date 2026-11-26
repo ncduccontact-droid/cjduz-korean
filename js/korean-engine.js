@@ -264,7 +264,7 @@ export function conjugateKoreanPredicate(dictForm) {
 }
 
 // 2-Beolsik On-Screen Jamo Append Helper
-const DOUBLE_JUNG = { "ㅗㅏ":"ㅘ", "ㅗㅐ":"ㅙ", "ㅗㅣ":"ㅚ", "ㅜㅓ":"ㅝ", "ㅜㅔ":"ㅞ", "ㅜㅣ":"ㅟ", "ㅡㅣ":"ㅢ" };
+const DOUBLE_JUNG = { "ㅗㅏ":"ㅘ", "ㅗㅐ":"ㅙ", "ㅗㅣ":"ㅚ", "ㅜㅓ":"ㅝ", "ㅜㅔ":"ㅞ", "ㅜㅣ":"ㅟ", "ㅡㅣ":"ㅢ", "ㅏㅣ":"ㅐ", "ㅓㅣ":"ㅔ", "ㅑㅣ":"ㅒ", "ㅕㅣ":"ㅖ" };
 const DOUBLE_JONG = { "ㄱㅅ":"ㄳ", "ㄴㅈ":"ㄵ", "ㄴㅎ":"ㄶ", "ㄹㄱ":"ㄺ", "ㄹㅁ":"ㄻ", "ㄹㅂ":"ㄼ", "ㄹㅅ":"ㄽ", "ㄹㅌ":"ㄾ", "ㄹㅍ":"ㄿ", "ㄹㅎ":"ㅀ", "ㅂㅅ":"ㅄ" };
 const SPLIT_JONG = Object.fromEntries(Object.entries(DOUBLE_JONG).map(([k, v]) => [v, [k[0], k[1]]]));
 

@@ -1,16 +1,16 @@
-import { store, UI_THEMES, isLocalPreviewHost, playAudio, preloadAudioUrls, speakKoreanTTS } from "./store.js?v=20261126-10";
-import { ico, daisyLogoSVG } from "./icons.js?v=20261126-10";
-import { conjugateKoreanPredicate } from "./korean-engine.js?v=20261126-10";
-import { openAuthModal, renderMandatoryAuthGate, renderOnboardingSurvey } from "./auth-modal.js?v=20261126-10";
-import { playSakuraPageIntro } from "./sakura-intro.js?v=20261126-10";
-import { buildUrl, parseUrl, getAncestorChain } from "./router.js?v=20261126-10";
-import { renderHomeView } from "./views/home.js?v=20261126-10";
-import { renderTheoryView } from "./views/theory.js?v=20261126-10";
-import { renderRoadmapView, getGuidedStudyPlan } from "./views/roadmap.js?v=20261126-10";
-import { renderSkillsPracticeView } from "./views/skills-practice.js?v=20261126-10";
-import { renderTopikPracticeView } from "./views/topik-practice.js?v=20261126-10";
-import { renderMockTestView } from "./views/mocktest.js?v=20261126-10";
-import { renderCheckAndToolsView } from "./views/check-tools.js?v=20261126-10";
+import { store, UI_THEMES, isLocalPreviewHost, playAudio, preloadAudioUrls, speakKoreanTTS } from "./store.js?v=20261126-12";
+import { ico, daisyLogoSVG } from "./icons.js?v=20261126-12";
+import { conjugateKoreanPredicate } from "./korean-engine.js?v=20261126-12";
+import { openAuthModal, renderMandatoryAuthGate, renderOnboardingSurvey } from "./auth-modal.js?v=20261126-12";
+import { playSakuraPageIntro } from "./sakura-intro.js?v=20261126-12";
+import { buildUrl, parseUrl, getAncestorChain } from "./router.js?v=20261126-12";
+import { renderHomeView } from "./views/home.js?v=20261126-12";
+import { renderTheoryView } from "./views/theory.js?v=20261126-12";
+import { renderRoadmapView, getGuidedStudyPlan } from "./views/roadmap.js?v=20261126-12";
+import { renderSkillsPracticeView } from "./views/skills-practice.js?v=20261126-12";
+import { renderTopikPracticeView } from "./views/topik-practice.js?v=20261126-12";
+import { renderMockTestView } from "./views/mocktest.js?v=20261126-12";
+import { renderCheckAndToolsView } from "./views/check-tools.js?v=20261126-12";
 
 const appRoot = document.getElementById("app-root");
 const modalRoot = document.getElementById("modal-root");
@@ -282,7 +282,25 @@ function openQuickLookupModal() {
   const allItems = [...db.sc1Vocab, ...extraBookWords, ...db.sejongVocab, ...db.topik1Bank, ...db.customVocab];
   let q = "";
 
-  function drawModal() {
+  modalRoot.innerHTML = `
+    <div class="modal-backdrop" id="quick-modal-bg">
+      <div class="modal-panel">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <strong style="font-size:18px;color:var(--primary-1);">${ico("search", 18)} Tra từ &amp; Chia động từ</strong>
+          <button type="button" id="close-quick-modal" style="background:var(--bg-body);border:1.5px solid var(--border-card);width:34px;height:34px;border-radius:10px;font-size:18px;cursor:pointer;">×</button>
+        </div>
+
+        <input id="quick-dict-inp" class="ko" value="" placeholder="Nhập tiếng Hàn (학교, 듣다, 춥다...) hoặc tiếng Việt..." style="width:100%;padding:11px 16px;border-radius:14px;border:1.5px solid var(--primary);font-size:15.5px;margin-bottom:14px;" />
+
+        <div id="quick-dict-results"></div>
+      </div>
+    </div>
+  `;
+
+  const resultsSlot = modalRoot.querySelector("#quick-dict-results");
+  const inp = modalRoot.querySelector("#quick-dict-inp");
+
+  function renderLookupResults() {
     const cleanQ = q.trim().toLowerCase();
     const matches = cleanQ
       ? allItems.filter((w) =>
@@ -295,56 +313,36 @@ function openQuickLookupModal() {
     preloadAudioUrls(matches.map((m) => m.wordAudio || m.exampleAudio).filter(Boolean));
     const conj = cleanQ.endsWith("다") ? conjugateKoreanPredicate(cleanQ) : null;
 
-    modalRoot.innerHTML = `
-      <div class="modal-backdrop" id="quick-modal-bg">
-        <div class="modal-panel">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-            <strong style="font-size:18px;color:var(--primary-1);">${ico("search", 18)} Tra từ &amp; Chia động từ</strong>
-            <button type="button" id="close-quick-modal" style="background:var(--bg-body);border:1.5px solid var(--border-card);width:34px;height:34px;border-radius:10px;font-size:18px;cursor:pointer;">×</button>
-          </div>
-
-          <input id="quick-dict-inp" class="ko" value="${q}" placeholder="Nhập tiếng Hàn (학교, 듣다, 춥다...) hoặc tiếng Việt..." style="width:100%;padding:11px 16px;border-radius:14px;border:1.5px solid var(--primary);font-size:15.5px;margin-bottom:14px;" />
-
-          ${conj ? `
-            <div style="background:var(--primary-3);border:1.5px solid var(--border-card);border-radius:14px;padding:12px 14px;margin-bottom:12px;">
-              <strong style="color:var(--primary-4);display:block;margin-bottom:6px;font-size:14px;">Chia tự động "${conj.dictForm}" (${conj.irregularNote}):</strong>
-              <div class="grid-2" style="gap:6px;">
-                ${conj.forms.slice(0, 6).map((f) => `
-                  <div style="font-size:13.5px;">• ${f.label}: <strong class="ko" style="color:var(--primary-1);">${f.ko}</strong></div>
-                `).join("")}
-              </div>
-            </div>
-          ` : ""}
-
-          <div style="display:flex;flex-direction:column;gap:8px;">
-            ${matches.map((m) => `
-              <div style="background:var(--bg-body);border:1px solid var(--border-card);padding:10px 14px;border-radius:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;">
-                <div>
-                  <div>
-                    <strong class="ko" style="font-size:17.5px;color:var(--primary-1);">${m.korean}</strong>
-                    ${m.pronunciation ? `<span style="font-size:12.5px;color:var(--text-muted);margin-left:6px;">/${m.pronunciation}/</span>` : ""}
-                    <span style="font-weight:600;margin-left:8px;">${m.vietnamese}</span>
-                  </div>
-                  ${m.exampleKo ? `<div class="ko" style="font-size:13px;color:var(--text-muted);margin-top:2px;">${m.exampleKo} — ${m.exampleVi}</div>` : ""}
-                </div>
-                <button class="btn-audio" data-mplay="${m.wordAudio || m.exampleAudio}" data-mtts="${m.korean}">${ico("speaker", 16)}</button>
-              </div>
+    resultsSlot.innerHTML = `
+      ${conj ? `
+        <div style="background:var(--primary-3);border:1.5px solid var(--border-card);border-radius:14px;padding:12px 14px;margin-bottom:12px;">
+          <strong style="color:var(--primary-4);display:block;margin-bottom:6px;font-size:14px;">Chia tự động "${conj.dictForm}" (${conj.irregularNote}):</strong>
+          <div class="grid-2" style="gap:6px;">
+            ${conj.forms.slice(0, 6).map((f) => `
+              <div style="font-size:13.5px;">• ${f.label}: <strong class="ko" style="color:var(--primary-1);">${f.ko}</strong></div>
             `).join("")}
           </div>
         </div>
+      ` : ""}
+
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        ${matches.length === 0 ? `<div style="color:var(--text-muted);font-size:14px;padding:8px 4px;">Không tìm thấy mục từ khớp với "${q}".</div>` : matches.map((m) => `
+          <div style="background:var(--bg-body);border:1px solid var(--border-card);padding:10px 14px;border-radius:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;">
+            <div>
+              <div>
+                <strong class="ko" style="font-size:17.5px;color:var(--primary-1);">${m.korean}</strong>
+                ${m.pronunciation ? `<span style="font-size:12.5px;color:var(--text-muted);margin-left:6px;">/${m.pronunciation}/</span>` : ""}
+                <span style="font-weight:600;margin-left:8px;">${m.vietnamese}</span>
+              </div>
+              ${m.exampleKo ? `<div class="ko" style="font-size:13px;color:var(--text-muted);margin-top:2px;">${m.exampleKo} — ${m.exampleVi}</div>` : ""}
+            </div>
+            <button type="button" class="btn-audio" data-mplay="${m.wordAudio || m.exampleAudio || ""}" data-mtts="${m.korean}">${ico("speaker", 16)}</button>
+          </div>
+        `).join("")}
       </div>
     `;
 
-    const inp = modalRoot.querySelector("#quick-dict-inp");
-    inp.focus();
-    inp.setSelectionRange(inp.value.length, inp.value.length);
-    inp.addEventListener("input", (e) => { q = e.target.value; drawModal(); });
-
-    modalRoot.querySelector("#close-quick-modal").addEventListener("click", () => { modalRoot.innerHTML = ""; });
-    modalRoot.querySelector("#quick-modal-bg").addEventListener("click", (e) => {
-      if (e.target.id === "quick-modal-bg") modalRoot.innerHTML = "";
-    });
-    modalRoot.querySelectorAll("[data-mplay]").forEach((b) => {
+    resultsSlot.querySelectorAll("[data-mplay]").forEach((b) => {
       b.addEventListener("pointerdown", () => {
         if (b.dataset.mplay) playAudio(b.dataset.mplay);
         else speakKoreanTTS(b.dataset.mtts);
@@ -352,7 +350,21 @@ function openQuickLookupModal() {
     });
   }
 
-  drawModal();
+  renderLookupResults();
+  inp.focus();
+  inp.addEventListener("input", (e) => {
+    q = e.target.value;
+    renderLookupResults();
+  });
+  inp.addEventListener("keydown", (e) => {
+    if (e.isComposing || e.keyCode === 229) return;
+    if (e.key === "Escape") modalRoot.innerHTML = "";
+  });
+
+  modalRoot.querySelector("#close-quick-modal").addEventListener("click", () => { modalRoot.innerHTML = ""; });
+  modalRoot.querySelector("#quick-modal-bg").addEventListener("click", (e) => {
+    if (e.target.id === "quick-modal-bg") modalRoot.innerHTML = "";
+  });
 }
 
 async function initApp() {

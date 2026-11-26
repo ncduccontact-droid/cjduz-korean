@@ -1,7 +1,7 @@
-import { store, normalizeBookId, getBookWords, getBookCurriculum, playAudio, preloadAudioUrls, speakKoreanTTS } from "./store.js?v=20261126-10";
-import { appendJamoToText } from "./korean-engine.js?v=20261126-10";
-import { HANGEUL_DATA } from "./curated-content.js?v=20261126-10";
-import { ico } from "./icons.js?v=20261126-10";
+import { store, normalizeBookId, getBookWords, getBookCurriculum, playAudio, preloadAudioUrls, speakKoreanTTS } from "./store.js?v=20261126-12";
+import { appendJamoToText } from "./korean-engine.js?v=20261126-12";
+import { HANGEUL_DATA } from "./curated-content.js?v=20261126-12";
+import { ico } from "./icons.js?v=20261126-12";
 
 /**
  * Interactive Workbook (익힘책 · Sách Bài Tập) for ALL 6 BOOKS (Quyển 1 -> Quyển 6):
@@ -160,14 +160,16 @@ export function renderChapterExercises(container, db, bookKey, lessonNum, initia
     ...topikDrills.slice(0, 4).map((q) => q.audioSrc)
   ]);
 
+  const chapterStateKey = `${normBook}_${lessonNum}`;
   let exSection = ["workbook", "translate", "topik"].includes(initialSection) ? initialSection : "workbook";
   let transMode = "blocks";
   let trIdx = 0;
   let selectedBlocks = [];
+  let typingDraft = "";
   let showKeyboard = false;
   let trChecked = null;
-  const pickedWb = {};
-  const pickedTopik = {};
+  const pickedWb = { ...(store.state.workbookAnswers?.[chapterStateKey] || {}) };
+  const pickedTopik = { ...(store.state.topikDrillAnswers?.[chapterStateKey] || {}) };
 
   function normalizeKo(s) {
     return (s || "").replace(/[.?!,~"']/g, "").replace(/\s+/g, " ").trim();
@@ -243,8 +245,10 @@ export function renderChapterExercises(container, db, bookKey, lessonNum, initia
         if (qObj?.audioSrc) playAudio(qObj.audioSrc);
         if (isWorkbook) {
           const corr = list.filter((x) => pickedMap[x.id] === x.answer).length;
-          store.recordWorkbookScore(normBook, lessonNum, corr, list.length);
+          store.recordWorkbookScore(normBook, lessonNum, corr, list.length, pickedMap);
         } else if (qObj) {
+          if (!store.state.topikDrillAnswers) store.state.topikDrillAnswers = {};
+          store.state.topikDrillAnswers[chapterStateKey] = { ...pickedMap };
           const partPrefix = normBook === "q1" || normBook === "q2" ? "t1_ch_wb" : "t2_ch_wb";
           store.recordQuestionResult(partPrefix, `Bài tập TOPIK ${bookCur?.shortTitle || normBook}`, qObj, oi);
         }
@@ -355,13 +359,13 @@ export function renderChapterExercises(container, db, bookKey, lessonNum, initia
           </div>
         ` : `
           <div style="margin-bottom:14px;">
-            <input id="tr-typing-inp" class="ko" placeholder="Gõ câu dịch tiếng Hàn hoàn chỉnh vào đây..." style="width:100%;padding:13px 16px;border-radius:12px;border:2px solid var(--primary);font-size:18px;font-weight:700;" />
+            <input id="tr-typing-inp" class="ko" value="${typingDraft.replace(/"/g, "&quot;")}" placeholder="Gõ câu dịch tiếng Hàn hoàn chỉnh vào đây (Nhấn Enter để kiểm tra)..." style="width:100%;padding:13px 16px;border-radius:12px;border:2px solid var(--primary);font-size:18px;font-weight:700;" />
             <div style="margin-top:8px;text-align:right;">
               <button type="button" class="btn-outline-teal" id="btn-toggle-vk" style="padding:4px 12px;font-size:12.5px;">
                 ⌨️ ${showKeyboard ? "Ẩn bàn phím Hàn ảo" : "Mở bàn phím Hàn ảo"}
               </button>
             </div>
-            ${showKeyboard ? `
+            <div id="tr-vk-panel" style="display:${showKeyboard ? "block" : "none"};">
               <div class="kr-keyboard">
                 ${HANGEUL_DATA.keyboardRows.map((row) => `
                   <div class="kr-key-row">
@@ -373,7 +377,7 @@ export function renderChapterExercises(container, db, bookKey, lessonNum, initia
                   <button type="button" class="kr-key" data-special="back" style="min-width:90px;">⌫ Xóa</button>
                 </div>
               </div>
-            ` : ""}
+            </div>
           </div>
         `}
 
@@ -429,15 +433,45 @@ export function renderChapterExercises(container, db, bookKey, lessonNum, initia
       });
     });
 
+    const checkTranslationNow = () => {
+      const userStr = transMode === "blocks"
+        ? selectedBlocks.map((x) => x.text).join(" ")
+        : (stage.querySelector("#tr-typing-inp")?.value || typingDraft);
+      typingDraft = stage.querySelector("#tr-typing-inp")?.value ?? typingDraft;
+      const ok = normalizeKo(userStr) === normalizeKo(item.ko);
+      trChecked = { ok };
+      if (ok) store.recordTranslationSolved(normBook, lessonNum);
+      if (item.audio) playAudio(item.audio);
+      else speakKoreanTTS(item.ko);
+      render();
+    };
+
     const vkBtn = stage.querySelector("#btn-toggle-vk");
-    if (vkBtn) {
-      vkBtn.addEventListener("click", () => { showKeyboard = !showKeyboard; render(); });
-    }
+    const vkPanel = stage.querySelector("#tr-vk-panel");
     const typeInp = stage.querySelector("#tr-typing-inp");
+    if (vkBtn && vkPanel) {
+      vkBtn.addEventListener("click", () => {
+        showKeyboard = !showKeyboard;
+        vkPanel.style.display = showKeyboard ? "block" : "none";
+        vkBtn.innerHTML = `⌨️ ${showKeyboard ? "Ẩn bàn phím Hàn ảo" : "Mở bàn phím Hàn ảo"}`;
+        typeInp?.focus();
+      });
+    }
     if (typeInp) {
+      typeInp.addEventListener("input", (e) => {
+        typingDraft = e.target.value;
+      });
+      typeInp.addEventListener("keydown", (e) => {
+        if (e.isComposing || e.keyCode === 229) return;
+        if (e.key === "Enter") {
+          e.preventDefault();
+          checkTranslationNow();
+        }
+      });
       stage.querySelectorAll("[data-jamo]").forEach((k) => {
         k.addEventListener("click", () => {
           typeInp.value = appendJamoToText(typeInp.value, k.dataset.jamo);
+          typingDraft = typeInp.value;
           typeInp.focus();
         });
       });
@@ -445,37 +479,31 @@ export function renderChapterExercises(container, db, bookKey, lessonNum, initia
         k.addEventListener("click", () => {
           if (k.dataset.special === "space") typeInp.value += " ";
           if (k.dataset.special === "back") typeInp.value = typeInp.value.slice(0, -1);
+          typingDraft = typeInp.value;
           typeInp.focus();
         });
       });
     }
 
-    stage.querySelector("#btn-check-tr").addEventListener("click", () => {
-      const userStr = transMode === "blocks"
-        ? selectedBlocks.map((x) => x.text).join(" ")
-        : (stage.querySelector("#tr-typing-inp")?.value || "");
-      const ok = normalizeKo(userStr) === normalizeKo(item.ko);
-      trChecked = { ok };
-      if (ok) store.recordTranslationSolved(normBook, lessonNum);
-      if (item.audio) playAudio(item.audio);
-      else speakKoreanTTS(item.ko);
-      render();
-    });
+    stage.querySelector("#btn-check-tr").addEventListener("click", checkTranslationNow);
 
     stage.querySelector("#btn-reset-tr").addEventListener("click", () => {
       selectedBlocks = [];
+      typingDraft = "";
       trChecked = null;
       render();
     });
     stage.querySelector("#btn-prev-tr").addEventListener("click", () => {
       trIdx = (trIdx - 1 + translationItems.length) % translationItems.length;
       selectedBlocks = [];
+      typingDraft = "";
       trChecked = null;
       render();
     });
     stage.querySelector("#btn-next-tr").addEventListener("click", () => {
       trIdx = (trIdx + 1) % translationItems.length;
       selectedBlocks = [];
+      typingDraft = "";
       trChecked = null;
       render();
     });

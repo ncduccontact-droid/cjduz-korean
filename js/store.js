@@ -70,6 +70,8 @@ function createFreshState(roadmapProfile = DEFAULT_ROADMAP_PROFILE) {
     completedLessons: {},
     chapterHomeworkDone: {},
     workbookScores: {},
+    workbookAnswers: {},
+    topikDrillAnswers: {},
     translationDone: {},
     roadmapDone: {},
     roadmapStepDone: {},
@@ -353,8 +355,9 @@ export const store = {
     this.save();
   },
 
-  recordWorkbookScore(bookId, lessonNum, correct, total) {
+  recordWorkbookScore(bookId, lessonNum, correct, total, answersSnapshot = null) {
     if (!this.state.workbookScores) this.state.workbookScores = {};
+    if (!this.state.workbookAnswers) this.state.workbookAnswers = {};
     if (!this.state.chapterHomeworkDone) this.state.chapterHomeworkDone = {};
     const normBook = bookId === "sc1" ? "q1" : (bookId === "sc2" ? "q2" : bookId);
     const key = `${normBook}_${lessonNum}`;
@@ -363,7 +366,10 @@ export const store = {
     if (!prev || pct >= (prev.pct || 0) || total >= (prev.total || 0)) {
       this.state.workbookScores[key] = { correct, total, pct, updatedAt: Date.now() };
     }
-    if (correct > 0) {
+    if (answersSnapshot && typeof answersSnapshot === "object") {
+      this.state.workbookAnswers[key] = { ...answersSnapshot };
+    }
+    if (correct > 0 || (answersSnapshot && Object.keys(answersSnapshot).length > 0)) {
       this.state.chapterHomeworkDone[key] = true;
       if (normBook === "q1") this.state.chapterHomeworkDone[`sc1_${lessonNum}`] = true;
     }

@@ -1,8 +1,8 @@
-import { store, normalizeBookId, getBookWords, getBookCurriculum, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261126-10";
-import { ico } from "../icons.js?v=20261126-10";
-import { analyzePronunciationRules, appendJamoToText } from "../korean-engine.js?v=20261126-10";
-import { HANGEUL_DATA, GRAMMAR_COMPARISONS, HANJA_ROOTS, FREQUENT_TOPIK_EXPRESSIONS } from "../curated-content.js?v=20261126-10";
-import { renderChapterExercises } from "../chapter-exercises.js?v=20261126-10";
+import { store, normalizeBookId, getBookWords, getBookCurriculum, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261126-12";
+import { ico } from "../icons.js?v=20261126-12";
+import { analyzePronunciationRules, appendJamoToText } from "../korean-engine.js?v=20261126-12";
+import { HANGEUL_DATA, GRAMMAR_COMPARISONS, HANJA_ROOTS, FREQUENT_TOPIK_EXPRESSIONS } from "../curated-content.js?v=20261126-12";
+import { renderChapterExercises } from "../chapter-exercises.js?v=20261126-12";
 
 function buildSubPartsForLesson(db, bookKey, lessonNum, lessonWords) {
   const bookCur = getBookCurriculum(db, bookKey);
@@ -701,20 +701,20 @@ function renderVocabReviewArena(root, db, navigate, params = {}) {
 
         <!-- Compact Tiered Selector (Quyển -> Bài -> Phần nhỏ) right inside Arena -->
         <div class="box-kind" style="padding:12px 16px;margin-bottom:14px;background:var(--primary-3);display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;">
-          <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
-            <select id="arena-sel-book" class="box-select" style="padding:6px 30px 6px 12px;font-size:13px;">
+          <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;max-width:100%;">
+            <select id="arena-sel-book" class="box-select" style="padding:6px 12px;font-size:13px;">
               ${(db.books6 || []).map((b) => `<option value="${b.bookId}" ${b.bookId === bookKey ? "selected" : ""}>${b.shortTitle}</option>`).join("")}
               <option value="sejong1" ${bookKey === "sejong1" ? "selected" : ""}>Giao tiếp Sejong</option>
             </select>
 
-            <select id="arena-sel-lesson" class="box-select" style="padding:6px 30px 6px 12px;font-size:13px;">
+            <select id="arena-sel-lesson" class="box-select" style="padding:6px 12px;font-size:13px;">
               ${lessonNums.map((ln) => {
                 const chTitle = bookCur?.chapters?.find((c) => c.lesson === ln)?.title || fullBookPool.find((w) => w.lesson === ln)?.lessonTitle || `Bài ${ln}`;
                 return `<option value="${ln}" ${ln === activeLesson ? "selected" : ""}>Bài ${String(ln).padStart(2, "0")}: ${chTitle}</option>`;
               }).join("")}
             </select>
 
-            <select id="arena-sel-part" class="box-select" style="padding:6px 30px 6px 12px;font-size:13px;">
+            <select id="arena-sel-part" class="box-select" style="padding:6px 12px;font-size:13px;">
               ${subParts.map((pt) => `<option value="${pt.part}" ${pt.part === activePart ? "selected" : ""}>${pt.title} (${pt.words.length} từ)</option>`).join("")}
             </select>
           </div>
@@ -901,6 +901,7 @@ function renderVocabReviewArena(root, db, navigate, params = {}) {
           window.removeEventListener("keydown", window._cjduzArenaKeyHandler);
           return;
         }
+        if (ev.isComposing || ev.keyCode === 229) return;
         const tag = (document.activeElement?.tagName || "").toUpperCase();
         if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || document.getElementById("quick-modal-bg") || document.getElementById("auth-modal-bg")) {
           return;
@@ -981,9 +982,9 @@ function renderVocabReviewArena(root, db, navigate, params = {}) {
               <button class="btn-primary" id="type-play-btn" style="margin-bottom:16px;">🔊 Phát âm thanh gợi ý</button>
             </div>
 
-            <div style="display:flex;gap:8px;">
-              <input id="ko-type-input" class="ko" type="text" placeholder="Gõ chữ tiếng Hàn..." style="flex:1;padding:12px 16px;border-radius:12px;border:2px solid var(--primary);font-size:19px;font-weight:700;" />
-              <button class="btn-orange" id="type-check-btn">Kiểm tra</button>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <input id="ko-type-input" class="ko" type="text" placeholder="Gõ chữ tiếng Hàn..." style="flex:1 1 170px;min-width:0;width:100%;padding:12px 14px;border-radius:12px;border:2px solid var(--primary);font-size:19px;font-weight:700;" />
+              <button class="btn-orange" id="type-check-btn" style="white-space:nowrap;flex-shrink:0;">Kiểm tra</button>
             </div>
             <div id="type-feedback" style="margin-top:12px;font-weight:600;text-align:center;"></div>
 
@@ -1032,7 +1033,10 @@ function renderVocabReviewArena(root, db, navigate, params = {}) {
         }
       };
       stage.querySelector("#type-check-btn").addEventListener("click", verify);
-      inp.addEventListener("keydown", (e) => { if (e.key === "Enter") verify(); });
+      inp.addEventListener("keydown", (e) => {
+        if (e.isComposing || e.keyCode === 229) return;
+        if (e.key === "Enter") verify();
+      });
     } else if (mode === "match") {
       if (window._cjduzArenaKeyHandler) {
         window.removeEventListener("keydown", window._cjduzArenaKeyHandler);
@@ -1122,9 +1126,9 @@ function renderHangeulLab(root, navigate) {
             <button type="button" class="btn-outline-teal ko" data-sample="${sample}" style="padding:5px 13px;font-size:14px;">${sample}</button>
           `).join("")}
         </div>
-        <div style="display:flex;gap:10px;">
-          <input id="pron-input" class="ko" value="안녕하십니까" style="flex:1;padding:10px 16px;border-radius:99px;border:1.5px solid var(--primary);font-size:18px;font-weight:700;" />
-          <button class="btn-primary" id="pron-speak">🔊 Đọc mẫu</button>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <input id="pron-input" class="ko" value="안녕하십니까" style="flex:1 1 180px;min-width:0;width:100%;padding:10px 16px;border-radius:99px;border:1.5px solid var(--primary);font-size:18px;font-weight:700;" />
+          <button class="btn-primary" id="pron-speak" style="white-space:nowrap;flex-shrink:0;">🔊 Đọc mẫu</button>
         </div>
         <div id="pron-result" style="margin-top:14px;"></div>
       </div>
@@ -1190,81 +1194,93 @@ function renderGrammarList(root, db, navigate, mode = "sc1") {
     ...db.sc1Grammar,
     ...(db.books6 || []).filter((b) => b.bookId !== "q1").flatMap((b) => b.chapters.flatMap((c) => c.textbook?.grammars || []))
   ];
-  function render() {
+
+  function updateGrammarCards() {
+    const listWrap = root.querySelector("#gram-list-results");
+    if (!listWrap) return;
+    const qNorm = searchQ.trim().toLowerCase();
     const filtered = allBookGrams.filter((g) =>
-      !searchQ || g.pattern.toLowerCase().includes(searchQ) || g.meaning.toLowerCase().includes(searchQ)
+      !qNorm || g.pattern.toLowerCase().includes(qNorm) || g.meaning.toLowerCase().includes(qNorm)
     );
-    root.innerHTML = `
-      <div class="container-web">
-        <div class="breadcrumb-bar">
-          <button id="bc-theory">Lý thuyết</button><span>▶</span><span>Kho Ngữ pháp Quyển 1–6 &amp; So sánh cấu trúc</span>
-        </div>
-
-        <div class="skill-pills-row">
-          <button class="btn-skill ${mode === "sc1" ? "active" : ""}" data-m="sc1">Tất cả Ngữ pháp Quyển 1–6 (${allBookGrams.length})</button>
-          <button class="btn-skill ${mode === "compare" ? "active" : ""}" data-m="compare">Bảng phân biệt Ngữ pháp dễ nhầm</button>
-        </div>
-
-        ${mode === "sc1" ? `
-          <input id="gram-search" value="${searchQ}" placeholder="Tìm nhanh cấu trúc (VD: 입니다, 아서, 기로 하다, 으므로)..." style="width:100%;max-width:480px;padding:10px 18px;border-radius:99px;border:1.5px solid var(--primary);margin-bottom:18px;" />
-          <div class="grid-2">
-            ${filtered.map((g) => `
-              <div class="box-kind">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:8px;">
-                  <strong class="ko" style="font-size:20px;color:var(--primary-1);">${g.pattern}</strong>
-                  <span class="badge-orange">${(g.book === "sc1" || g.book === "q1" ? "Quyển 1" : g.book?.toUpperCase()) || "Q1"} · Bài ${g.lesson}</span>
-                </div>
-                <div style="font-weight:700;margin-bottom:4px;">${g.meaning}</div>
-                <div style="font-size:13.5px;color:var(--text-muted);margin-bottom:10px;">${g.construction || ""} — ${g.usage || ""}</div>
-                <div style="background:var(--bg-body);border:1px solid var(--border-light);padding:10px 12px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;gap:8px;">
-                  <div>
-                    <div class="ko" style="font-weight:600;">${g.example1Ko}</div>
-                    <div style="font-size:13px;color:var(--text-muted);">${g.example1Vi || ""}</div>
-                  </div>
-                  <button class="btn-audio" data-play="${g.example1Audio || ""}" data-tts="${g.example1Ko}">🔊</button>
-                </div>
-              </div>
-            `).join("")}
-          </div>
-        ` : `
-          <div style="display:flex;flex-direction:column;gap:18px;">
-            ${GRAMMAR_COMPARISONS.map((cmp) => `
-              <div class="box-kind">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;">
-                  <h3 style="margin:0;font-size:19px;color:var(--primary-1);">${cmp.title}</h3>
-                  <span class="badge-orange">${cmp.level}</span>
-                </div>
-                <div class="grid-2">
-                  <div style="background:var(--primary-3);padding:14px;border-radius:12px;">
-                    <strong class="ko" style="font-size:17px;color:var(--primary-4);">${cmp.left.name}</strong>
-                    <ul style="margin:8px 0 0;padding-left:18px;font-size:14px;">${cmp.left.points.map((p) => `<li>${p}</li>`).join("")}</ul>
-                  </div>
-                  <div style="background:var(--powder-soft);padding:14px;border-radius:12px;">
-                    <strong class="ko" style="font-size:17px;color:var(--primary-1);">${cmp.right.name}</strong>
-                    <ul style="margin:8px 0 0;padding-left:18px;font-size:14px;">${cmp.right.points.map((p) => `<li>${p}</li>`).join("")}</ul>
-                  </div>
-                </div>
-              </div>
-            `).join("")}
-          </div>
-        `}
-      </div>
-    `;
-
-    root.querySelector("#bc-theory").addEventListener("click", () => navigate("theory"));
-    root.querySelectorAll("[data-m]").forEach((b) => b.addEventListener("click", () => navigate("theory", { sub: "grammar-list", mode: b.dataset.m })));
-    const sInp = root.querySelector("#gram-search");
-    if (sInp) {
-      sInp.addEventListener("input", (e) => { searchQ = e.target.value.toLowerCase(); render(); root.querySelector("#gram-search").focus(); });
+    if (!filtered.length) {
+      listWrap.innerHTML = `<div class="box-kind" style="grid-column:1 / -1;text-align:center;color:var(--text-muted);">Không tìm thấy ngữ pháp khớp từ khóa "<strong>${searchQ}</strong>".</div>`;
+      return;
     }
-    root.querySelectorAll("[data-play]").forEach((b) => {
+    listWrap.innerHTML = filtered.map((g) => `
+      <div class="box-kind">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:8px;">
+          <strong class="ko" style="font-size:20px;color:var(--primary-1);">${g.pattern}</strong>
+          <span class="badge-orange">${(g.book === "sc1" || g.book === "q1" ? "Quyển 1" : g.book?.toUpperCase()) || "Q1"} · Bài ${g.lesson}</span>
+        </div>
+        <div style="font-weight:700;margin-bottom:4px;">${g.meaning}</div>
+        <div style="font-size:13.5px;color:var(--text-muted);margin-bottom:10px;">${g.construction || ""} — ${g.usage || ""}</div>
+        <div style="background:var(--bg-body);border:1px solid var(--border-light);padding:10px 12px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;gap:8px;">
+          <div>
+            <div class="ko" style="font-weight:600;">${g.example1Ko}</div>
+            <div style="font-size:13px;color:var(--text-muted);">${g.example1Vi || ""}</div>
+          </div>
+          <button class="btn-audio" data-play="${g.example1Audio || ""}" data-tts="${g.example1Ko}">🔊</button>
+        </div>
+      </div>
+    `).join("");
+
+    listWrap.querySelectorAll("[data-play]").forEach((b) => {
       b.addEventListener("click", () => {
         if (b.dataset.play) playAudio(b.dataset.play);
         else speakKoreanTTS(b.dataset.tts);
       });
     });
   }
-  render();
+
+  root.innerHTML = `
+    <div class="container-web">
+      <div class="breadcrumb-bar">
+        <button id="bc-theory">Lý thuyết</button><span>▶</span><span>Kho Ngữ pháp Quyển 1–6 &amp; So sánh cấu trúc</span>
+      </div>
+
+      <div class="skill-pills-row">
+        <button class="btn-skill ${mode === "sc1" ? "active" : ""}" data-m="sc1">Tất cả Ngữ pháp Quyển 1–6 (${allBookGrams.length})</button>
+        <button class="btn-skill ${mode === "compare" ? "active" : ""}" data-m="compare">Bảng phân biệt Ngữ pháp dễ nhầm</button>
+      </div>
+
+      ${mode === "sc1" ? `
+        <input id="gram-search" placeholder="Tìm nhanh cấu trúc (VD: 입니다, 아서, 기로 하다, 으므로)..." style="width:100%;max-width:480px;padding:10px 18px;border-radius:99px;border:1.5px solid var(--primary);margin-bottom:18px;" />
+        <div class="grid-2" id="gram-list-results"></div>
+      ` : `
+        <div style="display:flex;flex-direction:column;gap:18px;">
+          ${GRAMMAR_COMPARISONS.map((cmp) => `
+            <div class="box-kind">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;">
+                <h3 style="margin:0;font-size:19px;color:var(--primary-1);">${cmp.title}</h3>
+                <span class="badge-orange">${cmp.level}</span>
+              </div>
+              <div class="grid-2">
+                <div style="background:var(--primary-3);padding:14px;border-radius:12px;">
+                  <strong class="ko" style="font-size:17px;color:var(--primary-4);">${cmp.left.name}</strong>
+                  <ul style="margin:8px 0 0;padding-left:18px;font-size:14px;">${cmp.left.points.map((p) => `<li>${p}</li>`).join("")}</ul>
+                </div>
+                <div style="background:var(--powder-soft);padding:14px;border-radius:12px;">
+                  <strong class="ko" style="font-size:17px;color:var(--primary-1);">${cmp.right.name}</strong>
+                  <ul style="margin:8px 0 0;padding-left:18px;font-size:14px;">${cmp.right.points.map((p) => `<li>${p}</li>`).join("")}</ul>
+                </div>
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      `}
+    </div>
+  `;
+
+  root.querySelector("#bc-theory").addEventListener("click", () => navigate("theory"));
+  root.querySelectorAll("[data-m]").forEach((b) => b.addEventListener("click", () => navigate("theory", { sub: "grammar-list", mode: b.dataset.m })));
+  const sInp = root.querySelector("#gram-search");
+  if (sInp) {
+    updateGrammarCards();
+    sInp.addEventListener("input", (e) => {
+      searchQ = e.target.value;
+      updateGrammarCards();
+    });
+  }
 }
 
 function renderFrequentTopikView(root, navigate) {

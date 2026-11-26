@@ -1,5 +1,5 @@
-import { store, playAudio, speakKoreanTTS } from "./store.js?v=20261126-10";
-import { analyzePronunciationRules } from "./korean-engine.js?v=20261126-10";
+import { store, playAudio, speakKoreanTTS } from "./store.js?v=20261126-12";
+import { analyzePronunciationRules } from "./korean-engine.js?v=20261126-12";
 
 // Curated Real YouTube Shorts Shadowing Library (from 6F0uUJgeJQI, @Tienghanvoihailey & @hongtuoissem)
 export const YOUTUBE_SHORTS_CLIPS = [
@@ -442,6 +442,7 @@ export function renderShortsShadowingStudio(stage, db, onSwitchToTextbookShadowi
         renderTranscriptList(clip);
       });
       listEl.querySelector("#shorts-dict-inp").addEventListener("keydown", (e) => {
+        if (e.isComposing || e.keyCode === 229) return;
         if (e.key === "Enter") {
           const fb = listEl.querySelector("#shorts-dict-fb");
           fb.innerHTML = `<span style="color:#FFD769;">Đáp án chuẩn trong clip: <strong class="ko">${ln.ko}</strong></span>`;

@@ -1,8 +1,8 @@
-import { store, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261126-10";
-import { ico } from "../icons.js?v=20261126-10";
-import { analyzePronunciationRules, conjugateKoreanPredicate } from "../korean-engine.js?v=20261126-10";
-import { renderChapterExercises } from "../chapter-exercises.js?v=20261126-10";
-import { renderShortsShadowingStudio } from "../shorts-shadowing.js?v=20261126-10";
+import { store, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261126-12";
+import { ico } from "../icons.js?v=20261126-12";
+import { analyzePronunciationRules, conjugateKoreanPredicate } from "../korean-engine.js?v=20261126-12";
+import { renderChapterExercises } from "../chapter-exercises.js?v=20261126-12";
+import { renderShortsShadowingStudio } from "../shorts-shadowing.js?v=20261126-12";
 
 const READING_PASSAGES = [
   {
@@ -254,10 +254,10 @@ function renderListeningModule(stage, db) {
           <label style="display:block;font-size:14px;font-weight:600;margin-bottom:6px;">
             Điền từ còn thiếu <span style="color:var(--text-muted);font-weight:400;">(hoặc chép lại cả câu)</span>:
           </label>
-          <div style="display:flex;gap:10px;">
-            <input id="dict-input" class="ko" placeholder="Nhập từ tiếng Hàn nghe được..." style="flex:1;padding:11px 16px;border-radius:99px;border:1.5px solid var(--primary);font-size:17px;font-weight:600;" />
-            <button class="btn-orange" id="btn-dict-check">Check đáp án</button>
-            <button class="btn-outline-teal" id="btn-listen-next">Câu tiếp →</button>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <input id="dict-input" class="ko" placeholder="Nhập từ tiếng Hàn nghe được..." style="flex:1 1 200px;min-width:0;width:100%;padding:11px 16px;border-radius:99px;border:1.5px solid var(--primary);font-size:17px;font-weight:600;" />
+            <button class="btn-orange" id="btn-dict-check" style="white-space:nowrap;flex-shrink:0;">Check đáp án</button>
+            <button class="btn-outline-teal" id="btn-listen-next" style="white-space:nowrap;flex-shrink:0;">Câu tiếp →</button>
           </div>
           <div id="dict-feedback" style="margin-top:12px;font-weight:600;"></div>
         </div>
@@ -312,7 +312,10 @@ function renderListeningModule(stage, db) {
     };
 
     stage.querySelector("#btn-dict-check").addEventListener("click", checkFn);
-    stage.querySelector("#dict-input").addEventListener("keydown", (e) => { if (e.key === "Enter") checkFn(); });
+    stage.querySelector("#dict-input").addEventListener("keydown", (e) => {
+      if (e.isComposing || e.keyCode === 229) return;
+      if (e.key === "Enter") checkFn();
+    });
     stage.querySelector("#btn-listen-next").addEventListener("click", () => {
       stopLoop();
       idx += 1;
@@ -745,25 +748,34 @@ function renderRoleplayAndPoliteness(stage) {
               <button type="button" class="btn-outline-teal ko" data-v="${v}" style="padding:4px 12px;font-size:13.5px;">${v}</button>
             `).join("")}
           </div>
-          <input id="polite-verb-inp" class="ko" value="${verbInput}" style="width:100%;padding:9px 14px;border-radius:99px;border:1.5px solid var(--primary);font-weight:700;margin-bottom:12px;" />
-
-          ${conj ? `
-            <div style="font-size:13px;color:var(--yellow-2);font-weight:700;margin-bottom:8px;">⚡ ${conj.irregularNote}</div>
-            <div style="display:flex;flex-direction:column;gap:8px;">
-              ${conj.forms.map((f) => `
-                <div style="display:flex;justify-content:space-between;align-items:center;background:#F8FAFB;padding:9px 12px;border-radius:8px;">
-                  <div>
-                    <div style="font-size:12.5px;color:var(--text-muted);">${f.label}</div>
-                    <strong class="ko" style="font-size:16.5px;color:var(--primary-1);">${f.ko}</strong>
-                  </div>
-                  <button class="btn-audio" style="width:30px;height:30px;" data-speak="${f.ko.split("/")[0].trim()}">🔊</button>
-                </div>
-              `).join("")}
-            </div>
-          ` : `<div style="color:var(--danger);font-size:13.5px;">Hãy nhập động từ/tính từ nguyên thể kết thúc bằng -다 (VD: 가다, 먹다).</div>`}
+          <input id="polite-verb-inp" class="ko" value="${verbInput.replace(/"/g, "&quot;")}" style="width:100%;padding:9px 14px;border-radius:99px;border:1.5px solid var(--primary);font-weight:700;margin-bottom:12px;" />
+          <div id="polite-verb-results"></div>
         </div>
       </div>
     `;
+
+    const politeResultsSlot = stage.querySelector("#polite-verb-results");
+    const renderPoliteResults = () => {
+      const cObj = conjugateKoreanPredicate(verbInput);
+      politeResultsSlot.innerHTML = cObj ? `
+        <div style="font-size:13px;color:var(--primary-1);font-weight:700;margin-bottom:8px;">⚡ ${cObj.irregularNote}</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          ${cObj.forms.map((f) => `
+            <div style="display:flex;justify-content:space-between;align-items:center;background:var(--bg-body);padding:9px 12px;border-radius:8px;">
+              <div>
+                <div style="font-size:12.5px;color:var(--text-muted);">${f.label}</div>
+                <strong class="ko" style="font-size:16.5px;color:var(--primary-1);">${f.ko}</strong>
+              </div>
+              <button type="button" class="btn-audio" style="width:30px;height:30px;" data-speak="${f.ko.split("/")[0].trim()}">🔊</button>
+            </div>
+          `).join("")}
+        </div>
+      ` : `<div style="color:var(--danger);font-size:13.5px;">Hãy nhập động từ/tính từ nguyên thể kết thúc bằng -다 (VD: 가다, 먹다).</div>`;
+      politeResultsSlot.querySelectorAll("[data-speak]").forEach((b) => {
+        b.addEventListener("click", () => speakKoreanTTS(b.dataset.speak));
+      });
+    };
+    renderPoliteResults();
 
     stage.querySelector("#rp-sel").addEventListener("change", (e) => {
       scIdx = Number(e.target.value);
@@ -788,17 +800,23 @@ function renderRoleplayAndPoliteness(stage) {
     const restartBtn = stage.querySelector("#rp-restart");
     if (restartBtn) restartBtn.addEventListener("click", () => { resetScenario(); render(); });
 
+    const pInp = stage.querySelector("#polite-verb-inp");
     stage.querySelectorAll("[data-v]").forEach((b) => {
-      b.addEventListener("click", () => { verbInput = b.dataset.v; render(); });
+      b.addEventListener("click", () => {
+        verbInput = b.dataset.v;
+        pInp.value = verbInput;
+        renderPoliteResults();
+      });
     });
-    stage.querySelector("#polite-verb-inp").addEventListener("input", (e) => {
+    pInp.addEventListener("input", (e) => {
       verbInput = e.target.value;
-      render();
-      const el = stage.querySelector("#polite-verb-inp");
-      el.focus();
-      el.setSelectionRange(el.value.length, el.value.length);
+      renderPoliteResults();
     });
-    stage.querySelectorAll("[data-speak]").forEach((b) => b.addEventListener("click", () => speakKoreanTTS(b.dataset.speak)));
+    stage.querySelectorAll("[data-speak]").forEach((b) => {
+      if (!politeResultsSlot.contains(b)) {
+        b.addEventListener("click", () => speakKoreanTTS(b.dataset.speak));
+      }
+    });
   }
 
   render();

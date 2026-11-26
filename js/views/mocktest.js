@@ -1,5 +1,5 @@
-import { store, ROADMAP_SCORE_SCALES, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261126-10";
-import { ico } from "../icons.js?v=20261126-10";
+import { store, ROADMAP_SCORE_SCALES, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261126-12";
+import { ico } from "../icons.js?v=20261126-12";
 
 /**
  * Hydrates a 70-question TOPIK I or 104-question TOPIK II exam from normalized slots + itemPool.
@@ -120,7 +120,7 @@ function renderMiniWongokjiPreview(text, maxCells = 300) {
   const rows = Math.min(36, Math.max(6, Math.ceil(Math.max(cells.length, Math.min(160, maxCells)) / 20)));
   while (cells.length < rows * 20) cells.push("");
   return `
-    <div class="wongokji-scroll-wrap" style="margin-top:10px;">
+    <div class="wongokji-scroll-wrap" style="margin-top:10px;width:100%;max-width:100%;overflow-x:auto;padding-bottom:6px;">
       <div style="display:grid;grid-template-columns:repeat(20, 26px);border:1.5px solid #DC2626;width:max-content;background:#FFFDF9;">
         ${cells.slice(0, rows * 20).map((c) => `
           <div class="ko" style="width:26px;height:26px;border:0.5px solid #FCA5A5;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#1E293B;">${c === " " ? "" : (c || "")}</div>
@@ -657,6 +657,7 @@ function renderExamRoom(root, sys, exam, scope, navigate, registerCleanup) {
   let qIdx = 0;
   let secRemaining = durationMinutes * 60;
   let submitted = false;
+  let confirmSubmitPending = false;
   let showWongokjiGrid = false;
   const answers = {};
   const writingAnswers = {};
@@ -665,21 +666,33 @@ function renderExamRoom(root, sys, exam, scope, navigate, registerCleanup) {
 
   preloadAudioUrls(questions.slice(0, 12).map((q) => q.audioSrc).filter(Boolean));
 
-  const timer = setInterval(() => {
-    if (submitted) return clearInterval(timer);
-    secRemaining -= 1;
-    if (secRemaining <= 0) {
-      clearInterval(timer);
-      submitExam();
-    } else {
-      const el = root.querySelector("#exam-clock");
-      if (el) {
-        const m = String(Math.floor(secRemaining / 60)).padStart(2, "0");
-        const s = String(secRemaining % 60).padStart(2, "0");
-        el.textContent = `⏱️ ${m}:${s}`;
+  let timer = null;
+  function startExamTimer() {
+    clearInterval(timer);
+    timer = setInterval(() => {
+      if (submitted) return clearInterval(timer);
+      secRemaining -= 1;
+      if (secRemaining <= 0) {
+        clearInterval(timer);
+        confirmSubmitPending = false;
+        submitExam();
+      } else {
+        const el = root.querySelector("#exam-clock");
+        if (el) {
+          const m = String(Math.floor(secRemaining / 60)).padStart(2, "0");
+          const s = String(secRemaining % 60).padStart(2, "0");
+          el.textContent = `⏱️ ${m}:${s}`;
+        }
       }
-    }
-  }, 1000);
+    }, 1000);
+  }
+  startExamTimer();
+
+  function getAnsweredCount() {
+    const mcqDone = Object.keys(answers).length;
+    const writeDone = Object.values(writingAnswers).filter((w) => ((w?.a || "") + (w?.b || "") + (w?.essay || "")).trim().length > 0).length;
+    return mcqDone + writeDone;
+  }
 
   const keyListener = (ev) => {
     const tag = (ev.target?.tagName || "").toUpperCase();
@@ -720,16 +733,22 @@ function renderExamRoom(root, sys, exam, scope, navigate, registerCleanup) {
 
   function submitExam() {
     submitted = true;
+    confirmSubmitPending = false;
     clearInterval(timer);
     let earnedScore = 0;
     let listenScore = 0;
     let writeScore = 0;
     let readScore = 0;
     let correctCount = 0;
+    let answeredWritingCount = 0;
 
     questions.forEach((q) => {
       if (q.isWriting) {
-        const wPts = scoreWritingResponse(q, writingAnswers[q.id] || {});
+        const dr = writingAnswers[q.id] || {};
+        if (((dr.a || "") + (dr.b || "") + (dr.essay || "")).trim().length > 0) {
+          answeredWritingCount += 1;
+        }
+        const wPts = scoreWritingResponse(q, dr);
         earnedScore += wPts;
         writeScore += wPts;
         if (wPts >= q.pts * 0.6) correctCount += 1;
@@ -760,9 +779,24 @@ function renderExamRoom(root, sys, exam, scope, navigate, registerCleanup) {
       store.save();
     }
 
-    lastSummary = { score: earnedScore, listenScore, writeScore, readScore, grade, correctCount };
+    lastSummary = { score: earnedScore, listenScore, writeScore, readScore, grade, correctCount, answeredWritingCount };
     window.scrollTo({ top: 0, behavior: "smooth" });
     drawRoom(lastSummary);
+  }
+
+  function retakeExam() {
+    Object.keys(answers).forEach((k) => delete answers[k]);
+    Object.keys(writingAnswers).forEach((k) => delete writingAnswers[k]);
+    Object.keys(instantChecked).forEach((k) => delete instantChecked[k]);
+    flagged.clear();
+    submitted = false;
+    confirmSubmitPending = false;
+    lastSummary = null;
+    qIdx = 0;
+    secRemaining = durationMinutes * 60;
+    startExamTimer();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    drawRoom(null);
   }
 
   function drawRoom(resultSummary = null) {
@@ -789,13 +823,31 @@ function renderExamRoom(root, sys, exam, scope, navigate, registerCleanup) {
             <strong style="font-size:16.5px;display:block;">${exam.title}</strong>
             <span style="font-size:12px;color:var(--text-muted);">📌 Nguồn: ${exam.sourceOrg}</span>
           </div>
-          <div style="display:flex;align-items:center;gap:10px;">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
             <span id="exam-clock" style="background:#FFF;border:2px solid var(--primary);padding:6px 15px;border-radius:99px;font-weight:800;color:var(--primary-1);">
               ⏱️ ${m}:${s}
             </span>
-            ${!submitted ? `<button type="button" class="btn-orange" id="btn-submit-exam">Nộp bài &amp; Chấm điểm</button>` : ""}
+            ${!submitted
+              ? `<button type="button" class="btn-orange" id="btn-submit-exam">Nộp bài &amp; Chấm điểm</button>`
+              : `<button type="button" class="btn-outline-teal" data-retake-exam="1">🔄 Làm lại đề này</button>`}
           </div>
         </div>
+
+        ${confirmSubmitPending && !submitted ? (() => {
+          const answeredNow = getAnsweredCount();
+          const remainingNow = Math.max(0, questions.length - answeredNow);
+          return `
+            <div id="submit-confirm-box" class="outline-ai" style="margin-bottom:14px;border-color:var(--yellow-2);background:#FFFBEB;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+              <div style="font-size:14.5px;color:#92400E;">
+                <strong>⚠️ Xác nhận nộp bài:</strong> Bạn mới làm <strong>${answeredNow}/${questions.length}</strong> câu (còn <strong>${remainingNow}</strong> câu bỏ trống). Bạn có chắc chắn muốn nộp ngay không?
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <button type="button" class="btn-orange" id="btn-confirm-submit-yes">Nộp bài ngay</button>
+                <button type="button" class="btn-outline-teal" id="btn-confirm-submit-no">Quay lại làm tiếp</button>
+              </div>
+            </div>
+          `;
+        })() : ""}
 
         <!-- Section Jump Bar (1교시 듣기 / 쓰기 / 2교시 읽기) -->
         <div class="skill-pills-row" style="margin-bottom:14px;">
@@ -818,8 +870,23 @@ function renderExamRoom(root, sys, exam, scope, navigate, registerCleanup) {
 
         ${resultSummary ? (() => {
           const rScale = ROADMAP_SCORE_SCALES[store.state.roadmapProfile?.startBook || "q1"] || ROADMAP_SCORE_SCALES.q1;
-          const scaledToRoadmap = Math.round((resultSummary.score / Math.max(1, totalMaxPts)) * rScale.maxScore);
-          const passCheck = scaledToRoadmap >= rScale.passScore;
+          const allWritingScope = questions.every((item) => item.isWriting);
+          const countSummaryText = allWritingScope
+            ? `Đã làm <strong>${resultSummary.answeredWritingCount || 0}/${questions.length}</strong> câu tự luận`
+            : `Đúng <strong>${resultSummary.correctCount}/${questions.length}</strong> câu`;
+          let compareLine = "";
+          if (!isFullExam) {
+            const pct = Math.round((resultSummary.score / Math.max(1, totalMaxPts)) * 100);
+            compareLine = `<div style="font-size:13px;font-weight:700;color:${pct >= 60 ? "var(--success)" : "var(--primary-4)"};">📊 Kết quả phân khúc: Đạt <strong>${pct}%</strong> điểm tối đa phần này (${resultSummary.score}/${totalMaxPts}đ).</div>`;
+          } else if (rScale.examLevel === exam.level) {
+            const scaledToRoadmap = Math.round((resultSummary.score / Math.max(1, totalMaxPts)) * rScale.maxScore);
+            const passCheck = scaledToRoadmap >= rScale.passScore;
+            compareLine = `<div style="font-size:13px;font-weight:700;color:${passCheck ? "var(--success)" : "var(--primary-4)"};">📊 So với lộ trình đang học (${rScale.label} · Chuẩn ≥ ${rScale.passScore}/${rScale.maxScore}đ): <strong>${scaledToRoadmap}/${rScale.maxScore}đ</strong> — ${passCheck ? "✔ ĐẠT CHUẨN LỘ TRÌNH!" : `Cần thêm +${rScale.passScore - scaledToRoadmap}đ để đạt chuẩn.`}</div>`;
+          } else {
+            const officialPass = exam.level === "topik2" ? 120 : 80;
+            const passCheck = resultSummary.score >= officialPass;
+            compareLine = `<div style="font-size:13px;font-weight:700;color:${passCheck ? "var(--success)" : "var(--primary-4)"};">📊 Thang chuẩn kỳ thi ${exam.level === "topik2" ? "TOPIK II" : "TOPIK I"} (Đạt ≥ ${officialPass}/${totalMaxPts}đ · Lộ trình bạn đang theo: ${rScale.label}): <strong>${resultSummary.score}/${totalMaxPts}đ</strong> — ${passCheck ? "✔ ĐẠT CHUẨN ĐỀ NÀY!" : `Cần thêm +${officialPass - resultSummary.score}đ để đạt mốc chuẩn.`}</div>`;
+          }
           return `
           <div class="prediction-banner" style="margin-bottom:18px;">
             <div>
@@ -827,14 +894,15 @@ function renderExamRoom(root, sys, exam, scope, navigate, registerCleanup) {
                 🎉 Tổng điểm: ${resultSummary.score} / ${totalMaxPts} điểm — ${resultSummary.grade}
               </h2>
               <div style="font-size:14px;margin-bottom:6px;">
-                Đúng <strong>${resultSummary.correctCount}/${questions.length}</strong> câu
+                ${countSummaryText}
                 ${isFullExam ? ` · Chi tiết: 🎧 Nghe <strong>${resultSummary.listenScore}/100đ</strong> ${exam.level === "topik2" ? `· ✍️ Viết <strong>${resultSummary.writeScore}/100đ</strong>` : ""} · 📖 Đọc <strong>${resultSummary.readScore}/100đ</strong>` : ""}
               </div>
-              <div style="font-size:13px;font-weight:700;color:${passCheck ? "var(--success)" : "var(--primary-4)"};">
-                📊 So với lộ trình đang học (${rScale.label} · Chuẩn ≥ ${rScale.passScore}/${rScale.maxScore}đ): Quy đổi <strong>${scaledToRoadmap}/${rScale.maxScore}đ</strong> — ${passCheck ? "✔ ĐẠT CHUẨN LỘ TRÌNH!" : `Cần thêm +${rScale.passScore - scaledToRoadmap}đ để đạt chuẩn.`}
-              </div>
+              ${compareLine}
             </div>
-            <button type="button" class="btn-primary" id="btn-go-mistakes">Mở Sổ tay câu sai →</button>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+              <button type="button" class="btn-outline-teal" id="btn-retake-exam" data-retake-exam="1">🔄 Làm lại đề này</button>
+              <button type="button" class="btn-primary" id="btn-go-mistakes">Mở Sổ tay câu sai →</button>
+            </div>
           </div>
           `;
         })() : ""}
@@ -935,7 +1003,7 @@ function renderExamRoom(root, sys, exam, scope, navigate, registerCleanup) {
 
             <div style="display:flex;justify-content:space-between;align-items:center;margin-top:20px;gap:10px;">
               <button type="button" class="btn-outline-teal" id="btn-prev-q" ${qIdx === 0 ? "disabled" : ""}>← Câu trước</button>
-              <span style="font-size:13px;color:var(--text-muted);">Đã làm: <strong>${Object.keys(answers).length + Object.keys(writingAnswers).length}/${questions.length}</strong> câu</span>
+              <span style="font-size:13px;color:var(--text-muted);">Đã làm: <strong>${getAnsweredCount()}/${questions.length}</strong> câu</span>
               <button type="button" class="btn-primary" id="btn-next-q" ${qIdx === questions.length - 1 ? "disabled" : ""}>Câu tiếp theo →</button>
             </div>
           </div>
@@ -997,7 +1065,38 @@ function renderExamRoom(root, sys, exam, scope, navigate, registerCleanup) {
     });
 
     const subBtn = root.querySelector("#btn-submit-exam");
-    if (subBtn) subBtn.addEventListener("click", submitExam);
+    if (subBtn) {
+      subBtn.addEventListener("click", () => {
+        const answeredNow = getAnsweredCount();
+        if (!submitted && answeredNow < questions.length && !confirmSubmitPending) {
+          confirmSubmitPending = true;
+          window.scrollTo({ top: 0, behavior: "smooth" });
+          drawRoom(null);
+          return;
+        }
+        submitExam();
+      });
+    }
+
+    const yesSubBtn = root.querySelector("#btn-confirm-submit-yes");
+    if (yesSubBtn) {
+      yesSubBtn.addEventListener("click", () => {
+        confirmSubmitPending = false;
+        submitExam();
+      });
+    }
+
+    const noSubBtn = root.querySelector("#btn-confirm-submit-no");
+    if (noSubBtn) {
+      noSubBtn.addEventListener("click", () => {
+        confirmSubmitPending = false;
+        drawRoom(null);
+      });
+    }
+
+    root.querySelectorAll("[data-retake-exam]").forEach((btn) => {
+      btn.addEventListener("click", retakeExam);
+    });
 
     const misBtn = root.querySelector("#btn-go-mistakes");
     if (misBtn) misBtn.addEventListener("click", () => navigate("check-tools", { tab: "mistakes" }));

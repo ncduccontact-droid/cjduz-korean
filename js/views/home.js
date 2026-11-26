@@ -1,6 +1,6 @@
-import { store, getBookWords, evaluateRoadmapScore } from "../store.js?v=20261126-10";
-import { ico, daisyLogoSVG } from "../icons.js?v=20261126-10";
-import { getGuidedStudyPlan, STAGE_LABELS } from "./roadmap.js?v=20261126-10";
+import { store, getBookWords, evaluateRoadmapScore } from "../store.js?v=20261126-12";
+import { ico, daisyLogoSVG } from "../icons.js?v=20261126-12";
+import { getGuidedStudyPlan, STAGE_LABELS } from "./roadmap.js?v=20261126-12";
 
 export function renderHomeView(root, db, navigate, startGuidedStep = null, openProfileSettings = null, modalRoot = null) {
   const s = store.state;

@@ -595,20 +595,19 @@ button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-
 }
 
 .box-select {
-  appearance: none;
+  -webkit-appearance: menulist;
+  -moz-appearance: menulist;
+  appearance: auto;
   background: #FFFFFF;
   color: var(--primary-1);
   border: 1.5px solid var(--border-card);
   border-radius: 99px;
-  padding: 8px 34px 8px 15px;
+  padding: 7px 14px;
+  max-width: 100%;
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
   box-shadow: 0 2.5px 0 var(--border-lip);
-  background-image: linear-gradient(45deg, transparent 50%, var(--primary-1) 50%), linear-gradient(135deg, var(--primary-1) 50%, transparent 50%);
-  background-position: calc(100% - 18px) 52%, calc(100% - 12px) 52%;
-  background-size: 6px 6px, 6px 6px;
-  background-repeat: no-repeat;
 }
 
 .skill-pills-row {
@@ -743,6 +742,8 @@ button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-
   align-items: center;
   justify-content: space-between;
   gap: 14px;
+  min-width: 0;
+  max-width: 100%;
   cursor: pointer;
   transition: border-color 0.14s ease, transform 0.12s ease;
 }
@@ -763,6 +764,8 @@ button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-
   padding: 18px 20px;
   border: 1.5px solid var(--border-card);
   box-shadow: var(--shadow-card);
+  min-width: 0;
+  max-width: 100%;
   overflow: hidden;
   transition: border-color 0.14s ease, transform 0.12s ease;
 }
@@ -788,6 +791,8 @@ button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-
   padding: 18px;
   border: 1.5px solid var(--border-card);
   box-shadow: var(--shadow-card);
+  min-width: 0;
+  max-width: 100%;
   display: flex;
   flex-direction: column;
   gap: 11px;
@@ -1091,8 +1096,8 @@ button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-
 }
 
 @media (max-width: 900px) {
-  .shorts-studio-grid { grid-template-columns: 1fr; }
-  .shorts-player-frame { max-width: 380px; margin: 0 auto; width: 100%; }
+  .shorts-studio-grid { grid-template-columns: minmax(0, 1fr); }
+  .shorts-player-frame { max-width: 300px; margin: 0 auto; width: 100%; }
 }
 
 .tap-word {
@@ -1259,12 +1264,13 @@ button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-
 
 .wongokji-scroll-wrap {
   width: 100%;
+  max-width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
 
 .wongokji-scroll-wrap .wongokji-grid {
-  min-width: 580px;
+  width: max-content;
 }
 
 .user-auth-pill {
@@ -1538,10 +1544,12 @@ button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-
   .nav-links { display: none; }
   .migii-navbar { height: 62px; }
   .brand-title span { display: none; }
-  .exam-room-grid { grid-template-columns: 1fr; }
+  .exam-room-grid { grid-template-columns: minmax(0, 1fr); }
+  .shorts-studio-grid { grid-template-columns: minmax(0, 1fr); }
   .grid-books-6 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  body { padding-bottom: 68px; }
+  body { padding-bottom: 72px; }
+  .migii-footer { padding-bottom: 88px; }
   .mobile-bottom-nav {
     position: fixed;
     bottom: 0;
@@ -1575,11 +1583,22 @@ button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-
 }
 
 @media (max-width: 768px) {
+  .navbar-inner { padding: 0 10px; gap: 6px; }
+  .brand-logo { padding: 3px 7px; border-radius: 12px; }
+  .brand-logo-img { height: 28px; }
+  .nav-actions { gap: 5px; min-width: 0; }
+  .btn-theme-pill, .btn-quick-dict { padding: 6px 9px; font-size: 12px; }
+  .user-auth-pill { padding: 5px 9px; font-size: 12px; max-width: 112px; }
+  #nav-user-label { max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; }
+  .shorts-player-frame { max-width: 248px; padding: 10px; margin: 0 auto; }
   .container-web, .container-narrow { padding: 16px 14px 44px; }
   .section-head h2 { font-size: 19px; }
-  .roadmap-hero-grid, .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  .roadmap-hero-grid, .grid-2, .grid-3 { grid-template-columns: minmax(0, 1fr); }
   .grid-books-6 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .prediction-banner { flex-direction: column; align-items: flex-start; padding: 18px; }
+  .kr-keyboard { padding: 8px; gap: 5px; }
+  .kr-key-row { gap: 4px; }
+  .kr-key { min-width: 28px; height: 36px; font-size: 13.5px; }
   .hide-sm { display: none; }
 }
 
