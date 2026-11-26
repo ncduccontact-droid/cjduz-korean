@@ -1,5 +1,5 @@
-import { store, DEFAULT_ROADMAP_PROFILE, normalizeBookId, getBookWords, getBookCurriculum, evaluateRoadmapScore } from "../store.js?v=20261127-01";
-import { ico, daisyLogoSVG } from "../icons.js?v=20261127-01";
+import { store, DEFAULT_ROADMAP_PROFILE, normalizeBookId, getBookWords, getBookCurriculum, evaluateRoadmapScore } from "../store.js?v=20261127-02";
+import { ico, daisyLogoSVG } from "../icons.js?v=20261127-02";
 
 const PLACEMENT_QUESTIONS = [
   { q: "1. Chọn câu chào lịch sự khi mới gặp lần đầu:", opts: ["안녕히 가세요.", "만나서 반갑습니다.", "잘 먹겠습니다.", "주말 잘 보내세요."], ans: 1 },
@@ -248,42 +248,40 @@ export function renderRoadmapScoreCardHTML(evalObj) {
   const pctBar = Math.min(100, Math.round((evalObj.estimatedScore / evalObj.maxScore) * 100));
   const passLinePct = Math.round((evalObj.passScore / evalObj.maxScore) * 100);
   return `
-    <div class="box-kind" style="background:linear-gradient(135deg,var(--primary-3) 0%,#FFFFFF 75%);padding:18px 20px;">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
+    <div class="box-kind">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
         <div>
-          <span class="badge-orange">📊 Đánh giá thang điểm theo lộ trình: ${evalObj.label}</span>
-          <div style="margin-top:6px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;">
-            <strong style="font-size:28px;font-weight:800;color:var(--primary);">${evalObj.estimatedScore} <span style="font-size:16px;color:var(--text-muted);">/ ${evalObj.maxScore} điểm</span></strong>
-            <span style="font-size:13px;font-weight:700;color:${evalObj.passed ? "var(--success)" : "var(--primary-1)"};">
+          <span style="font-size:12.5px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:2px;">Đánh giá năng lực · ${evalObj.label}</span>
+          <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;">
+            <strong style="font-size:28px;font-weight:800;color:var(--text-main);">${evalObj.estimatedScore} <span style="font-size:15px;color:var(--text-muted);font-weight:600;">/ ${evalObj.maxScore} điểm</span></strong>
+            <span style="font-size:13px;font-weight:600;color:${evalObj.passed ? "var(--success)" : "var(--primary-1)"};">
               · ${evalObj.statusLabel}
             </span>
           </div>
         </div>
-        <span class="meta-chip" style="background:#FFFFFF;color:var(--primary-4);font-weight:800;">
+        <span class="badge-orange">
           Chuẩn ${evalObj.gradeName}: ≥ ${evalObj.passScore}đ
         </span>
       </div>
 
-      <!-- Score Scale Bar with Pass Threshold Marker -->
-      <div style="position:relative;padding-top:4px;margin-bottom:14px;">
-        <div class="progress-track" style="height:11px;background:#DCEBFA;">
-          <div class="progress-fill" style="width:${pctBar}%;background:${evalObj.passed ? "var(--success)" : "var(--primary)"};"></div>
+      <div style="position:relative;padding-top:2px;margin-bottom:14px;">
+        <div class="progress-track" style="height:8px;background:#E2E8F0;">
+          <div class="progress-fill" style="width:${pctBar}%;${evalObj.passed ? "background:var(--success);" : ""}"></div>
         </div>
-        <div style="position:absolute;left:${passLinePct}%;top:0;bottom:-4px;width:2px;background:var(--primary-4);" title="Mốc đạt ${evalObj.passScore}đ"></div>
+        <div style="position:absolute;left:${passLinePct}%;top:0;bottom:-3px;width:2px;background:#475569;border-radius:2px;" title="Mốc đạt ${evalObj.passScore}đ"></div>
       </div>
 
-      <!-- 4 Standardized Daily Pillars Breakdown -->
-      <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;">
+      <div class="pillar-grid-4">
         ${evalObj.pillars.map((p) => `
-          <div style="background:#FFFFFF;border:1px solid var(--border-card);border-radius:11px;padding:8px 10px;">
-            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;">
+          <div style="background:#F8FAFC;border-radius:12px;padding:10px 12px;">
+            <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:4px;">
               <strong style="color:var(--text-main);">${p.label}</strong>
-              <span style="font-weight:800;color:var(--primary);">${p.pct}%</span>
+              <span style="font-weight:750;color:var(--primary-1);">${p.pct}%</span>
             </div>
-            <div class="progress-track" style="height:5px;margin-bottom:4px;">
+            <div class="progress-track" style="height:5px;margin-bottom:5px;">
               <div class="progress-fill" style="width:${p.pct}%"></div>
             </div>
-            <span style="font-size:11px;color:var(--text-muted);">${p.detail}</span>
+            <span style="font-size:11.5px;color:var(--text-muted);">${p.detail}</span>
           </div>
         `).join("")}
       </div>
@@ -305,14 +303,14 @@ export function renderRoadmapView(root, db, navigate, openAccountCustomizer) {
 
     root.innerHTML = `
       <div class="container-narrow">
-        <div class="box-kind" style="border-radius:20px;padding:22px;margin-bottom:18px;">
+        <div class="box-kind" style="margin-bottom:16px;">
           <div class="roadmap-hero-grid">
-            <div style="background:var(--primary-3);border:1.5px solid var(--border-card);border-radius:16px;padding:18px;text-align:center;">
-              <div style="display:inline-grid;place-items:center;width:64px;height:64px;border-radius:18px;background:#FFFFFF;border:1.5px solid var(--border-card);box-shadow:0 3px 0 var(--border-lip);">
-                ${daisyLogoSVG(44)}
+            <div style="background:#F8FAFC;border-radius:16px;padding:18px;text-align:center;">
+              <div style="display:inline-grid;place-items:center;width:58px;height:58px;border-radius:16px;background:#FFFFFF;border:1px solid var(--border-card);">
+                ${daisyLogoSVG(38)}
               </div>
-              <strong style="display:block;margin-top:8px;color:var(--primary-1);font-size:15px;">Lộ trình của ${userName}</strong>
-              <span style="font-size:12.5px;color:var(--text-muted);">Đang ở <strong>Ngày ${activeDay.day}/30</strong> · Xong ${completedDaysCount} ngày</span>
+              <strong style="display:block;margin-top:8px;color:var(--text-main);font-size:15px;">Lộ trình của ${userName}</strong>
+              <span style="font-size:12.5px;color:var(--text-muted);">Ngày ${activeDay.day}/30 · Xong ${completedDaysCount} ngày</span>
               <div class="progress-track" style="margin-top:8px;">
                 <div class="progress-fill" style="width:${pct}%"></div>
               </div>
@@ -321,42 +319,41 @@ export function renderRoadmapView(root, db, navigate, openAccountCustomizer) {
             <div>
               <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
                 <span class="badge-orange">${STAGE_LABELS[profile.startBook] || STAGE_LABELS.q1}</span>
-                <span class="meta-chip" style="color:var(--primary-1);">Chuẩn 4 bước/ngày: Từ vựng → Bài tập → Dịch câu → Luyện đề</span>
+                <span class="meta-chip">Từ vựng → Bài tập → Dịch câu → Luyện đề</span>
               </div>
-              <h2 style="margin:0 0 6px;font-size:20px;">Đang học: Ngày ${activeDay.day} — ${activeDay.shortTopic}</h2>
-              <p style="margin:0 0 12px;color:var(--text-muted);font-size:14px;">
-                Bước tiếp theo cần làm: <strong style="color:var(--primary-1);">${nextTask.label}</strong>
+              <h1 style="margin:0 0 6px;font-size:20px;font-weight:750;">Ngày ${activeDay.day}: ${activeDay.shortTopic}</h1>
+              <p style="margin:0 0 14px;color:var(--text-muted);font-size:14px;">
+                Bước tiếp theo: <strong style="color:var(--text-main);">${nextTask.label}</strong>
               </p>
               <div style="display:flex;gap:8px;flex-wrap:wrap;">
                 <button class="btn-primary" id="btn-rm-continue-next">
-                  ▶ Học tiếp Bước ${nextTask.stepIdx + 1}/${nextTask.totalSteps}
+                  Học tiếp Bước ${nextTask.stepIdx + 1}/${nextTask.totalSteps}
                 </button>
                 <button class="btn-outline-teal" id="btn-start-placement">
-                  ${ico("sparkle", 15)} Test xếp Quyển
+                  ${ico("sparkle", 14)} Test xếp quyển
                 </button>
                 <button class="btn-outline-teal" id="btn-customize-roadmap">
-                  ${ico("user", 15)} Đổi Quyển học (Hồ sơ)
+                  ${ico("user", 14)} Đổi quyển học
                 </button>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- ROADMAP-CALIBRATED SCORE EVALUATION -->
-        <div style="margin-bottom:22px;">
+        <div style="margin-bottom:20px;">
           ${renderRoadmapScoreCardHTML(evalObj)}
         </div>
 
         ${takingPlacement ? `
-          <div class="box-kind" style="border:2px solid var(--primary);margin-bottom:24px;">
-            <h3 style="margin:0 0 14px;color:var(--primary-1);">📝 Bài Test Xếp Quyển Nhanh (6 Câu · Từ Sơ cấp 1 đến TOPIK II)</h3>
-            <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="box-kind" style="border-color:rgba(13,148,136,0.38);margin-bottom:22px;">
+            <h3 style="margin:0 0 14px;font-size:17px;">Bài test xếp quyển nhanh (6 câu)</h3>
+            <div style="display:flex;flex-direction:column;gap:14px;">
               ${PLACEMENT_QUESTIONS.map((item, qi) => `
-                <div style="background:var(--bg-body);padding:14px;border-radius:10px;">
-                  <div style="font-weight:700;margin-bottom:8px;">${item.q}</div>
+                <div style="background:#F8FAFC;padding:14px;border-radius:12px;">
+                  <div style="font-weight:650;margin-bottom:8px;">${item.q}</div>
                   <div class="grid-2" style="gap:8px;">
                     ${item.opts.map((opt, oi) => `
-                      <button type="button" class="ko" data-q="${qi}" data-o="${oi}" style="text-align:left;padding:9px 12px;border-radius:8px;border:1.5px solid ${userAnswers[qi] === oi ? "var(--primary)" : "var(--border-card)"};background:${userAnswers[qi] === oi ? "var(--primary-3)" : "#FFFFFF"};cursor:pointer;font-weight:600;">
+                      <button type="button" class="ko mcq-opt-btn" data-q="${qi}" data-o="${oi}" style="${userAnswers[qi] === oi ? "border-color:var(--primary);background:var(--primary-3);font-weight:650;" : ""}">
                         ${["①", "②", "③", "④"][oi]} ${opt}
                       </button>
                     `).join("")}
@@ -365,48 +362,50 @@ export function renderRoadmapView(root, db, navigate, openAccountCustomizer) {
               `).join("")}
             </div>
             <div style="margin-top:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
-              <button class="btn-primary" id="btn-submit-placement">Chấm điểm &amp; Áp dụng Quyển phù hợp</button>
-              ${placementResult ? `<div style="font-weight:700;color:var(--primary-1);">${placementResult}</div>` : ""}
+              <button class="btn-primary" id="btn-submit-placement">Chấm điểm &amp; Áp dụng quyển phù hợp</button>
+              ${placementResult ? `<div style="font-weight:650;color:var(--primary-1);">${placementResult}</div>` : ""}
             </div>
           </div>
         ` : ""}
 
         <div class="section-head" style="margin-top:0;">
-          <h2>Chi tiết 30 ngày chuẩn hóa (${STAGE_LABELS[profile.startBook] || "Quyển 1"})</h2>
+          <h2>Kế hoạch 30 ngày (${STAGE_LABELS[profile.startBook] || "Quyển 1"})</h2>
         </div>
 
         <div style="display:flex;flex-direction:column;gap:12px;">
           ${days.map((d) => {
             const isToday = d.day === activeDay.day;
             return `
-              <div class="box-kind" style="border:${isToday ? "2px solid var(--primary)" : "1.5px solid var(--border-card)"};background:${isToday ? "linear-gradient(180deg,#FFFFFF 0%,var(--primary-3) 100%)" : "#FFFFFF"};">
+              <div class="box-kind" style="${isToday ? "border-color:rgba(13,148,136,0.38);" : ""}">
                 <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
                   <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                    ${isToday ? `<span class="badge-orange">📍 HÔM NAY</span>` : ""}
-                    <strong style="font-size:16px;color:${d.isDayComplete ? "var(--success)" : "var(--text-main)"};">
+                    ${isToday ? `<span class="badge-orange">Hôm nay</span>` : ""}
+                    <strong style="font-size:15.5px;color:${d.isDayComplete ? "var(--success)" : "var(--text-main)"};">
                       ${d.title}
                     </strong>
                   </div>
-                  <span class="meta-chip" style="color:${d.isDayComplete ? "var(--success)" : "var(--primary-1)"};">
-                    ${d.isDayComplete ? "✔ Hoàn thành cả 4 bước" : `Xong ${d.doneSteps}/${d.totalSteps} bước`}
+                  <span class="meta-chip" style="color:${d.isDayComplete ? "var(--success)" : "var(--text-muted)"};">
+                    ${d.isDayComplete ? "Đã xong 4/4" : `${d.doneSteps}/${d.totalSteps} bước`}
                   </span>
                 </div>
 
                 <div class="today-stepper">
                   ${d.tasks.map((t) => {
                     const isNextHere = isToday && !t.done && t.stepIdx === nextTask.stepIdx;
+                    const cleanCat = t.tag.replace(/^Bước\s*\d+\s*·\s*/i, "");
                     return `
                       <div class="today-step-row ${t.done ? "is-done" : (isNextHere ? "is-next" : "")}">
-                        <div style="display:flex;align-items:center;gap:10px;min-width:0;">
-                          <button type="button" class="step-check-btn ${t.done ? "checked" : ""}" data-rm-chk="${d.day}" data-sidx="${t.stepIdx}" data-stotal="${d.totalSteps}" title="Đánh dấu hoàn thành bước này">✓</button>
-                          <div style="min-width:0;">
-                            <span style="font-size:11.5px;font-weight:800;color:var(--primary-1);">${t.tag}</span>
-                            <span style="font-size:12px;color:var(--text-muted);"> · ${t.hint}</span>
-                            <strong style="font-size:14px;display:block;${t.done ? "text-decoration:line-through;color:var(--text-muted);" : ""}">${t.label}</strong>
+                        <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1;">
+                          <button type="button" class="step-check-btn ${t.done ? "checked" : ""}" data-rm-chk="${d.day}" data-sidx="${t.stepIdx}" data-stotal="${d.totalSteps}" title="Đánh dấu hoàn thành">
+                            ${t.done ? "✓" : (t.stepIdx + 1)}
+                          </button>
+                          <div style="min-width:0;flex:1;">
+                            <div style="font-size:14px;font-weight:650;${t.done ? "text-decoration:line-through;color:var(--text-muted);" : "color:var(--text-main);"}">${t.label}</div>
+                            <div style="font-size:12px;color:var(--text-muted);">${cleanCat} · ${t.hint}</div>
                           </div>
                         </div>
-                        <button type="button" class="${isNextHere ? "btn-primary" : "btn-outline-teal"}" data-day="${d.day}" data-ti="${t.stepIdx}" style="padding:5px 13px;font-size:12.5px;flex-shrink:0;">
-                          ${t.done ? "Xem lại" : (isNextHere ? "Học ngay →" : "Mở")}
+                        <button type="button" class="${isNextHere ? "btn-soft-jade" : "btn-outline-teal"}" data-day="${d.day}" data-ti="${t.stepIdx}" style="padding:6px 12px;font-size:12.5px;border-radius:9px;flex-shrink:0;">
+                          ${t.done ? "Xem lại" : (isNextHere ? "Học ngay" : "Mở")}
                         </button>
                       </div>
                     `;

@@ -1,6 +1,6 @@
-import { store, getBookWords, evaluateRoadmapScore } from "../store.js?v=20261127-01";
-import { ico, daisyLogoSVG } from "../icons.js?v=20261127-01";
-import { getGuidedStudyPlan, STAGE_LABELS } from "./roadmap.js?v=20261127-01";
+import { store, getBookWords, evaluateRoadmapScore } from "../store.js?v=20261127-02";
+import { ico, daisyLogoSVG } from "../icons.js?v=20261127-02";
+import { getGuidedStudyPlan, STAGE_LABELS } from "./roadmap.js?v=20261127-02";
 
 export function renderHomeView(root, db, navigate, startGuidedStep = null, openProfileSettings = null, modalRoot = null) {
   const s = store.state;
@@ -20,52 +20,57 @@ export function renderHomeView(root, db, navigate, startGuidedStep = null, openP
   const levels = (db.books6 || []).map((bk) => {
     const bw = getBookWords(db, bk.bookId);
     const bm = bw.filter((w) => store.isMastered(w.id)).length;
-    const partCnt = bk.chapters.reduce((a, c) => a + (c.parts?.length || 1), 0);
+    const pct = bw.length ? Math.round((bm / bw.length) * 100) : 0;
+    const shortLevel = bk.levelBadge.split("·")[1]?.trim() || bk.levelBadge;
     return {
-      badge: `QUYỂN ${bk.bookNum}`,
-      sub: bk.levelBadge,
-      items: [
-        `${bk.chapters.length} chương · ${partCnt} phần nhỏ (${bm}/${bw.length} từ)`,
-        `Đủ Sách giáo trình & Sách bài tập 익힘책`,
-        `Chuẩn ${bk.scale.gradeName}: ≥ ${bk.scale.passScore}/${bk.scale.maxScore}đ`
-      ],
+      bookNum: bk.bookNum,
+      shortLevel,
+      chaptersCount: bk.chapters.length,
+      mastered: bm,
+      totalWords: bw.length,
+      pct,
+      passDesc: `${bk.scale.gradeName} ≥ ${bk.scale.passScore}đ`,
       action: () => navigate("theory", { sub: "index", book: bk.bookId })
     };
   });
 
   root.innerHTML = `
     <div class="container-web">
-      <!-- SMART TODAY'S GUIDED STUDY PLAN ("HÔM NAY HỌC GÌ & HỌC TIẾP THEO CÁI GÌ?") -->
-      <section class="today-plan-grid" style="margin-bottom:24px;">
-        <div class="box-kind" style="background:linear-gradient(135deg,var(--primary-3) 0%,#FFFFFF 65%);padding:20px 22px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
-            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-              <span class="badge-orange">📍 Hôm nay · Ngày ${activeDay.day}/30</span>
-              <strong style="font-size:16.5px;color:var(--primary-1);">${activeDay.shortTopic}</strong>
+      <section class="today-plan-grid">
+        <!-- LEFT: TODAY'S FOCUSED STUDY PLAN -->
+        <div class="box-kind">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:14px;">
+            <div>
+              <div style="font-size:12.5px;font-weight:600;color:var(--text-muted);margin-bottom:2px;">
+                Lộ trình hôm nay · Ngày ${activeDay.day}/30
+              </div>
+              <h1 style="margin:0;font-size:19px;font-weight:750;color:var(--text-main);">
+                ${activeDay.shortTopic}
+              </h1>
             </div>
-            <span class="meta-chip" style="background:#FFFFFF;color:var(--primary-1);">
-              Đã xong ${activeDay.doneSteps}/${activeDay.totalSteps} bước hôm nay
+            <span class="badge-orange" style="flex-shrink:0;">
+              ${activeDay.doneSteps}/${activeDay.totalSteps} bước
             </span>
           </div>
 
           <div class="next-up-spotlight">
-            <div>
-              <div style="font-size:12px;font-weight:800;color:var(--yellow-lip);margin-bottom:3px;">
-                HỌC TIẾP THEO · BƯỚC ${nextTask.stepIdx + 1}/${activeDay.totalSteps}
+            <div style="min-width:0;flex:1 1 200px;">
+              <div style="font-size:12px;font-weight:650;color:var(--primary-1);margin-bottom:3px;">
+                Bước tiếp theo (${nextTask.stepIdx + 1}/${activeDay.totalSteps})
               </div>
-              <strong style="font-size:18px;display:block;color:var(--text-main);margin-bottom:2px;">
+              <strong style="font-size:16.5px;display:block;color:var(--text-main);line-height:1.35;margin-bottom:2px;">
                 ${nextTask.label}
               </strong>
               <span style="font-size:13px;color:var(--text-muted);">${nextTask.hint}</span>
             </div>
 
-            <div style="display:flex;gap:8px;flex-wrap:wrap;">
-              <button type="button" class="btn-primary" id="btn-start-next-step" style="padding:10px 20px;font-size:14.5px;">
-                ▶ Vào học Bước ${nextTask.stepIdx + 1} ngay
+            <div style="display:flex;gap:8px;flex-wrap:wrap;width:auto;">
+              <button type="button" class="btn-primary" id="btn-start-next-step">
+                Bắt đầu học
               </button>
               ${dueCount > 0 ? `
-                <button type="button" class="btn-orange" id="btn-home-due-srs">
-                  ${ico("cards", 16)} Ôn ${dueCount} từ đến hạn
+                <button type="button" class="btn-soft-jade" id="btn-home-due-srs">
+                  Ôn ${dueCount} từ đến hạn
                 </button>
               ` : ""}
             </div>
@@ -74,25 +79,25 @@ export function renderHomeView(root, db, navigate, startGuidedStep = null, openP
           <div class="today-stepper">
             ${activeDay.tasks.map((t) => {
               const isNext = !t.done && t.stepIdx === nextTask.stepIdx;
+              const cleanCategory = t.tag.replace(/^Bước\s*\d+\s*·\s*/i, "");
               return `
                 <div class="today-step-row ${t.done ? "is-done" : (isNext ? "is-next" : "")}">
-                  <div style="display:flex;align-items:center;gap:10px;min-width:0;">
-                    <button type="button" class="step-check-btn ${t.done ? "checked" : ""}" data-home-chk="${activeDay.day}" data-sidx="${t.stepIdx}" data-stotal="${activeDay.totalSteps}" title="Đánh dấu xong bước này">✓</button>
-                    <div style="min-width:0;">
-                      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-                        <span style="font-size:11.5px;font-weight:800;color:${t.done ? "#15803D" : (isNext ? "var(--primary)" : "var(--primary-1)")};">
-                          ${t.tag}
-                        </span>
-                        <span style="font-size:12px;color:var(--text-muted);">· ${t.hint}</span>
-                      </div>
-                      <strong style="font-size:14.5px;display:block;${t.done ? "text-decoration:line-through;color:var(--text-muted);" : "color:var(--text-main);"}">
+                  <div style="display:flex;align-items:center;gap:11px;min-width:0;flex:1;">
+                    <button type="button" class="step-check-btn ${t.done ? "checked" : ""}" data-home-chk="${activeDay.day}" data-sidx="${t.stepIdx}" data-stotal="${activeDay.totalSteps}" title="Đánh dấu hoàn thành">
+                      ${t.done ? "✓" : (t.stepIdx + 1)}
+                    </button>
+                    <div style="min-width:0;flex:1;">
+                      <div style="font-size:14px;font-weight:650;line-height:1.35;${t.done ? "text-decoration:line-through;color:var(--text-muted);" : "color:var(--text-main);"}">
                         ${t.label}
-                      </strong>
+                      </div>
+                      <div style="font-size:12px;color:var(--text-muted);margin-top:1px;">
+                        ${cleanCategory} · ${t.hint}
+                      </div>
                     </div>
                   </div>
 
-                  <button type="button" class="${isNext ? "btn-orange" : "btn-outline-teal"}" data-home-go="${t.stepIdx}" style="padding:6px 14px;font-size:13px;flex-shrink:0;">
-                    ${t.done ? "Xem lại" : (isNext ? "Học tiếp →" : "Mở")}
+                  <button type="button" class="${isNext ? "btn-soft-jade" : "btn-outline-teal"}" data-home-go="${t.stepIdx}" style="padding:6px 12px;font-size:12.5px;border-radius:9px;flex-shrink:0;">
+                    ${t.done ? "Xem lại" : (isNext ? "Học tiếp" : "Mở")}
                   </button>
                 </div>
               `;
@@ -100,173 +105,168 @@ export function renderHomeView(root, db, navigate, startGuidedStep = null, openP
           </div>
         </div>
 
-        <!-- RIGHT: ROADMAP SCORE SCALE EVALUATION & PROFILE RESET -->
-        <div class="box-kind" style="display:flex;flex-direction:column;justify-content:space-between;padding:20px;">
+        <!-- RIGHT: SCORE EVALUATION & GOAL -->
+        <div class="box-kind" style="display:flex;flex-direction:column;justify-content:space-between;gap:14px;">
           <div>
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-              <strong style="font-size:15.5px;color:var(--primary-1);">${ico("chart", 17)} Đánh giá theo lộ trình</strong>
-              <span class="badge-orange">${activeBookLabel}</span>
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px;">
+              <strong style="font-size:15.5px;color:var(--text-main);">Năng lực hiện tại</strong>
+              <button type="button" class="badge-orange" id="btn-home-edit-profile" style="cursor:pointer;border:none;font-family:inherit;" title="Đổi quyển đang học">
+                ${activeBookLabel} · Đổi
+              </button>
             </div>
 
-            <!-- Calibrated Score Box -->
-            <div style="background:var(--primary-3);border:1.5px solid var(--border-card);border-radius:14px;padding:12px 14px;margin-bottom:10px;">
+            <div style="background:#F8FAFC;border-radius:14px;padding:14px 15px;margin-bottom:12px;">
               <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;">
-                <span style="font-size:12px;font-weight:700;color:var(--text-muted);">Thang ${evalObj.gradeName}</span>
-                <span style="font-size:11.5px;font-weight:800;color:var(--primary-1);">Mốc đạt: ${evalObj.passScore}/${evalObj.maxScore}đ</span>
+                <span style="font-size:12px;font-weight:600;color:var(--text-muted);">Thang ${evalObj.gradeName}</span>
+                <span style="font-size:12px;font-weight:650;color:var(--primary-1);">Đạt từ ${evalObj.passScore}/${evalObj.maxScore}đ</span>
               </div>
-              <div style="font-size:24px;font-weight:800;color:var(--primary);line-height:1.2;margin-bottom:6px;">
-                ${evalObj.estimatedScore} <span style="font-size:14px;color:var(--text-muted);font-weight:700;">/ ${evalObj.maxScore} điểm</span>
+              <div style="font-size:26px;font-weight:800;color:var(--text-main);line-height:1.15;margin-bottom:8px;">
+                ${evalObj.estimatedScore} <span style="font-size:13.5px;color:var(--text-muted);font-weight:600;">/ ${evalObj.maxScore} điểm</span>
               </div>
-              <div style="position:relative;margin-bottom:6px;">
-                <div class="progress-track" style="height:8px;background:#FFFFFF;">
-                  <div class="progress-fill" style="width:${scorePctBar}%;background:${evalObj.passed ? "var(--success)" : "var(--primary)"};"></div>
+              <div style="position:relative;margin-bottom:7px;">
+                <div class="progress-track" style="height:7px;background:#E2E8F0;">
+                  <div class="progress-fill" style="width:${scorePctBar}%;${evalObj.passed ? "background:var(--success);" : ""}"></div>
                 </div>
-                <div style="position:absolute;left:${passLinePct}%;top:-2px;bottom:-2px;width:2px;background:var(--primary-4);"></div>
+                <div style="position:absolute;left:${passLinePct}%;top:-2px;bottom:-2px;width:2px;background:#475569;border-radius:2px;"></div>
               </div>
-              <div style="font-size:12px;font-weight:600;color:${evalObj.passed ? "var(--success)" : "var(--primary-4)"};">
+              <div style="font-size:12px;font-weight:500;color:var(--text-secondary);">
                 ${evalObj.statusLabel}
               </div>
             </div>
 
-            <!-- Mini 4-Pillar Grid -->
-            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:10px;">
+            <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:12px;">
               ${evalObj.pillars.map((p) => `
-                <div style="background:var(--bg-body);border:1px solid var(--border-card);border-radius:10px;padding:6px 9px;font-size:12px;">
-                  <div style="display:flex;justify-content:space-between;">
-                    <span style="color:var(--text-muted);font-weight:600;">${p.label}</span>
-                    <strong style="color:var(--primary-1);">${p.pct}%</strong>
+                <div style="background:#F8FAFC;border-radius:11px;padding:8px 10px;">
+                  <div style="display:flex;justify-content:space-between;align-items:baseline;font-size:12px;">
+                    <span style="color:var(--text-muted);font-weight:500;">${p.label}</span>
+                    <strong style="color:var(--primary-1);font-size:12.5px;">${p.pct}%</strong>
                   </div>
-                  <div style="font-size:11px;color:var(--text-main);font-weight:600;">${p.detail}</div>
+                  <div style="font-size:11.5px;color:var(--text-main);font-weight:600;margin-top:2px;">${p.detail}</div>
                 </div>
               `).join("")}
             </div>
 
-            <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin-bottom:4px;">
-              <span>Tiến độ 30 ngày: <strong style="color:var(--primary-1);">${completedDaysCount}/30 (${roadmapPct}%)</strong></span>
-              <span>Còn <strong>${daysLeft} ngày</strong> thi</span>
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12.5px;color:var(--text-muted);">
+              <span>30 ngày: <strong style="color:var(--text-main);">${completedDaysCount}/30 (${roadmapPct}%)</strong></span>
+              <label style="display:inline-flex;align-items:center;gap:6px;">
+                <span>Thi sau <strong style="color:var(--text-main);">${daysLeft} ngày</strong></span>
+                <input type="date" id="home-exam-date" value="${s.examDate}" style="padding:4px 8px;border-radius:8px;font-size:12px;font-weight:600;width:128px;" />
+              </label>
             </div>
-            <input type="date" id="home-exam-date" value="${s.examDate}" style="width:100%;padding:6px 12px;border-radius:99px;border:1.5px solid var(--border-card);font-size:13px;font-weight:600;" />
           </div>
 
-          <div style="display:flex;flex-direction:column;gap:7px;margin-top:12px;">
-            <button type="button" class="btn-outline-teal" id="btn-open-roadmap" style="width:100%;justify-content:center;padding:7px 12px;font-size:13px;">
-              ${ico("compass", 15)} Lộ trình 30 ngày &amp; Thang điểm
-            </button>
-            <button type="button" class="btn-outline-teal" id="btn-home-edit-profile" style="width:100%;justify-content:center;padding:7px 12px;font-size:13px;">
-              ${ico("user", 15)} Đổi Quyển học (Hồ sơ học viên)
-            </button>
-          </div>
+          <button type="button" class="btn-outline-teal" id="btn-open-roadmap" style="width:100%;">
+            ${ico("compass", 15)} Xem lộ trình 30 ngày chi tiết
+          </button>
         </div>
       </section>
 
       <!-- 4 Core Study Modules -->
       <div class="section-head">
-        <h2>Tự chọn học phần nhanh</h2>
+        <h2>Học nhanh theo kỹ năng</h2>
       </div>
       <div class="grid-2">
         <div class="theory-card" data-quick="vocab-review">
-          <div style="display:flex;align-items:center;gap:13px;">
-            <div class="icon-vocab-badge">${ico("cards", 22)}</div>
-            <div>
-              <strong style="font-size:16.5px;display:block;">Lật thẻ 3D Từ vựng Kyuri</strong>
-              <span style="font-size:13.5px;color:var(--text-muted);">Lật thẻ tự phát âm · Phím tắt 1–4</span>
+          <div style="display:flex;align-items:center;gap:13px;min-width:0;">
+            <div class="icon-vocab-badge">${ico("cards", 20)}</div>
+            <div style="min-width:0;">
+              <strong style="font-size:15.5px;display:block;">Lật thẻ từ vựng 3D</strong>
+              <span style="font-size:13px;color:var(--text-muted);">Chia theo phần nhỏ 8–15 từ, tự phát âm</span>
             </div>
           </div>
-          <span class="meta-chip" style="color:var(--primary-1);">Học ngay</span>
+          <span class="card-chevron">›</span>
         </div>
 
         <div class="theory-card" data-quick="chapter-translate">
-          <div style="display:flex;align-items:center;gap:13px;">
-            <div class="icon-grammar-badge">${ico("pen", 22)}</div>
-            <div>
-              <strong style="font-size:16.5px;display:block;">Bài tập chương &amp; Dịch câu</strong>
-              <span style="font-size:13.5px;color:var(--text-muted);">Dịch Việt → Hàn &amp; câu chuẩn TOPIK</span>
+          <div style="display:flex;align-items:center;gap:13px;min-width:0;">
+            <div class="icon-grammar-badge">${ico("pen", 20)}</div>
+            <div style="min-width:0;">
+              <strong style="font-size:15.5px;display:block;">Sách bài tập &amp; Dịch câu</strong>
+              <span style="font-size:13px;color:var(--text-muted);">Thực hành ngữ pháp 익힘책 và ghép câu Hàn</span>
             </div>
           </div>
-          <span class="meta-chip" style="color:var(--primary-1);">15 chương</span>
+          <span class="card-chevron">›</span>
         </div>
 
         <div class="theory-card" data-quick="shorts-shadowing">
-          <div style="display:flex;align-items:center;gap:13px;">
-            <div class="icon-vocab-badge">${ico("video", 22)}</div>
-            <div>
-              <strong style="font-size:16.5px;display:block;">Shadowing YouTube Shorts</strong>
-              <span style="font-size:13.5px;color:var(--text-muted);">Phụ đề chạy tự động · Chạm từ tra nghĩa</span>
+          <div style="display:flex;align-items:center;gap:13px;min-width:0;">
+            <div class="icon-vocab-badge">${ico("video", 20)}</div>
+            <div style="min-width:0;">
+              <strong style="font-size:15.5px;display:block;">Shadowing YouTube Shorts</strong>
+              <span style="font-size:13px;color:var(--text-muted);">Nhại giọng theo phụ đề chạy, chạm từ tra nghĩa</span>
             </div>
           </div>
-          <span class="badge-orange">HOT</span>
+          <span class="card-chevron">›</span>
         </div>
 
         <div class="theory-card" data-quick="exams-20">
-          <div style="display:flex;align-items:center;gap:13px;">
-            <div class="icon-grammar-badge">${ico("exam", 22)}</div>
-            <div>
-              <strong style="font-size:16.5px;display:block;">30 Đề Full &amp; Luyện từng dạng</strong>
-              <span style="font-size:13.5px;color:var(--text-muted);">TOPIK I (70 câu) · TOPIK II (104 câu)</span>
+          <div style="display:flex;align-items:center;gap:13px;min-width:0;">
+            <div class="icon-grammar-badge">${ico("exam", 20)}</div>
+            <div style="min-width:0;">
+              <strong style="font-size:15.5px;display:block;">Kho 30 Đề thi TOPIK</strong>
+              <span style="font-size:13px;color:var(--text-muted);">Làm full đề 70/104 câu hoặc luyện từng dạng</span>
             </div>
           </div>
-          <span class="badge-orange">${ico("star", 13)} Tuyển chọn</span>
+          <span class="card-chevron">›</span>
         </div>
       </div>
 
-      <!-- 6 TOPIK Level Cards -->
+      <!-- 6 Books Compact Grid (3 cols Web, 2 cols Mobile) -->
       <div class="section-head">
-        <h2>Khung kiến thức 6 cấp TOPIK</h2>
+        <h2>Giáo trình Tiếng Hàn Tổng Hợp (Quyển 1–6)</h2>
       </div>
-      <div class="grid-3">
+      <div class="home-books-grid">
         ${levels.map((lv, idx) => `
-          <article class="achieve-card">
-            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
-              <span class="badge-orange">${lv.badge}</span>
-              <span style="font-size:12.5px;color:var(--primary-1);font-weight:700;">${lv.sub}</span>
+          <article class="achieve-card clickable" data-lv-idx="${idx}">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;">
+              <strong style="font-size:15.5px;color:var(--text-main);">Quyển ${lv.bookNum}</strong>
+              <span class="badge-orange">${lv.shortLevel}</span>
             </div>
-            <ul class="achieve-list">
-              ${lv.items.map((it) => `<li><span style="color:var(--primary);font-weight:800;">•</span><span>${it}</span></li>`).join("")}
-            </ul>
-            <button type="button" class="btn-outline-teal" data-lv-idx="${idx}" style="margin-top:auto;width:100%;justify-content:center;padding:7px 14px;font-size:13.5px;">
-              Mở học phần
-            </button>
+            <div style="font-size:12.5px;color:var(--text-muted);">
+              ${lv.chaptersCount} bài · Thuộc <strong style="color:var(--text-secondary);">${lv.mastered}/${lv.totalWords}</strong> từ
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill" style="width:${lv.pct}%"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--text-muted);margin-top:auto;">
+              <span>${lv.passDesc}</span>
+              <span style="color:var(--primary-1);font-weight:650;">Mở ›</span>
+            </div>
           </article>
         `).join("")}
       </div>
 
-      <!-- Compact Writing + Cute Admin Support VietQR Strip -->
+      <!-- Writing + Compact Support Card -->
       <div class="grid-2" style="margin-top:24px;align-items:stretch;">
         <section class="outline-ai" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;">
           <div style="display:flex;align-items:center;gap:12px;">
-            <div class="icon-vocab-badge">${ico("sparkle", 22)}</div>
+            <div class="icon-vocab-badge">${ico("sparkle", 20)}</div>
             <div>
-              <strong style="font-size:16px;display:block;">Phòng Viết 원고지 &amp; Sổ tay câu sai</strong>
-              <span style="font-size:13px;color:var(--text-muted);">Đếm ô Câu 51–54 &amp; rà dạng bài yếu</span>
+              <strong style="font-size:15.5px;display:block;">Phòng Viết 원고지 &amp; Sổ tay câu sai</strong>
+              <span style="font-size:13px;color:var(--text-muted);">Luyện viết Câu 51–54 và ôn lại các câu làm nhầm</span>
             </div>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <button class="btn-primary" id="btn-mia-writing" style="padding:8px 15px;font-size:13.5px;">${ico("pen", 15)} Viết 원고지</button>
-            <button class="btn-outline-teal" id="btn-mia-check" style="padding:7px 14px;font-size:13.5px;">Câu sai (${s.mistakes.length})</button>
+            <button class="btn-soft-jade" id="btn-mia-writing">${ico("pen", 14)} Viết 원고지</button>
+            <button class="btn-outline-teal" id="btn-mia-check">Câu sai (${s.mistakes.length})</button>
           </div>
         </section>
 
-        <!-- CUTE COMPACT VIETQR DONATE ADMIN CARD -->
         <section class="donate-cute-card">
-          <div style="flex:1;min-width:200px;">
-            <div style="display:flex;align-items:center;gap:7px;margin-bottom:4px;">
-              ${daisyLogoSVG(26)}
-              <strong style="font-size:15px;color:var(--primary-4);">Tiếp sức Admin duy trì D ● TOPIK</strong>
+          <div style="flex:1;min-width:190px;">
+            <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;">
+              ${daisyLogoSVG(24)}
+              <strong style="font-size:14.5px;color:var(--text-main);">Ủng hộ duy trì D ● TOPIK</strong>
             </div>
             <div style="font-size:12.5px;color:var(--text-muted);margin-bottom:8px;">
-              Mời Admin một ly trà nhỏ nếu web giúp bạn học vui hơn nha 🌿
-            </div>
-            <div style="display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin-bottom:8px;">
-              <span class="meta-chip" style="background:#FFFFFF;color:var(--primary-1);font-weight:800;">VIETCOMBANK</span>
-              <span class="meta-chip" style="background:#FFFFFF;color:var(--text-main);font-weight:800;">0201000736282</span>
-              <span class="meta-chip" style="background:#FFFFFF;">NGUYEN CHI DUC</span>
+              Vietcombank · <strong style="color:var(--text-secondary);">0201000736282</strong> · NGUYEN CHI DUC
             </div>
             <div style="display:flex;gap:6px;flex-wrap:wrap;">
-              <button type="button" class="btn-outline-teal" id="btn-copy-stk" style="padding:5px 12px;font-size:12.5px;">
+              <button type="button" class="btn-outline-teal" id="btn-copy-stk" style="padding:6px 12px;font-size:12.5px;">
                 Sao chép STK
               </button>
-              <button type="button" class="btn-primary" id="btn-zoom-qr" style="padding:5px 13px;font-size:12.5px;">
-                Mở QR quét nhanh
+              <button type="button" class="btn-soft-jade" id="btn-zoom-qr" style="padding:6px 12px;font-size:12.5px;">
+                Mở mã QR
               </button>
             </div>
           </div>
@@ -282,20 +282,20 @@ export function renderHomeView(root, db, navigate, startGuidedStep = null, openP
     if (!targetModal) return;
     targetModal.innerHTML = `
       <div class="modal-backdrop" id="qr-modal-bg">
-        <div class="modal-panel" style="max-width:390px;text-align:center;padding:24px;">
+        <div class="modal-panel" style="max-width:380px;text-align:center;padding:22px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-            <strong style="font-size:17px;color:var(--primary-4);display:flex;align-items:center;gap:8px;">
-              ${daisyLogoSVG(28)} Ủng hộ Admin D ● TOPIK
+            <strong style="font-size:16px;color:var(--text-main);display:flex;align-items:center;gap:8px;">
+              ${daisyLogoSVG(26)} Ủng hộ D ● TOPIK
             </strong>
-            <button type="button" id="close-qr-modal" style="background:var(--bg-body);border:1.5px solid var(--border-card);width:32px;height:32px;border-radius:10px;font-size:18px;cursor:pointer;">×</button>
+            <button type="button" id="close-qr-modal" style="background:#F1F5F9;border:none;width:32px;height:32px;border-radius:50%;font-size:18px;cursor:pointer;color:var(--text-secondary);">×</button>
           </div>
-          <p style="margin:0 0 12px;font-size:13.5px;color:var(--text-muted);">
-            Cảm ơn bạn đã đồng hành và tiếp thêm động lực cho D ● TOPIK 🌿
+          <p style="margin:0 0 12px;font-size:13px;color:var(--text-muted);">
+            Cảm ơn bạn đã đồng hành cùng D ● TOPIK.
           </p>
-          <img src="/media/vietqr_admin.jpg" alt="VietQR VIETCOMBANK 0201000736282 NGUYEN CHI DUC" style="width:100%;max-width:270px;border-radius:16px;border:2px solid var(--border-card);padding:6px;background:#FFF;margin-bottom:12px;" />
-          <div style="background:var(--bg-body);border:1px solid var(--border-card);border-radius:14px;padding:10px 14px;font-size:13.5px;line-height:1.6;">
+          <img src="/media/vietqr_admin.jpg" alt="VietQR VIETCOMBANK 0201000736282 NGUYEN CHI DUC" style="width:100%;max-width:250px;border-radius:14px;border:1px solid var(--border-card);padding:6px;background:#FFF;margin-bottom:12px;" />
+          <div style="background:#F8FAFC;border-radius:12px;padding:10px 14px;font-size:13px;line-height:1.6;">
             <div>Ngân hàng: <strong style="color:var(--primary-1);">VIETCOMBANK</strong></div>
-            <div>Số tài khoản: <strong style="font-size:15.5px;color:var(--text-main);">0201000736282</strong></div>
+            <div>Số tài khoản: <strong style="font-size:15px;color:var(--text-main);">0201000736282</strong></div>
             <div>Chủ TK: <strong>NGUYEN CHI DUC</strong></div>
           </div>
         </div>
@@ -310,7 +310,7 @@ export function renderHomeView(root, db, navigate, startGuidedStep = null, openP
   root.querySelector("#btn-copy-stk").addEventListener("click", (e) => {
     const btn = e.currentTarget;
     navigator.clipboard?.writeText("0201000736282").catch(() => {});
-    btn.textContent = "✔ Đã chép 0201000736282";
+    btn.textContent = "Đã chép STK";
     setTimeout(() => { btn.textContent = "Sao chép STK"; }, 2200);
   });
   root.querySelector("#btn-zoom-qr").addEventListener("click", openQrModal);
@@ -346,14 +346,6 @@ export function renderHomeView(root, db, navigate, startGuidedStep = null, openP
   root.querySelector("#btn-mia-writing").addEventListener("click", () => navigate("practice", { sub: "topik2", skill: "writing" }));
   root.querySelector("#btn-mia-check").addEventListener("click", () => navigate("check-tools", { tab: "mistakes" }));
 
-  const targetSel = root.querySelector("#home-target-select");
-  if (targetSel) {
-    targetSel.addEventListener("change", (e) => {
-      store.state.targetLevel = e.target.value;
-      store.save();
-      renderHomeView(root, db, navigate, startGuidedStep, openProfileSettings, modalRoot);
-    });
-  }
   root.querySelector("#home-exam-date").addEventListener("change", (e) => {
     store.state.examDate = e.target.value;
     store.save();
@@ -370,7 +362,7 @@ export function renderHomeView(root, db, navigate, startGuidedStep = null, openP
     });
   });
 
-  root.querySelectorAll("[data-lv-idx]").forEach((btn) => {
-    btn.addEventListener("click", () => levels[Number(btn.dataset.lvIdx)].action());
+  root.querySelectorAll("[data-lv-idx]").forEach((card) => {
+    card.addEventListener("click", () => levels[Number(card.dataset.lvIdx)].action());
   });
 }

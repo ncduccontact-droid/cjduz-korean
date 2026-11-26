@@ -1,5 +1,5 @@
-import { store, isLocalPreviewHost, BOOK_SURVEY_OPTIONS, DEFAULT_ROADMAP_PROFILE } from "./store.js?v=20261127-01";
-import { ico, daisyLogoSVG } from "./icons.js?v=20261127-01";
+import { store, isLocalPreviewHost, BOOK_SURVEY_OPTIONS, DEFAULT_ROADMAP_PROFILE } from "./store.js?v=20261127-02";
+import { ico, daisyLogoSVG } from "./icons.js?v=20261127-02";
 
 let authConfigCache = null;
 
@@ -26,9 +26,9 @@ const GOOGLE_SVG = `
 function roadmapSelectorHTML(prefix, current) {
   const curBook = current.startBook || "q1";
   return `
-    <div style="background:var(--primary-3);border:1.5px solid var(--border-card);border-radius:16px;padding:14px;margin:10px 0;">
-      <strong style="display:block;color:var(--primary-4);font-size:13.5px;margin-bottom:8px;">
-        ${ico("compass", 15)} Cài đặt Lộ trình học (Chọn từ Quyển mấy):
+    <div style="background:#F8FAFC;border-radius:14px;padding:14px;margin:10px 0;">
+      <strong style="display:block;color:var(--text-main);font-size:13.5px;margin-bottom:8px;">
+        ${ico("compass", 15)} Cài đặt lộ trình học cá nhân
       </strong>
       <div style="display:flex;flex-direction:column;gap:10px;">
         <div>
@@ -355,7 +355,7 @@ export async function openAuthModal(modalRoot, initialView = "profile", onComple
                   </strong>
                 </div>
               </div>
-              <button type="button" id="close-survey-modal" title="Đóng và mặc định Quyển 1" style="background:var(--bg-body);border:1.5px solid var(--border-card);width:34px;height:34px;border-radius:10px;font-size:18px;cursor:pointer;flex-shrink:0;">×</button>
+              <button type="button" id="close-survey-modal" title="Đóng và mặc định Quyển 1" style="background:#F1F5F9;border:none;width:32px;height:32px;border-radius:50%;font-size:18px;cursor:pointer;flex-shrink:0;color:var(--text-secondary);">×</button>
             </div>
 
             <div class="survey-book-grid" style="margin-bottom:14px;">
@@ -472,13 +472,13 @@ export async function openAuthModal(modalRoot, initialView = "profile", onComple
             </button>
           </div>
           <form id="gate-login-form" style="display:flex;flex-direction:column;gap:10px;">
-            <input id="gl-email" type="email" required placeholder="Email đã đăng ký..." style="padding:11px 16px;border-radius:99px;border:1.5px solid var(--border-card);" />
-            <input id="gl-pw" type="password" required placeholder="Mật khẩu..." style="padding:11px 16px;border-radius:99px;border:1.5px solid var(--border-card);" />
+            <input id="gl-email" type="email" required placeholder="Email đã đăng ký..." style="padding:11px 14px;" />
+            <input id="gl-pw" type="password" required placeholder="Mật khẩu..." style="padding:11px 14px;" />
             <div style="display:flex;justify-content:space-between;font-size:12.5px;">
-              <button type="button" data-v="forgot" style="background:none;border:none;color:var(--primary-1);font-weight:700;cursor:pointer;padding:0;">Quên mật khẩu?</button>
+              <button type="button" data-v="forgot" style="background:none;border:none;color:var(--primary-1);font-weight:650;cursor:pointer;padding:0;">Quên mật khẩu?</button>
               <span style="color:var(--text-muted);">Đồng bộ Cloud D ● TOPIK</span>
             </div>
-            <button type="submit" class="btn-primary" style="width:100%;padding:12px;margin-top:4px;">Đăng nhập &amp; Đồng bộ tiến độ</button>
+            <button type="submit" class="btn-primary" style="width:100%;padding:11px;margin-top:4px;">Đăng nhập</button>
           </form>
         `;
       } else if (view === "register") {
@@ -494,10 +494,10 @@ export async function openAuthModal(modalRoot, initialView = "profile", onComple
             </button>
           </div>
           <form id="gate-reg-form" style="display:flex;flex-direction:column;gap:10px;">
-            <input id="gr-name" required value="${draft.name}" placeholder="Họ tên / Biệt danh của bạn..." style="padding:11px 16px;border-radius:99px;border:1.5px solid var(--border-card);" />
-            <input id="gr-email" type="email" required value="${draft.email}" placeholder="Email cá nhân (lưu tiến độ Cloud)..." style="padding:11px 16px;border-radius:99px;border:1.5px solid var(--border-card);" />
-            <input id="gr-pw" type="password" required minlength="6" placeholder="Mật khẩu (tối thiểu 6 ký tự)..." style="padding:11px 16px;border-radius:99px;border:1.5px solid var(--border-card);" />
-            <button type="submit" class="btn-primary" style="width:100%;padding:12px;margin-top:4px;">
+            <input id="gr-name" required value="${draft.name}" placeholder="Họ tên / Biệt danh của bạn..." style="padding:11px 14px;" />
+            <input id="gr-email" type="email" required value="${draft.email}" placeholder="Email cá nhân (lưu tiến độ Cloud)..." style="padding:11px 14px;" />
+            <input id="gr-pw" type="password" required minlength="6" placeholder="Mật khẩu (tối thiểu 6 ký tự)..." style="padding:11px 14px;" />
+            <button type="submit" class="btn-primary" style="width:100%;padding:11px;margin-top:4px;">
               Tạo tài khoản → Chọn Quyển học
             </button>
           </form>
@@ -506,24 +506,24 @@ export async function openAuthModal(modalRoot, initialView = "profile", onComple
         formBody = `
           <p style="margin:0 0 12px;font-size:14px;color:var(--text-muted);">Nhập mã OTP 6 chữ số gửi tới <strong>${pendingEmail}</strong>:</p>
           <form id="gate-otp-form" style="display:flex;flex-direction:column;gap:10px;">
-            <input id="go-otp" required maxlength="6" placeholder="6 chữ số OTP..." style="text-align:center;font-size:24px;font-weight:800;letter-spacing:6px;padding:12px;border-radius:14px;border:2px solid var(--primary);" />
+            <input id="go-otp" required maxlength="6" placeholder="6 chữ số OTP..." style="text-align:center;font-size:22px;font-weight:750;letter-spacing:6px;padding:12px;" />
             <button type="submit" class="btn-primary">Xác thực &amp; Chọn lộ trình</button>
-            <button type="button" class="btn-outline-teal" data-v="register" style="justify-content:center;">← Quay lại</button>
+            <button type="button" class="btn-outline-teal" data-v="register">← Quay lại</button>
           </form>
         `;
       } else if (view === "forgot") {
         formBody = `
           <form id="gate-forgot-form" style="display:flex;flex-direction:column;gap:10px;">
-            <input id="gf-email" type="email" required placeholder="Nhập Email đã đăng ký..." style="padding:11px 16px;border-radius:99px;border:1.5px solid var(--primary);" />
+            <input id="gf-email" type="email" required placeholder="Nhập Email đã đăng ký..." style="padding:11px 14px;" />
             <button type="submit" class="btn-primary">Gửi mã khôi phục</button>
-            <button type="button" class="btn-outline-teal" data-v="login" style="justify-content:center;">← Quay lại Đăng nhập</button>
+            <button type="button" class="btn-outline-teal" data-v="login">← Quay lại Đăng nhập</button>
           </form>
         `;
       } else if (view === "reset-otp") {
         formBody = `
           <form id="gate-reset-form" style="display:flex;flex-direction:column;gap:10px;">
-            <input id="grs-otp" required maxlength="6" placeholder="Mã OTP 6 số..." style="text-align:center;font-size:20px;font-weight:800;letter-spacing:5px;padding:10px;border-radius:12px;border:1.5px solid var(--primary);" />
-            <input id="grs-pw" type="password" required minlength="6" placeholder="Mật khẩu mới..." style="padding:11px 16px;border-radius:99px;border:1.5px solid var(--border-card);" />
+            <input id="grs-otp" required maxlength="6" placeholder="Mã OTP 6 số..." style="text-align:center;font-size:20px;font-weight:750;letter-spacing:5px;padding:10px;" />
+            <input id="grs-pw" type="password" required minlength="6" placeholder="Mật khẩu mới..." style="padding:11px 14px;" />
             <button type="submit" class="btn-primary">Lưu mật khẩu &amp; Đăng nhập</button>
           </form>
         `;
@@ -531,12 +531,12 @@ export async function openAuthModal(modalRoot, initialView = "profile", onComple
 
       modalRoot.innerHTML = `
         <div class="modal-backdrop" id="auth-modal-bg">
-          <div class="modal-panel" style="max-width:480px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-              <strong style="font-size:18px;color:var(--primary-1);display:flex;align-items:center;gap:8px;">
-                ${daisyLogoSVG(26)} Tài khoản D ● TOPIK Cloud
+          <div class="modal-panel" style="max-width:460px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+              <strong style="font-size:17px;color:var(--text-main);display:flex;align-items:center;gap:8px;">
+                ${daisyLogoSVG(24)} Tài khoản D ● TOPIK
               </strong>
-              <button type="button" id="close-auth-modal" style="background:var(--bg-body);border:1.5px solid var(--border-card);width:34px;height:34px;border-radius:10px;font-size:18px;cursor:pointer;">×</button>
+              <button type="button" id="close-auth-modal" style="background:#F1F5F9;border:none;width:32px;height:32px;border-radius:50%;font-size:18px;cursor:pointer;color:var(--text-secondary);">×</button>
             </div>
             ${alertHTML}
             ${formBody}
@@ -581,16 +581,16 @@ export async function openAuthModal(modalRoot, initialView = "profile", onComple
     modalRoot.innerHTML = `
       <div class="modal-backdrop" id="auth-modal-bg">
         <div class="modal-panel" style="max-width:540px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-            <strong style="font-size:18.5px;color:var(--primary-1);display:flex;align-items:center;gap:8px;">
-              ${daisyLogoSVG(26)} Hồ sơ Học viên
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+            <strong style="font-size:17.5px;color:var(--text-main);display:flex;align-items:center;gap:8px;">
+              ${daisyLogoSVG(24)} Hồ sơ học viên
             </strong>
-            <button type="button" id="close-auth-modal" style="background:var(--bg-body);border:1.5px solid var(--border-card);width:34px;height:34px;border-radius:10px;font-size:18px;cursor:pointer;">×</button>
+            <button type="button" id="close-auth-modal" style="background:#F1F5F9;border:none;width:32px;height:32px;border-radius:50%;font-size:18px;cursor:pointer;color:var(--text-secondary);">×</button>
           </div>
 
-          ${msg ? `<div style="margin-bottom:12px;padding:9px 12px;border-radius:10px;background:rgba(16,185,129,0.14);color:var(--primary-4);font-weight:700;font-size:13.5px;">${msg}</div>` : ""}
+          ${msg ? `<div style="margin-bottom:12px;padding:9px 12px;border-radius:10px;background:rgba(16,185,129,0.12);color:#065F46;font-weight:650;font-size:13px;">${msg}</div>` : ""}
 
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--bg-body);border:1px solid var(--border-card);padding:12px 14px;border-radius:14px;margin-bottom:12px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;background:#F8FAFC;padding:12px 14px;border-radius:14px;margin-bottom:12px;">
             <div style="display:flex;align-items:center;gap:12px;">
               <div style="width:42px;height:42px;border-radius:13px;background:var(--brand-grad);color:#FFF;display:grid;place-items:center;font-weight:800;font-size:17px;">
                 ${(u.name || u.email)[0].toUpperCase()}

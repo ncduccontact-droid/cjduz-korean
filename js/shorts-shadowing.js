@@ -1,5 +1,5 @@
-import { store, playAudio, speakKoreanTTS } from "./store.js?v=20261127-01";
-import { analyzePronunciationRules } from "./korean-engine.js?v=20261127-01";
+import { store, playAudio, speakKoreanTTS } from "./store.js?v=20261127-02";
+import { analyzePronunciationRules } from "./korean-engine.js?v=20261127-02";
 
 // Curated Real YouTube Shorts Shadowing Library (from 6F0uUJgeJQI, @Tienghanvoihailey & @hongtuoissem)
 export const YOUTUBE_SHORTS_CLIPS = [
@@ -506,13 +506,13 @@ export function renderShortsShadowingStudio(stage, db, onSwitchToTextbookShadowi
       </div>
 
       ${addingClipModal ? `
-        <div class="box-kind" style="margin-bottom:18px;border:2px solid var(--primary);">
-          <h3 style="margin:0 0 8px;font-size:17px;">➕ Thêm Clip YouTube Shorts mới kèm Phụ đề tự chạy</h3>
+        <div class="box-kind" style="margin-bottom:18px;border-color:rgba(13,148,136,0.38);">
+          <h3 style="margin:0 0 8px;font-size:17px;">Thêm Clip YouTube Shorts mới kèm phụ đề tự chạy</h3>
           <div class="grid-2" style="gap:10px;margin-bottom:10px;">
-            <input id="new-yt-url" placeholder="Dán link YouTube Shorts (VD: https://youtube.com/shorts/6F0uUJgeJQI)..." style="padding:9px 14px;border-radius:99px;border:1.5px solid #CBD5E1;" />
-            <input id="new-yt-title" placeholder="Tiêu đề bài học của clip..." style="padding:9px 14px;border-radius:99px;border:1.5px solid #CBD5E1;" />
+            <input id="new-yt-url" placeholder="Dán link YouTube Shorts (VD: https://youtube.com/shorts/6F0uUJgeJQI)..." style="padding:9px 14px;" />
+            <input id="new-yt-title" placeholder="Tiêu đề bài học của clip..." style="padding:9px 14px;" />
           </div>
-          <textarea id="new-yt-subs" rows="4" class="ko" placeholder="Mỗi dòng theo mẫu: Giây_bắt_đầu | Câu tiếng Hàn | Nghĩa tiếng Việt\nVí dụ:\n0 | 안녕하세요 여러분 | Xin chào mọi người\n3 | 오늘 같이 한국어 공부해요 | Hôm nay cùng học tiếng Hàn nhé" style="width:100%;padding:10px;border-radius:10px;border:1.5px solid #CBD5E1;margin-bottom:10px;"></textarea>
+          <textarea id="new-yt-subs" rows="4" class="ko" placeholder="Mỗi dòng theo mẫu: Giây_bắt_đầu | Câu tiếng Hàn | Nghĩa tiếng Việt\nVí dụ:\n0 | 안녕하세요 여러분 | Xin chào mọi người\n3 | 오늘 같이 한국어 공부해요 | Hôm nay cùng học tiếng Hàn nhé" style="width:100%;padding:10px;margin-bottom:10px;"></textarea>
           <div style="display:flex;gap:8px;">
             <button type="button" class="btn-primary" id="btn-save-new-clip">Lưu Clip vào tài khoản</button>
             <button type="button" class="btn-outline-teal" id="btn-cancel-new-clip">Đóng</button>

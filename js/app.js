@@ -1,16 +1,16 @@
-import { store, UI_THEMES, isLocalPreviewHost, playAudio, preloadAudioUrls, speakKoreanTTS } from "./store.js?v=20261127-01";
-import { ico, daisyLogoSVG } from "./icons.js?v=20261127-01";
-import { conjugateKoreanPredicate } from "./korean-engine.js?v=20261127-01";
-import { openAuthModal, renderMandatoryAuthGate, renderOnboardingSurvey } from "./auth-modal.js?v=20261127-01";
-import { playSakuraPageIntro } from "./sakura-intro.js?v=20261127-01";
-import { buildUrl, parseUrl, getAncestorChain } from "./router.js?v=20261127-01";
-import { renderHomeView } from "./views/home.js?v=20261127-01";
-import { renderTheoryView } from "./views/theory.js?v=20261127-01";
-import { renderRoadmapView, getGuidedStudyPlan } from "./views/roadmap.js?v=20261127-01";
-import { renderSkillsPracticeView } from "./views/skills-practice.js?v=20261127-01";
-import { renderTopikPracticeView } from "./views/topik-practice.js?v=20261127-01";
-import { renderMockTestView } from "./views/mocktest.js?v=20261127-01";
-import { renderCheckAndToolsView } from "./views/check-tools.js?v=20261127-01";
+import { store, UI_THEMES, isLocalPreviewHost, playAudio, preloadAudioUrls, speakKoreanTTS } from "./store.js?v=20261127-02";
+import { ico, daisyLogoSVG } from "./icons.js?v=20261127-02";
+import { conjugateKoreanPredicate } from "./korean-engine.js?v=20261127-02";
+import { openAuthModal, renderMandatoryAuthGate, renderOnboardingSurvey } from "./auth-modal.js?v=20261127-02";
+import { playSakuraPageIntro } from "./sakura-intro.js?v=20261127-02";
+import { buildUrl, parseUrl, getAncestorChain } from "./router.js?v=20261127-02";
+import { renderHomeView } from "./views/home.js?v=20261127-02";
+import { renderTheoryView } from "./views/theory.js?v=20261127-02";
+import { renderRoadmapView, getGuidedStudyPlan } from "./views/roadmap.js?v=20261127-02";
+import { renderSkillsPracticeView } from "./views/skills-practice.js?v=20261127-02";
+import { renderTopikPracticeView } from "./views/topik-practice.js?v=20261127-02";
+import { renderMockTestView } from "./views/mocktest.js?v=20261127-02";
+import { renderCheckAndToolsView } from "./views/check-tools.js?v=20261127-02";
 
 const appRoot = document.getElementById("app-root");
 const modalRoot = document.getElementById("modal-root");
@@ -55,14 +55,12 @@ function renderGuidedRibbon() {
       <div class="guided-active-bar">
         <div class="guided-active-inner">
           <div style="display:flex;align-items:center;gap:8px;font-size:13px;min-width:0;flex-wrap:wrap;">
-            <span class="badge-orange">${ico("cloud", 13)} Chế độ xem &amp; học nhanh</span>
-            <span style="color:var(--text-main);font-weight:600;">Đăng nhập để lưu tiến độ Cloud &amp; cá nhân hóa Quyển 1–6</span>
+            <span class="badge-orange">${ico("cloud", 13)} Học thử ngay</span>
+            <span style="color:var(--text-secondary);font-weight:500;">Đăng nhập để lưu tiến độ Cloud theo tài khoản cá nhân</span>
           </div>
-          <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
-            <button type="button" class="btn-primary" id="btn-banner-login" style="padding:5px 14px;font-size:12.5px;">
-              Đăng nhập / Tạo tài khoản
-            </button>
-          </div>
+          <button type="button" class="btn-soft-jade" id="btn-banner-login" style="padding:5px 13px;font-size:12.5px;flex-shrink:0;">
+            Đăng nhập
+          </button>
         </div>
       </div>
     `;
@@ -75,34 +73,32 @@ function renderGuidedRibbon() {
     return;
   }
 
-  if (!isDataBooted || currentRoute === "home" || currentRoute === "roadmap") {
+  // Only show guided step bar when learner explicitly launched a guided step from Trang chủ / Lộ trình
+  if (!isDataBooted || !activeGuidedSession || currentRoute === "home" || currentRoute === "roadmap") {
     trialSlot.innerHTML = "";
     return;
   }
 
-  // Always compute live Today's next step so even if user entered a tab directly, they see what's next today!
   const plan = getGuidedStudyPlan(db, navigate, startGuidedStep);
   const { activeDay, nextTask } = plan;
-  const gDay = activeGuidedSession?.day || activeDay.day;
-  const gIdx = activeGuidedSession ? activeGuidedSession.stepIdx : nextTask.stepIdx;
+  const gDay = activeGuidedSession.day || activeDay.day;
+  const gIdx = activeGuidedSession.stepIdx;
   const dayObj = plan.days.find((d) => d.day === gDay) || activeDay;
   const curStep = dayObj.tasks[gIdx] || nextTask;
   const isLastStepInDay = curStep.stepIdx >= dayObj.totalSteps - 1;
 
   trialSlot.innerHTML = `
     <div class="guided-active-bar">
-      <div class="guided-active-inner">
-        <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;min-width:0;">
-          <span class="badge-orange" style="padding:2px 9px;font-size:12px;">Ngày ${dayObj.day} · Bước ${curStep.stepIdx + 1}/${dayObj.totalSteps}</span>
-          <strong style="color:var(--text-main);">${curStep.label}</strong>
+      <div class="guided-active-inner" style="flex-wrap:nowrap;">
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px;min-width:0;flex:1;">
+          <span class="badge-orange" style="flex-shrink:0;">Bước ${curStep.stepIdx + 1}/${dayObj.totalSteps}</span>
+          <span style="color:var(--text-main);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${curStep.label}</span>
         </div>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <button type="button" class="btn-primary" id="btn-complete-guided-step" style="padding:5px 14px;font-size:13px;">
-            ${isLastStepInDay ? `🎉 Hoàn thành Ngày ${dayObj.day}` : `✔ Xong bước này · Qua Bước ${curStep.stepIdx + 2} →`}
+        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+          <button type="button" class="btn-primary" id="btn-complete-guided-step" style="padding:6px 13px;font-size:12.5px;border-radius:9px;">
+            ${isLastStepInDay ? `Xong Ngày ${dayObj.day}` : `Qua Bước ${curStep.stepIdx + 2} →`}
           </button>
-          <button type="button" class="btn-outline-teal" id="btn-guided-back-home" style="padding:5px 11px;font-size:12.5px;">
-            Hôm nay học gì?
-          </button>
+          <button type="button" id="btn-guided-close" title="Đóng thanh lộ trình" style="background:#F1F5F9;border:none;width:28px;height:28px;border-radius:50%;font-size:15px;cursor:pointer;color:var(--text-secondary);">×</button>
         </div>
       </div>
     </div>
@@ -124,8 +120,9 @@ function renderGuidedRibbon() {
     }
   });
 
-  trialSlot.querySelector("#btn-guided-back-home").addEventListener("click", () => {
-    navigate("home");
+  trialSlot.querySelector("#btn-guided-close").addEventListener("click", () => {
+    activeGuidedSession = null;
+    renderGuidedRibbon();
   });
 }
 
@@ -312,11 +309,11 @@ function openQuickLookupModal() {
     <div class="modal-backdrop" id="quick-modal-bg">
       <div class="modal-panel">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-          <strong style="font-size:18px;color:var(--primary-1);">${ico("search", 18)} Tra từ &amp; Chia động từ</strong>
-          <button type="button" id="close-quick-modal" style="background:var(--bg-body);border:1.5px solid var(--border-card);width:34px;height:34px;border-radius:10px;font-size:18px;cursor:pointer;">×</button>
+          <strong style="font-size:17px;color:var(--text-main);">${ico("search", 17)} Tra từ &amp; Chia động từ</strong>
+          <button type="button" id="close-quick-modal" style="background:#F1F5F9;border:none;width:32px;height:32px;border-radius:50%;font-size:18px;cursor:pointer;color:var(--text-secondary);">×</button>
         </div>
 
-        <input id="quick-dict-inp" class="ko" value="" placeholder="Nhập tiếng Hàn (학교, 듣다, 춥다...) hoặc tiếng Việt..." style="width:100%;padding:11px 16px;border-radius:14px;border:1.5px solid var(--primary);font-size:15.5px;margin-bottom:14px;" />
+        <input id="quick-dict-inp" class="ko" value="" placeholder="Nhập tiếng Hàn (학교, 듣다, 춥다...) hoặc tiếng Việt..." style="width:100%;padding:11px 15px;border-radius:12px;font-size:15px;margin-bottom:14px;" />
 
         <div id="quick-dict-results"></div>
       </div>
@@ -341,19 +338,19 @@ function openQuickLookupModal() {
 
     resultsSlot.innerHTML = `
       ${conj ? `
-        <div style="background:var(--primary-3);border:1.5px solid var(--border-card);border-radius:14px;padding:12px 14px;margin-bottom:12px;">
-          <strong style="color:var(--primary-4);display:block;margin-bottom:6px;font-size:14px;">Chia tự động "${conj.dictForm}" (${conj.irregularNote}):</strong>
+        <div style="background:var(--primary-3);border-radius:12px;padding:12px 14px;margin-bottom:12px;">
+          <strong style="color:var(--text-main);display:block;margin-bottom:6px;font-size:13.5px;">Chia tự động "${conj.dictForm}" (${conj.irregularNote}):</strong>
           <div class="grid-2" style="gap:6px;">
             ${conj.forms.slice(0, 6).map((f) => `
-              <div style="font-size:13.5px;">• ${f.label}: <strong class="ko" style="color:var(--primary-1);">${f.ko}</strong></div>
+              <div style="font-size:13px;">• ${f.label}: <strong class="ko" style="color:var(--primary-1);">${f.ko}</strong></div>
             `).join("")}
           </div>
         </div>
       ` : ""}
 
-      <div style="display:flex;flex-direction:column;gap:8px;">
+      <div style="display:flex;flex-direction:column;gap:6px;">
         ${matches.length === 0 ? `<div style="color:var(--text-muted);font-size:14px;padding:8px 4px;">Không tìm thấy mục từ khớp với "${q}".</div>` : matches.map((m) => `
-          <div style="background:var(--bg-body);border:1px solid var(--border-card);padding:10px 14px;border-radius:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;">
+          <div style="background:#F8FAFC;padding:10px 14px;border-radius:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;">
             <div>
               <div>
                 <strong class="ko" style="font-size:17.5px;color:var(--primary-1);">${m.korean}</strong>
@@ -411,6 +408,7 @@ function wireNavigationEventsOnce() {
   }
 
   const triggerRouteFromNav = (r) => {
+    activeGuidedSession = null;
     if (r === "practice") navigate("practice", { sub: "skills", skill: "shadowing" });
     else if (r === "mock-test") navigate("mock-test", { sub: "topik1", viewMode: "exams", category: "all" });
     else navigate(r);

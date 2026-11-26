@@ -1,8 +1,8 @@
-import { store, normalizeBookId, getBookWords, getBookCurriculum, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261127-01";
-import { ico } from "../icons.js?v=20261127-01";
-import { analyzePronunciationRules, appendJamoToText } from "../korean-engine.js?v=20261127-01";
-import { HANGEUL_DATA, GRAMMAR_COMPARISONS, HANJA_ROOTS, FREQUENT_TOPIK_EXPRESSIONS } from "../curated-content.js?v=20261127-01";
-import { renderChapterExercises } from "../chapter-exercises.js?v=20261127-01";
+import { store, normalizeBookId, getBookWords, getBookCurriculum, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261127-02";
+import { ico } from "../icons.js?v=20261127-02";
+import { analyzePronunciationRules, appendJamoToText } from "../korean-engine.js?v=20261127-02";
+import { HANGEUL_DATA, GRAMMAR_COMPARISONS, HANJA_ROOTS, FREQUENT_TOPIK_EXPRESSIONS } from "../curated-content.js?v=20261127-02";
+import { renderChapterExercises } from "../chapter-exercises.js?v=20261127-02";
 
 function buildSubPartsForLesson(db, bookKey, lessonNum, lessonWords) {
   const bookCur = getBookCurriculum(db, bookKey);
@@ -89,49 +89,37 @@ export function renderTheoryView(root, db, navigate, params = {}) {
 
   root.innerHTML = `
     <div class="container-web">
-      <!-- TIER 1: 6-BOOK TIERED SELECTOR (KHÔNG GỘP CHUNG GÂY NGỢP) -->
-      <div class="box-kind" style="background:linear-gradient(135deg,var(--primary-3) 0%,#FFFFFF 70%);margin-bottom:20px;padding:18px 20px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
-          <div>
-            <span class="badge-orange">Phân tầng 6 Quyển · Học theo từng Phần nhỏ 8–15 từ</span>
-            <h2 style="margin:5px 0 2px;font-size:21px;font-weight:800;">
-              Từ vựng, Sách Giáo Trình &amp; Sách Bài Tập (Quyển 1 → Quyển 6)
-            </h2>
-            <span style="font-size:13.5px;color:var(--text-muted);">
-              Chọn đúng Quyển → Chương → Phần nhỏ bên dưới để học nhẹ nhàng, không bị ngợp.
-            </span>
-          </div>
-          <button type="button" class="btn-primary" id="btn-srs-current-part">
-            ${ico("cards", 16)} Lật thẻ Phần đang học
-          </button>
-        </div>
-
-        <div style="display:flex;flex-wrap:wrap;gap:8px;">
-          ${books.map((b) => {
-            const bWords = getBookWords(db, b.bookId);
-            const bMast = bWords.filter((w) => store.isMastered(w.id)).length;
-            const isSel = selectedBookKey === b.bookId;
-            return `
-              <button type="button" class="btn-skill ${isSel ? "active" : ""}" data-pick-book="${b.bookId}" style="padding:8px 15px;font-size:13.5px;">
-                <strong>Quyển ${b.bookNum}</strong>
-                <span style="opacity:0.88;">· ${b.levelBadge.split("·")[1]?.trim() || b.levelBadge} (${bMast}/${bWords.length})</span>
-              </button>
-            `;
-          }).join("")}
-          <button type="button" class="btn-skill ${selectedBookKey === "sejong1" ? "active" : ""}" data-pick-book="sejong1" style="padding:8px 14px;font-size:13.5px;">
-            Giao tiếp Sejong (${db.sejongVocab.length})
-          </button>
-        </div>
-      </div>
-
-      <!-- SELECTED BOOK CHAPTERS + CLICKABLE SUB-PARTS + WORKBOOK -->
-      <div class="section-head" style="margin-top:4px;">
+      <!-- COMPACT HEADER + HORIZONTAL SWIPEABLE BOOK TABS (Chapters immediately visible above the fold!) -->
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px;margin-bottom:14px;">
         <div>
-          <h2>${selectedBookKey === "sejong1" ? "Từ vựng Giao tiếp Sejong" : activeCur?.title || "Quyển 1"}</h2>
-          <span style="font-size:13.5px;color:var(--text-muted);">
-            Đã thuộc <strong style="color:var(--primary-1);">${bookMastered}/${activePool.length} từ</strong> · Bấm vào từng <strong>Phần 1, 2, 3</strong> để học từng nhóm nhỏ 8–15 từ, hoặc mở <strong>Sách bài tập</strong>.
+          <h1 style="margin:0 0 3px;font-size:21px;font-weight:750;">
+            ${selectedBookKey === "sejong1" ? "Từ vựng Giao tiếp Sejong" : activeCur?.title || "Tiếng Hàn Tổng Hợp · Quyển 1"}
+          </h1>
+          <span style="font-size:13px;color:var(--text-muted);">
+            Đã thuộc <strong style="color:var(--primary-1);">${bookMastered}/${activePool.length} từ</strong> · Chọn phần nhỏ 8–15 từ bên dưới để vào học ngay
           </span>
         </div>
+        <button type="button" class="btn-primary" id="btn-srs-current-part" style="padding:8px 15px;font-size:13.5px;">
+          ${ico("cards", 15)} Lật thẻ nhanh
+        </button>
+      </div>
+
+      <div class="book-tabs-bar">
+        ${books.map((b) => {
+          const bWords = getBookWords(db, b.bookId);
+          const bMast = bWords.filter((w) => store.isMastered(w.id)).length;
+          const isSel = selectedBookKey === b.bookId;
+          return `
+            <button type="button" class="btn-skill ${isSel ? "active" : ""}" data-pick-book="${b.bookId}">
+              <span>Quyển ${b.bookNum}</span>
+              <span style="opacity:0.78;font-size:12px;font-weight:500;">${bMast}/${bWords.length}</span>
+            </button>
+          `;
+        }).join("")}
+        <button type="button" class="btn-skill ${selectedBookKey === "sejong1" ? "active" : ""}" data-pick-book="sejong1">
+          <span>Sejong</span>
+          <span style="opacity:0.78;font-size:12px;font-weight:500;">${db.sejongVocab.length}</span>
+        </button>
       </div>
 
       <div class="grid-3">
@@ -140,44 +128,43 @@ export function renderTheoryView(root, db, navigate, params = {}) {
           const pct = ch.words.length ? Math.round((chMast / ch.words.length) * 100) : 0;
           const wbStat = store.state.workbookScores?.[`${normalizeBookId(selectedBookKey)}_${ch.lesson}`];
           return `
-            <div class="box-kind" style="display:flex;flex-direction:column;justify-content:space-between;gap:11px;padding:16px 18px;">
+            <div class="box-kind" style="display:flex;flex-direction:column;justify-content:space-between;gap:12px;padding:16px 18px;">
               <div>
                 <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px;">
-                  <div style="display:flex;align-items:center;gap:10px;">
-                    <div class="icon-vocab-badge" style="width:40px;height:40px;font-size:14px;">B${String(ch.lesson).padStart(2, "0")}</div>
-                    <div>
-                      <strong style="font-size:15.5px;display:block;line-height:1.25;">Bài ${String(ch.lesson).padStart(2, "0")}: ${ch.title}</strong>
-                      <span style="font-size:12px;color:var(--text-muted);">${ch.koTitle ? `<span class="ko">${ch.koTitle}</span> · ` : ""}Thuộc ${chMast}/${ch.words.length} từ</span>
+                  <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+                    <div class="icon-vocab-badge" style="width:38px;height:38px;font-size:13px;">B${String(ch.lesson).padStart(2, "0")}</div>
+                    <div style="min-width:0;">
+                      <strong style="font-size:15px;display:block;line-height:1.3;">Bài ${String(ch.lesson).padStart(2, "0")}: ${ch.title}</strong>
+                      <span style="font-size:12px;color:var(--text-muted);">${ch.koTitle ? `<span class="ko">${ch.koTitle}</span> · ` : ""}${chMast}/${ch.words.length} từ</span>
                     </div>
                   </div>
-                  ${wbStat ? `<span class="badge-orange" style="font-size:11px;">BT ${wbStat.pct}%</span>` : ""}
+                  ${wbStat ? `<span class="badge-orange" style="font-size:11px;flex-shrink:0;">BT ${wbStat.pct}%</span>` : ""}
                 </div>
 
                 <div class="progress-track" style="margin-bottom:10px;">
                   <div class="progress-fill" style="width:${pct}%"></div>
                 </div>
 
-                <!-- Bite-sized Sub-parts inside each Chapter -->
                 <div style="display:flex;flex-direction:column;gap:5px;">
                   ${ch.parts.map((pt) => {
                     const pMast = pt.words.filter((w) => store.isMastered(w.id)).length;
                     const pDone = pt.words.length > 0 && pMast === pt.words.length;
                     return `
-                      <button type="button" data-open-part="${pt.part}" data-ls="${ch.lesson}" style="text-align:left;background:${pDone ? "rgba(34,197,94,0.08)" : "var(--bg-body)"};border:1px solid ${pDone ? "rgba(34,197,94,0.35)" : "var(--border-card)"};border-radius:10px;padding:6px 10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:6px;font-size:12.5px;">
-                        <span style="font-weight:700;color:var(--text-main);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${pt.title}</span>
-                        <span style="font-weight:700;color:${pDone ? "var(--success)" : "var(--primary-1)"};flex-shrink:0;">${pMast}/${pt.words.length} từ →</span>
+                      <button type="button" class="chapter-part-btn ${pDone ? "is-done" : ""}" data-open-part="${pt.part}" data-ls="${ch.lesson}">
+                        <span style="font-weight:600;color:var(--text-main);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${pt.title}</span>
+                        <span style="font-weight:650;font-size:12px;color:${pDone ? "var(--success)" : "var(--primary-1)"};flex-shrink:0;">${pMast}/${pt.words.length} ›</span>
                       </button>
                     `;
                   }).join("")}
                 </div>
               </div>
 
-              <div style="display:flex;gap:6px;padding-top:4px;border-top:1px dashed var(--border-light);">
-                <button type="button" class="btn-outline-teal" data-open-tb="${ch.lesson}" style="flex:1;justify-content:center;padding:6px 8px;font-size:12.5px;">
-                  📘 Giáo trình
+              <div style="display:flex;gap:8px;padding-top:8px;border-top:1px solid var(--border-light);">
+                <button type="button" class="btn-outline-teal" data-open-tb="${ch.lesson}" style="flex:1;padding:7px 8px;font-size:12.5px;">
+                  Giáo trình
                 </button>
-                <button type="button" class="btn-primary" data-open-wb="${ch.lesson}" style="flex:1;justify-content:center;padding:6px 8px;font-size:12.5px;">
-                  📙 Sách bài tập
+                <button type="button" class="btn-soft-jade" data-open-wb="${ch.lesson}" style="flex:1;padding:7px 8px;font-size:12.5px;">
+                  Bài tập
                 </button>
               </div>
             </div>
@@ -192,32 +179,32 @@ export function renderTheoryView(root, db, navigate, params = {}) {
 
       <div class="grid-2">
         <div class="theory-card" id="card-hangeul-lab">
-          <div style="display:flex;align-items:center;gap:13px;">
-            <div class="icon-grammar-badge" style="font-family:var(--font-ko);font-size:16px;">한글</div>
-            <div>
-              <strong style="font-size:16px;display:block;">Hangeul &amp; 7 Quy tắc Biến âm</strong>
+          <div style="display:flex;align-items:center;gap:13px;min-width:0;">
+            <div class="icon-grammar-badge" style="font-family:var(--font-ko);font-size:15px;">한글</div>
+            <div style="min-width:0;">
+              <strong style="font-size:15.5px;display:block;">Hangeul &amp; 7 Quy tắc Biến âm</strong>
               <span style="font-size:13px;color:var(--text-muted);">Soi tự động nối âm, căng âm, biến âm mũi</span>
             </div>
           </div>
-          <span class="meta-chip" style="color:var(--primary-1);">Mở Lab</span>
+          <span class="card-chevron">›</span>
         </div>
 
         <div class="theory-card" id="card-sc1-grammar">
-          <div style="display:flex;align-items:center;gap:13px;">
-            <div class="icon-vocab-badge">${ico("pen", 21)}</div>
-            <div>
-              <strong style="font-size:16px;display:block;">Tổng hợp Ngữ pháp &amp; Phân biệt dễ nhầm</strong>
-              <span style="font-size:13px;color:var(--text-muted);">은/는 vs 이/가 · -아서 vs -(으)니까 · 51 mẫu Kyuri</span>
+          <div style="display:flex;align-items:center;gap:13px;min-width:0;">
+            <div class="icon-vocab-badge">${ico("pen", 20)}</div>
+            <div style="min-width:0;">
+              <strong style="font-size:15.5px;display:block;">Kho Ngữ pháp &amp; Phân biệt dễ nhầm</strong>
+              <span style="font-size:13px;color:var(--text-muted);">은/는 vs 이/가 · -아서 vs -(으)니까 · Quyển 1–6</span>
             </div>
           </div>
-          <span class="meta-chip" style="color:var(--primary-1);">Tra cứu</span>
+          <span class="card-chevron">›</span>
         </div>
 
         <div class="theory-card" id="card-frequent-topik">
-          <div style="display:flex;align-items:center;gap:13px;">
-            <div class="icon-grammar-badge">${ico("star", 21)}</div>
-            <div>
-              <strong style="font-size:16px;display:block;">Biểu hiện &amp; Quán dụng ngữ TOPIK 1, 2</strong>
+          <div style="display:flex;align-items:center;gap:13px;min-width:0;">
+            <div class="icon-grammar-badge">${ico("star", 20)}</div>
+            <div style="min-width:0;">
+              <strong style="font-size:15.5px;display:block;">Biểu hiện &amp; Quán dụng ngữ TOPIK</strong>
               <span style="font-size:13px;color:var(--text-muted);">Câu tủ hội thoại, phó từ liên kết, đồng nghĩa</span>
             </div>
           </div>
@@ -225,14 +212,14 @@ export function renderTheoryView(root, db, navigate, params = {}) {
         </div>
 
         <div class="theory-card" id="card-open-hanja">
-          <div style="display:flex;align-items:center;gap:13px;">
-            <div class="icon-vocab-badge">${ico("sprout", 21)}</div>
-            <div>
-              <strong style="font-size:16px;display:block;">Sơ đồ Cầu nối Âm Hán – Hàn</strong>
+          <div style="display:flex;align-items:center;gap:13px;min-width:0;">
+            <div class="icon-vocab-badge">${ico("sprout", 20)}</div>
+            <div style="min-width:0;">
+              <strong style="font-size:15.5px;display:block;">Sơ đồ Gốc từ Âm Hán – Hàn</strong>
               <span style="font-size:13px;color:var(--text-muted);">Học 1 gốc Hán Việt mở khóa 6 từ vựng TOPIK II</span>
             </div>
           </div>
-          <span class="meta-chip">${HANJA_ROOTS.length} gốc chữ</span>
+          <span class="meta-chip">${HANJA_ROOTS.length} gốc</span>
         </div>
       </div>
     </div>
@@ -343,38 +330,35 @@ function renderLessonDetail(root, db, navigate, rawBookKey, lessonNum, activeTab
     root.innerHTML = `
       <div class="container-web">
         <div class="breadcrumb-bar">
-          <button id="bc-theory">6 Quyển Lý thuyết</button>
-          <span>▶</span>
+          <button id="bc-theory">Giáo trình</button>
+          <span>/</span>
           <button id="bc-book">${bookCur?.shortTitle || bookKey}</button>
-          <span>▶</span>
-          <span>Bài ${String(lessonNum).padStart(2, "0")} · ${lessonTitle}</span>
+          <span>/</span>
+          <span>Bài ${String(lessonNum).padStart(2, "0")}</span>
         </div>
 
-        <div class="section-head" style="margin-top:0;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
           <div>
-            <span class="badge-orange" style="margin-bottom:4px;">${bookCur?.shortTitle || bookKey} · ${bookCur?.levelBadge || ""}</span>
-            <h2>Bài ${String(lessonNum).padStart(2, "0")} · ${lessonTitle} ${chapObj?.koTitle ? `<span class="ko" style="color:var(--primary-1);font-weight:700;">(${chapObj.koTitle})</span>` : ""}</h2>
+            <div style="font-size:12.5px;font-weight:600;color:var(--primary-1);margin-bottom:2px;">${bookCur?.shortTitle || bookKey} · ${bookCur?.levelBadge || ""}</div>
+            <h1 style="margin:0;font-size:20px;font-weight:750;">Bài ${String(lessonNum).padStart(2, "0")}: ${lessonTitle} ${chapObj?.koTitle ? `<span class="ko" style="color:var(--text-muted);font-weight:600;">(${chapObj.koTitle})</span>` : ""}</h1>
           </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <button class="btn-primary" id="btn-quiz-part">
-              ${ico("cards", 16)} Lật thẻ ${selectedPart === "all" ? `Bài này (${words.length} từ)` : `Phần ${activePartObj.part} (${visibleWords.length} từ)`}
-            </button>
-          </div>
+          <button class="btn-primary" id="btn-quiz-part" style="padding:8px 15px;font-size:13.5px;">
+            ${ico("cards", 15)} Lật thẻ ${selectedPart === "all" ? `cả bài (${words.length})` : `Phần ${activePartObj.part} (${visibleWords.length})`}
+          </button>
         </div>
 
-        <!-- 2-in-1 Textbook (📘) + Workbook (📙) Tabs -->
         <div class="skill-pills-row">
           <button class="btn-skill ${normTab === "vocab" ? "active" : ""}" data-tab="vocab">
-            📘 1. Từ vựng chia Phần (${subParts.length} phần)
+            Từ vựng (${words.length})
           </button>
           <button class="btn-skill ${normTab === "grammar" ? "active" : ""}" data-tab="grammar">
-            📘 2. Giáo trình: Ngữ pháp &amp; Bài khóa
+            Ngữ pháp &amp; Hội thoại
           </button>
           <button class="btn-skill ${normTab === "workbook" ? "active" : ""}" data-tab="workbook">
-            📙 3. Sách bài tập (익힘책)
+            Sách bài tập
           </button>
           <button class="btn-skill ${normTab === "translate" ? "active" : ""}" data-tab="translate">
-            ✍️ 4. Luyện Dịch Câu Việt → Hàn
+            Dịch câu
           </button>
         </div>
 
@@ -403,29 +387,25 @@ function renderLessonDetail(root, db, navigate, rawBookKey, lessonNum, activeTab
 
     if (normTab === "vocab") {
       body.innerHTML = `
-        <!-- Sub-part Filter Bar so learner studies 8-15 words per part without feeling overwhelmed -->
-        <div class="box-kind" style="background:var(--primary-3);padding:14px 16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
-          <div style="display:flex;flex-wrap:wrap;gap:7px;align-items:center;">
-            <strong style="font-size:13px;color:var(--primary-4);margin-right:4px;">Chia nhỏ theo chương:</strong>
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+          <div class="book-tabs-bar" style="margin-bottom:0;flex:1;min-width:0;">
             ${subParts.map((pt) => {
               const pMast = pt.words.filter((w) => store.isMastered(w.id)).length;
               const isAct = Number(selectedPart) === pt.part;
               return `
-                <button type="button" data-pick-subpart="${pt.part}" style="padding:6px 13px;border-radius:99px;font-size:13px;font-weight:700;cursor:pointer;border:1.5px solid ${isAct ? "var(--primary-1)" : "var(--border-card)"};background:${isAct ? "var(--primary)" : "#FFFFFF"};color:${isAct ? "#FFFFFF" : "var(--text-main)"};">
-                  ${pt.title} (${pMast}/${pt.words.length})
+                <button type="button" class="btn-skill ${isAct ? "active" : ""}" data-pick-subpart="${pt.part}" style="padding:6px 12px;font-size:13px;">
+                  ${pt.title} <span style="opacity:0.78;font-size:12px;">(${pMast}/${pt.words.length})</span>
                 </button>
               `;
             }).join("")}
-            <button type="button" data-pick-subpart="all" style="padding:6px 12px;border-radius:99px;font-size:12.5px;font-weight:700;cursor:pointer;border:1.5px solid ${selectedPart === "all" ? "var(--primary-1)" : "var(--border-card)"};background:${selectedPart === "all" ? "var(--primary)" : "#FFFFFF"};color:${selectedPart === "all" ? "#FFFFFF" : "var(--text-muted)"};">
+            <button type="button" class="btn-skill ${selectedPart === "all" ? "active" : ""}" data-pick-subpart="all" style="padding:6px 12px;font-size:13px;">
               Tất cả (${words.length})
             </button>
           </div>
 
-          <div style="display:flex;gap:8px;align-items:center;">
-            <button class="btn-outline-teal" id="btn-toggle-meaning" style="padding:5px 12px;font-size:12.5px;">
-              ${hideMeaning ? "👁️ Hiện nghĩa" : "🙈 Ẩn nghĩa tự dò"}
-            </button>
-          </div>
+          <button class="btn-outline-teal" id="btn-toggle-meaning" style="padding:6px 12px;font-size:12.5px;flex-shrink:0;">
+            ${hideMeaning ? "Hiện nghĩa" : "Ẩn nghĩa tự dò"}
+          </button>
         </div>
 
         <div class="grid-2">
@@ -695,38 +675,35 @@ function renderVocabReviewArena(root, db, navigate, params = {}) {
       <div class="container-web">
         <div class="breadcrumb-bar">
           <button id="bc-back-lesson">← Bài ${String(activeLesson).padStart(2, "0")} (${bookCur?.shortTitle || bookKey})</button>
-          <span>▶</span>
+          <span>/</span>
           <span>${scopeLabel} (${sortedDeck.length} từ)</span>
         </div>
 
-        <!-- Compact Tiered Selector (Quyển -> Bài -> Phần nhỏ) right inside Arena -->
-        <div class="box-kind" style="padding:12px 16px;margin-bottom:14px;background:var(--primary-3);display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;">
+        <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:12px;">
           <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;max-width:100%;">
-            <select id="arena-sel-book" class="box-select" style="padding:6px 12px;font-size:13px;">
+            <select id="arena-sel-book" class="box-select">
               ${(db.books6 || []).map((b) => `<option value="${b.bookId}" ${b.bookId === bookKey ? "selected" : ""}>${b.shortTitle}</option>`).join("")}
               <option value="sejong1" ${bookKey === "sejong1" ? "selected" : ""}>Giao tiếp Sejong</option>
             </select>
 
-            <select id="arena-sel-lesson" class="box-select" style="padding:6px 12px;font-size:13px;">
+            <select id="arena-sel-lesson" class="box-select">
               ${lessonNums.map((ln) => {
                 const chTitle = bookCur?.chapters?.find((c) => c.lesson === ln)?.title || fullBookPool.find((w) => w.lesson === ln)?.lessonTitle || `Bài ${ln}`;
                 return `<option value="${ln}" ${ln === activeLesson ? "selected" : ""}>Bài ${String(ln).padStart(2, "0")}: ${chTitle}</option>`;
               }).join("")}
             </select>
 
-            <select id="arena-sel-part" class="box-select" style="padding:6px 12px;font-size:13px;">
+            <select id="arena-sel-part" class="box-select">
               ${subParts.map((pt) => `<option value="${pt.part}" ${pt.part === activePart ? "selected" : ""}>${pt.title} (${pt.words.length} từ)</option>`).join("")}
             </select>
           </div>
-
-          <span class="badge-orange" style="background:#FFFFFF;">Gói gọn ${sortedDeck.length} từ/lượt · Không lo ngợp</span>
         </div>
 
         <div class="skill-pills-row">
-          <button class="btn-skill ${mode === "flashcard" ? "active" : ""}" data-mode="flashcard">1. Lật thẻ 3D</button>
-          <button class="btn-skill ${mode === "mcq" ? "active" : ""}" data-mode="mcq">2. Trắc nghiệm</button>
-          <button class="btn-skill ${mode === "typing" ? "active" : ""}" data-mode="typing">3. Nghe &amp; Gõ Hangeul</button>
-          <button class="btn-skill ${mode === "match" ? "active" : ""}" data-mode="match">4. Ghép cặp tốc độ</button>
+          <button class="btn-skill ${mode === "flashcard" ? "active" : ""}" data-mode="flashcard">Lật thẻ 3D</button>
+          <button class="btn-skill ${mode === "mcq" ? "active" : ""}" data-mode="mcq">Trắc nghiệm</button>
+          <button class="btn-skill ${mode === "typing" ? "active" : ""}" data-mode="typing">Nghe &amp; Gõ</button>
+          <button class="btn-skill ${mode === "match" ? "active" : ""}" data-mode="match">Ghép cặp</button>
         </div>
 
         <div id="arena-stage"></div>
@@ -822,50 +799,46 @@ function renderVocabReviewArena(root, db, navigate, params = {}) {
           <div class="flashcard-3d-scene">
             <div class="flashcard-3d-inner ${flipped ? "is-flipped" : ""}" id="fc-3d-inner">
               <div class="flashcard-face">
-                <span style="font-size:11.5px;font-weight:700;color:var(--primary);letter-spacing:0.06em;margin-bottom:8px;">MẶT TRƯỚC · LẬT THẺ TỰ PHÁT ÂM</span>
-                <div class="ko" style="font-size:40px;font-weight:800;color:var(--primary-1);margin-bottom:6px;">${card.korean}</div>
-                ${pron.hasChange ? `<div class="ko" style="font-size:15px;color:var(--yellow-2);font-weight:700;margin-bottom:10px;">Phát âm: [${pron.pronounced}]</div>` : ""}
-                <button type="button" class="btn-outline-teal fc-play-trigger" style="margin-bottom:16px;">
-                  🔊 Nghe phát âm <kbd class="keycap">R</kbd>
+                <span style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:8px;">Chạm thẻ để lật và nghe phát âm</span>
+                <div class="ko" style="font-size:42px;font-weight:800;color:var(--text-main);margin-bottom:6px;">${card.korean}</div>
+                ${pron.hasChange ? `<div class="ko" style="font-size:14.5px;color:var(--primary-1);font-weight:650;margin-bottom:10px;">[${pron.pronounced}]</div>` : ""}
+                <button type="button" class="btn-soft-jade fc-play-trigger" style="margin-top:6px;">
+                  ${ico("speaker", 15)} Nghe phát âm <kbd class="keycap">R</kbd>
                 </button>
-                <div style="color:var(--text-muted);font-size:13.5px;">
-                  👆 Chạm thẻ hoặc <kbd class="keycap">Space</kbd> để lật 3D · Phím <kbd class="keycap">1</kbd>–<kbd class="keycap">4</kbd> chấm mức nhớ
-                </div>
               </div>
 
               <div class="flashcard-face flashcard-face-back">
-                <span style="font-size:11.5px;font-weight:700;color:var(--primary);letter-spacing:0.06em;margin-bottom:6px;">MẶT SAU · NGHĨA &amp; CÂU MẪU</span>
-                <div class="ko" style="font-size:25px;font-weight:800;color:var(--primary-1);">${card.korean}</div>
-                <div style="font-size:22px;font-weight:800;color:var(--text-main);margin:6px 0 10px;">${card.vietnamese}</div>
+                <div class="ko" style="font-size:24px;font-weight:750;color:var(--primary-1);">${card.korean}</div>
+                <div style="font-size:22px;font-weight:750;color:var(--text-main);margin:4px 0 12px;">${card.vietnamese}</div>
                 ${card.exampleKo ? `
-                  <div style="background:#FFFFFF;border:1px solid var(--border-card);border-radius:12px;padding:10px 14px;width:100%;max-width:500px;margin-bottom:10px;">
-                    <div class="ko" style="font-size:16px;font-weight:700;color:var(--text-main);">${card.exampleKo}</div>
-                    <div style="font-size:13.5px;color:var(--text-muted);margin-top:2px;">${card.exampleVi || ""}</div>
+                  <div style="background:#F8FAFC;border-radius:12px;padding:10px 14px;width:100%;max-width:480px;margin-bottom:10px;">
+                    <div class="ko" style="font-size:15.5px;font-weight:650;color:var(--text-main);">${card.exampleKo}</div>
+                    <div style="font-size:13px;color:var(--text-muted);margin-top:2px;">${card.exampleVi || ""}</div>
                   </div>
                 ` : ""}
-                <button type="button" class="btn-outline-teal fc-ex-trigger" style="padding:6px 14px;font-size:13px;">
-                  🔊 Nghe câu ví dụ
+                <button type="button" class="btn-outline-teal fc-ex-trigger" style="padding:6px 13px;font-size:13px;">
+                  ${ico("speaker", 14)} Nghe câu ví dụ
                 </button>
               </div>
             </div>
           </div>
 
           <div class="srs-rating-grid">
-            <button class="box-kind clickable srs-btn" data-rate="0" style="border-color:#FECDD3;">
+            <button class="box-kind clickable srs-btn" data-rate="0">
               <div class="srs-btn-top"><kbd class="keycap keycap-danger">1</kbd><strong style="color:var(--danger);">Quên</strong></div>
-              <small>5 phút</small>
+              <small style="color:var(--text-muted);">5 phút</small>
             </button>
-            <button class="box-kind clickable srs-btn" data-rate="1" style="border-color:var(--border-card);">
-              <div class="srs-btn-top"><kbd class="keycap keycap-warn">2</kbd><strong style="color:var(--yellow-2);">Khó</strong></div>
-              <small>12 giờ</small>
+            <button class="box-kind clickable srs-btn" data-rate="1">
+              <div class="srs-btn-top"><kbd class="keycap keycap-warn">2</kbd><strong style="color:#D97706;">Khó</strong></div>
+              <small style="color:var(--text-muted);">12 giờ</small>
             </button>
-            <button class="box-kind clickable srs-btn" data-rate="2" style="border-color:var(--border-card);">
+            <button class="box-kind clickable srs-btn" data-rate="2">
               <div class="srs-btn-top"><kbd class="keycap keycap-teal">3</kbd><strong style="color:var(--primary-1);">Tốt</strong></div>
-              <small>1–3 ngày</small>
+              <small style="color:var(--text-muted);">1–3 ngày</small>
             </button>
-            <button class="box-kind clickable srs-btn" data-rate="3" style="border-color:#BBF7D0;">
+            <button class="box-kind clickable srs-btn" data-rate="3">
               <div class="srs-btn-top"><kbd class="keycap keycap-ok">4</kbd><strong style="color:var(--success);">Dễ</strong></div>
-              <small>7+ ngày</small>
+              <small style="color:var(--text-muted);">7+ ngày</small>
             </button>
           </div>
         </div>
@@ -983,8 +956,8 @@ function renderVocabReviewArena(root, db, navigate, params = {}) {
             </div>
 
             <div style="display:flex;gap:8px;flex-wrap:wrap;">
-              <input id="ko-type-input" class="ko" type="text" placeholder="Gõ chữ tiếng Hàn..." style="flex:1 1 170px;min-width:0;width:100%;padding:12px 14px;border-radius:12px;border:2px solid var(--primary);font-size:19px;font-weight:700;" />
-              <button class="btn-orange" id="type-check-btn" style="white-space:nowrap;flex-shrink:0;">Kiểm tra</button>
+              <input id="ko-type-input" class="ko" type="text" placeholder="Gõ chữ tiếng Hàn..." style="flex:1 1 170px;min-width:0;width:100%;padding:12px 14px;font-size:18px;font-weight:700;" />
+              <button class="btn-primary" id="type-check-btn" style="white-space:nowrap;flex-shrink:0;">Kiểm tra</button>
             </div>
             <div id="type-feedback" style="margin-top:12px;font-weight:600;text-align:center;"></div>
 
@@ -1127,8 +1100,8 @@ function renderHangeulLab(root, navigate) {
           `).join("")}
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
-          <input id="pron-input" class="ko" value="안녕하십니까" style="flex:1 1 180px;min-width:0;width:100%;padding:10px 16px;border-radius:99px;border:1.5px solid var(--primary);font-size:18px;font-weight:700;" />
-          <button class="btn-primary" id="pron-speak" style="white-space:nowrap;flex-shrink:0;">🔊 Đọc mẫu</button>
+          <input id="pron-input" class="ko" value="안녕하십니까" style="flex:1 1 180px;min-width:0;width:100%;padding:10px 16px;font-size:17px;font-weight:700;" />
+          <button class="btn-primary" id="pron-speak" style="white-space:nowrap;flex-shrink:0;">Đọc mẫu</button>
         </div>
         <div id="pron-result" style="margin-top:14px;"></div>
       </div>
@@ -1244,7 +1217,7 @@ function renderGrammarList(root, db, navigate, mode = "sc1") {
       </div>
 
       ${mode === "sc1" ? `
-        <input id="gram-search" placeholder="Tìm nhanh cấu trúc (VD: 입니다, 아서, 기로 하다, 으므로)..." style="width:100%;max-width:480px;padding:10px 18px;border-radius:99px;border:1.5px solid var(--primary);margin-bottom:18px;" />
+        <input id="gram-search" placeholder="Tìm nhanh cấu trúc (VD: 입니다, 아서, 기로 하다, 으므로)..." style="width:100%;max-width:480px;padding:10px 16px;margin-bottom:18px;" />
         <div class="grid-2" id="gram-list-results"></div>
       ` : `
         <div style="display:flex;flex-direction:column;gap:18px;">

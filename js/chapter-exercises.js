@@ -1,7 +1,7 @@
-import { store, normalizeBookId, getBookWords, getBookCurriculum, playAudio, preloadAudioUrls, speakKoreanTTS } from "./store.js?v=20261127-01";
-import { appendJamoToText } from "./korean-engine.js?v=20261127-01";
-import { HANGEUL_DATA } from "./curated-content.js?v=20261127-01";
-import { ico } from "./icons.js?v=20261127-01";
+import { store, normalizeBookId, getBookWords, getBookCurriculum, playAudio, preloadAudioUrls, speakKoreanTTS } from "./store.js?v=20261127-02";
+import { appendJamoToText } from "./korean-engine.js?v=20261127-02";
+import { HANGEUL_DATA } from "./curated-content.js?v=20261127-02";
+import { ico } from "./icons.js?v=20261127-02";
 
 /**
  * Interactive Workbook (익힘책 · Sách Bài Tập) for ALL 6 BOOKS (Quyển 1 -> Quyển 6):
@@ -208,14 +208,13 @@ export function renderChapterExercises(container, db, bookKey, lessonNum, initia
 
               <div class="grid-2" style="gap:8px;">
                 ${q.options.map((opt, oi) => {
-                  let border = "var(--border-card)";
-                  let bg = "#FFFFFF";
+                  let cls = "mcq-opt-btn";
                   if (answered) {
-                    if (oi === q.answer) { border = "var(--success)"; bg = "rgba(34,197,94,0.12)"; }
-                    else if (oi === userPick) { border = "var(--danger)"; bg = "rgba(244,63,94,0.10)"; }
+                    if (oi === q.answer) cls += " is-correct";
+                    else if (oi === userPick) cls += " is-wrong";
                   }
                   return `
-                    <button type="button" class="ko" data-qpick="${q.id}" data-oi="${oi}" style="text-align:left;padding:10px 14px;border-radius:12px;border:1.5px solid ${border};background:${bg};font-size:15px;font-weight:600;cursor:pointer;">
+                    <button type="button" class="ko ${cls}" data-qpick="${q.id}" data-oi="${oi}">
                       ${["①", "②", "③", "④"][oi]} ${opt}
                     </button>
                   `;
@@ -330,18 +329,18 @@ export function renderChapterExercises(container, db, bookKey, lessonNum, initia
           </div>
         </div>
 
-        <div style="background:var(--primary-3);border:1px solid var(--border-card);border-radius:14px;padding:18px 20px;margin-bottom:16px;">
-          <div style="font-size:12px;font-weight:800;color:var(--primary-1);margin-bottom:4px;">DỊCH CÂU TIẾNG VIỆT SAU SANG TIẾNG HÀN:</div>
-          <div style="font-size:20px;font-weight:800;color:var(--text-main);">${item.vi}</div>
-          <div style="font-size:13px;color:var(--primary-1);margin-top:6px;">💡 ${item.hint}</div>
+        <div style="background:#F8FAFC;border-radius:14px;padding:18px 20px;margin-bottom:16px;">
+          <div style="font-size:12.5px;font-weight:600;color:var(--text-muted);margin-bottom:4px;">Dịch câu sau sang tiếng Hàn</div>
+          <div style="font-size:19px;font-weight:750;color:var(--text-main);">${item.vi}</div>
+          <div style="font-size:13px;color:var(--primary-1);margin-top:6px;">Gợi ý: ${item.hint}</div>
         </div>
 
         ${transMode === "blocks" ? `
-          <div style="min-height:58px;background:var(--bg-body);border:2px dashed var(--border-lip);border-radius:12px;padding:12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px;">
+          <div style="min-height:56px;background:#F8FAFC;border:1.5px dashed #CBD5E1;border-radius:12px;padding:12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px;">
             ${selectedBlocks.length === 0
-              ? `<span style="color:var(--text-muted);font-size:14px;">👆 Bấm chọn lần lượt các cụm từ tiếng Hàn bên dưới theo đúng trật tự câu...</span>`
+              ? `<span style="color:var(--text-muted);font-size:13.5px;">Chạm lần lượt vào các cụm từ bên dưới để ghép câu...</span>`
               : selectedBlocks.map((b, bi) => `
-                  <button type="button" class="ko" data-remove-blk="${bi}" style="background:var(--primary);color:#FFF;border:none;border-radius:8px;padding:7px 13px;font-size:16.5px;font-weight:700;cursor:pointer;">
+                  <button type="button" class="ko" data-remove-blk="${bi}" style="background:var(--primary);color:#FFF;border:none;border-radius:8px;padding:7px 13px;font-size:16px;font-weight:650;cursor:pointer;">
                     ${b.text} ×
                   </button>
                 `).join("")}
@@ -351,7 +350,7 @@ export function renderChapterExercises(container, db, bookKey, lessonNum, initia
             ${bank.map((b) => {
               const used = selectedBlocks.some((s) => s.id === b.id);
               return `
-                <button type="button" class="ko" data-pick-blk="${b.id}" ${used ? "disabled" : ""} style="padding:8px 14px;border-radius:10px;border:1.5px solid ${used ? "var(--border-light)" : "var(--primary)"};background:${used ? "#F1F5F9" : "#FFFFFF"};color:${used ? "#94A3B8" : "var(--text-main)"};font-size:16.5px;font-weight:700;cursor:${used ? "default" : "pointer"};">
+                <button type="button" class="ko" data-pick-blk="${b.id}" ${used ? "disabled" : ""} style="padding:8px 14px;border-radius:10px;border:1px solid ${used ? "#E2E8F0" : "#CBD5E1"};background:${used ? "#F1F5F9" : "#FFFFFF"};color:${used ? "#94A3B8" : "var(--text-main)"};font-size:16px;font-weight:650;cursor:${used ? "default" : "pointer"};">
                   ${b.text}
                 </button>
               `;
@@ -359,10 +358,10 @@ export function renderChapterExercises(container, db, bookKey, lessonNum, initia
           </div>
         ` : `
           <div style="margin-bottom:14px;">
-            <input id="tr-typing-inp" class="ko" value="${typingDraft.replace(/"/g, "&quot;")}" placeholder="Gõ câu dịch tiếng Hàn hoàn chỉnh vào đây (Nhấn Enter để kiểm tra)..." style="width:100%;padding:13px 16px;border-radius:12px;border:2px solid var(--primary);font-size:18px;font-weight:700;" />
+            <input id="tr-typing-inp" class="ko" value="${typingDraft.replace(/"/g, "&quot;")}" placeholder="Gõ câu dịch tiếng Hàn hoàn chỉnh (Nhấn Enter để kiểm tra)..." style="width:100%;padding:12px 15px;font-size:17px;font-weight:650;" />
             <div style="margin-top:8px;text-align:right;">
-              <button type="button" class="btn-outline-teal" id="btn-toggle-vk" style="padding:4px 12px;font-size:12.5px;">
-                ⌨️ ${showKeyboard ? "Ẩn bàn phím Hàn ảo" : "Mở bàn phím Hàn ảo"}
+              <button type="button" class="btn-outline-teal" id="btn-toggle-vk" style="padding:5px 12px;font-size:12.5px;">
+                ${showKeyboard ? "Ẩn bàn phím Hàn ảo" : "Mở bàn phím Hàn ảo"}
               </button>
             </div>
             <div id="tr-vk-panel" style="display:${showKeyboard ? "block" : "none"};">
@@ -383,12 +382,12 @@ export function renderChapterExercises(container, db, bookKey, lessonNum, initia
 
         <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
           <div style="display:flex;gap:8px;">
-            <button type="button" class="btn-primary" id="btn-check-tr">✔ Kiểm tra câu dịch</button>
+            <button type="button" class="btn-primary" id="btn-check-tr">Kiểm tra câu dịch</button>
             <button type="button" class="btn-outline-teal" id="btn-reset-tr">Làm lại</button>
           </div>
           <div style="display:flex;gap:8px;">
             <button type="button" class="btn-outline-teal" id="btn-prev-tr">← Câu trước</button>
-            <button type="button" class="btn-orange" id="btn-next-tr">Câu dịch tiếp →</button>
+            <button type="button" class="btn-soft-jade" id="btn-next-tr">Câu tiếp →</button>
           </div>
         </div>
 

@@ -29,10 +29,10 @@ function todayISO() {
 export const DEFAULT_THEME_ID = "jade_grad";
 
 export const UI_THEMES = [
-  { id: "jade_grad", name: "Ngọc Bích Chuyển Sắc", desc: "Gradient xanh ngọc – bạc hà dịu mắt chuẩn D ● TOPIK", swatch: "linear-gradient(135deg,#0D9488,#10B981,#2DD4BF)", accent: "#5EEAD4" },
-  { id: "jade_aurora", name: "Ngọc Lục Bảo Aurora", desc: "Thanh điều hướng xanh ngọc đậm chuyển sắc sang trọng", swatch: "linear-gradient(135deg,#096B63,#10B981,#2DD4BF)", accent: "#99F6E4" },
-  { id: "celadon_mist", name: "Ngọc Sương Mai", desc: "Xanh ngọc bích pha sương trắng nhẹ nhàng", swatch: "linear-gradient(135deg,#129B8E,#34D399,#A7F3D0)", accent: "#A7F3D0" },
-  { id: "lagoon_jade", name: "Ngọc Lam Biển", desc: "Gradient xanh ngọc pha lam ngọc tươi mát", swatch: "linear-gradient(135deg,#0E9F9A,#14B8A6,#38BDF8)", accent: "#67E8F9" }
+  { id: "jade_grad", name: "Ngọc Bích Thanh Lịch", desc: "Nền sáng tinh gọn, điểm nhấn gradient xanh ngọc", swatch: "linear-gradient(135deg,#0D9488,#10B981,#24C6B2)", accent: "#F5F7FA" },
+  { id: "jade_aurora", name: "Ngọc Lục Bảo Đậm", desc: "Thanh điều hướng xanh ngọc đậm chuyển sắc", swatch: "linear-gradient(135deg,#0B5550,#0D7A70,#129E8F)", accent: "#99F6E4" },
+  { id: "celadon_mist", name: "Sương Mai Ngọc Bích", desc: "Sắc xanh ngọc dịu nhẹ trên nền giấy sáng", swatch: "linear-gradient(135deg,#0E8F79,#16B996,#34D399)", accent: "#D1FAE5" },
+  { id: "lagoon_jade", name: "Ngọc Lam Biển", desc: "Gradient xanh ngọc pha lam tươi mát", swatch: "linear-gradient(135deg,#0C8288,#14B8A6,#38BDF8)", accent: "#CCFBF1" }
 ];
 
 export const BOOK_SURVEY_OPTIONS = [

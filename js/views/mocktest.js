@@ -1,5 +1,5 @@
-import { store, ROADMAP_SCORE_SCALES, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261127-01";
-import { ico } from "../icons.js?v=20261127-01";
+import { store, ROADMAP_SCORE_SCALES, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261127-02";
+import { ico } from "../icons.js?v=20261127-02";
 
 /**
  * Hydrates a 70-question TOPIK I or 104-question TOPIK II exam from normalized slots + itemPool.
@@ -176,41 +176,42 @@ export function renderMockTestView(root, db, navigate, params = {}, registerClea
         <span>Đề thi ${levelKey === "topik1" ? "TOPIK I (70 câu)" : "TOPIK II (104 câu)"}</span>
       </div>
 
-      <!-- CLEAN 2-MODE SWITCHER -->
-      <div class="box-kind" style="padding:16px 20px;margin-bottom:18px;background:linear-gradient(135deg,var(--primary-3) 0%,#FFFFFF 100%);">
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:12px;">
-          <strong style="font-size:17.5px;color:var(--primary-1);">
-            ${ico("exam", 19)} Luyện đề ${levelKey === "topik1" ? "TOPIK I · 70 câu · 200 điểm" : "TOPIK II · 104 câu · 300 điểm"}
-          </strong>
+      <div class="box-kind" style="padding:18px 20px;margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:14px;">
+          <div>
+            <h1 style="margin:0;font-size:19.5px;font-weight:750;">
+              Đề thi ${levelKey === "topik1" ? "TOPIK I (70 câu · 200 điểm)" : "TOPIK II (104 câu · 300 điểm)"}
+            </h1>
+          </div>
 
-          <div style="display:flex;gap:6px;background:#FFFFFF;border:1.5px solid var(--border-card);padding:4px;border-radius:99px;">
-            <button type="button" id="lv-btn-t1" style="padding:6px 16px;border-radius:99px;border:none;font-weight:700;cursor:pointer;background:${levelKey === "topik1" ? "var(--primary)" : "transparent"};color:${levelKey === "topik1" ? "#FFF" : "var(--text-main)"};">
+          <div style="display:flex;gap:4px;background:#F1F5F9;padding:4px;border-radius:10px;">
+            <button type="button" id="lv-btn-t1" style="padding:6px 15px;border-radius:8px;border:none;font-size:13.5px;font-weight:650;cursor:pointer;background:${levelKey === "topik1" ? "#FFFFFF" : "transparent"};color:${levelKey === "topik1" ? "var(--primary-1)" : "var(--text-muted)"};${levelKey === "topik1" ? "box-shadow:0 1px 3px rgba(15,23,42,0.08);" : ""}">
               TOPIK I
             </button>
-            <button type="button" id="lv-btn-t2" style="padding:6px 16px;border-radius:99px;border:none;font-weight:700;cursor:pointer;background:${levelKey === "topik2" ? "var(--primary)" : "transparent"};color:${levelKey === "topik2" ? "#FFF" : "var(--text-main)"};">
+            <button type="button" id="lv-btn-t2" style="padding:6px 15px;border-radius:8px;border:none;font-size:13.5px;font-weight:650;cursor:pointer;background:${levelKey === "topik2" ? "#FFFFFF" : "transparent"};color:${levelKey === "topik2" ? "var(--primary-1)" : "var(--text-muted)"};${levelKey === "topik2" ? "box-shadow:0 1px 3px rgba(15,23,42,0.08);" : ""}">
               TOPIK II
             </button>
           </div>
         </div>
 
-        <div class="grid-2" style="gap:12px;">
-          <button type="button" id="mode-card-exams" style="text-align:left;padding:13px 16px;border-radius:15px;cursor:pointer;border:1.5px solid ${viewMode === "exams" ? "var(--primary)" : "var(--border-card)"};background:#FFFFFF;box-shadow:${viewMode === "exams" ? "0 3px 0 var(--primary)" : "0 2px 0 var(--border-lip)"};">
+        <div class="grid-2" style="gap:10px;">
+          <button type="button" id="mode-card-exams" style="text-align:left;padding:13px 16px;border-radius:14px;cursor:pointer;border:1.5px solid ${viewMode === "exams" ? "var(--primary)" : "var(--border-card)"};background:${viewMode === "exams" ? "var(--primary-3)" : "#FFFFFF"};">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
-              <strong style="font-size:15.5px;color:var(--primary-1);">${ico("exam", 17)} Vào làm Full Đề (${rawExams.length} đề)</strong>
-              ${viewMode === "exams" ? `<span class="badge-orange">Đang chọn</span>` : ""}
+              <strong style="font-size:15px;color:var(--text-main);">${ico("exam", 16)} Làm Full Đề (${rawExams.length} đề)</strong>
+              ${viewMode === "exams" ? `<span class="badge-orange" style="background:#FFFFFF;">Đang chọn</span>` : ""}
             </div>
             <div style="font-size:13px;color:var(--text-muted);">
-              Đủ ${levelKey === "topik1" ? "70 câu · 100 phút" : "104 câu · 180 phút"} chuẩn thi thật
+              Đủ ${levelKey === "topik1" ? "70 câu · 100 phút" : "104 câu · 180 phút"} chuẩn cấu trúc thi
             </div>
           </button>
 
-          <button type="button" id="mode-card-segments" style="text-align:left;padding:13px 16px;border-radius:15px;cursor:pointer;border:1.5px solid ${viewMode === "segments" ? "var(--yellow-2)" : "var(--border-card)"};background:#FFFFFF;box-shadow:${viewMode === "segments" ? "0 3px 0 var(--yellow-lip)" : "0 2px 0 var(--border-lip)"};">
+          <button type="button" id="mode-card-segments" style="text-align:left;padding:13px 16px;border-radius:14px;cursor:pointer;border:1.5px solid ${viewMode === "segments" ? "var(--primary)" : "var(--border-card)"};background:${viewMode === "segments" ? "var(--primary-3)" : "#FFFFFF"};">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
-              <strong style="font-size:15.5px;color:var(--primary-1);">${ico("layers", 17)} Luyện từng phần · Từng dạng (1 → ${levelKey === "topik1" ? "8" : "10"})</strong>
-              ${viewMode === "segments" ? `<span class="badge-orange">Đang chọn</span>` : ""}
+              <strong style="font-size:15px;color:var(--text-main);">${ico("layers", 16)} Luyện từng dạng (Dạng 1 → ${levelKey === "topik1" ? "8" : "10"})</strong>
+              ${viewMode === "segments" ? `<span class="badge-orange" style="background:#FFFFFF;">Đang chọn</span>` : ""}
             </div>
             <div style="font-size:13px;color:var(--text-muted);">
-              Tách riêng Nghe · Đọc${levelKey === "topik2" ? " · Viết" : ""}, chấm ngay &amp; lặp câu sai
+              Tách riêng Nghe · Đọc${levelKey === "topik2" ? " · Viết" : ""}, chấm ngay từng câu
             </div>
           </button>
         </div>
@@ -824,12 +825,12 @@ function renderExamRoom(root, sys, exam, scope, navigate, registerCleanup) {
             <span style="font-size:12px;color:var(--text-muted);">📌 Nguồn: ${exam.sourceOrg}</span>
           </div>
           <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-            <span id="exam-clock" style="background:#FFF;border:2px solid var(--primary);padding:6px 15px;border-radius:99px;font-weight:800;color:var(--primary-1);">
-              ⏱️ ${m}:${s}
+            <span id="exam-clock" style="background:var(--primary-3);padding:7px 14px;border-radius:10px;font-weight:750;color:var(--primary-1);font-variant-numeric:tabular-nums;">
+              ${m}:${s}
             </span>
             ${!submitted
-              ? `<button type="button" class="btn-orange" id="btn-submit-exam">Nộp bài &amp; Chấm điểm</button>`
-              : `<button type="button" class="btn-outline-teal" data-retake-exam="1">🔄 Làm lại đề này</button>`}
+              ? `<button type="button" class="btn-primary" id="btn-submit-exam">Nộp bài</button>`
+              : `<button type="button" class="btn-outline-teal" data-retake-exam="1">Làm lại đề này</button>`}
           </div>
         </div>
 
@@ -968,17 +969,18 @@ function renderExamRoom(root, sys, exam, scope, navigate, registerCleanup) {
 
               ${q.passage ? `<pre class="ko" style="white-space:pre-wrap;background:#F8FAFB;padding:16px;border-radius:10px;font-size:16.5px;line-height:1.78;margin:0 0 16px;border:1px solid #E2E8F0;">${q.passage}</pre>` : ""}
 
-              <div style="display:flex;flex-direction:column;gap:10px;">
+              <div style="display:flex;flex-direction:column;gap:8px;">
                 ${q.options.map((opt, oi) => {
                   const chosen = answers[q.id] === oi;
-                  let border = chosen ? "var(--primary)" : "#E5E7EB";
-                  let bg = chosen ? "var(--primary-3)" : "#FFFFFF";
+                  let cls = "mcq-opt-btn";
+                  let extraStyle = chosen ? "border-color:var(--primary);background:var(--primary-3);font-weight:650;" : "";
                   if (showAnswerFeedback) {
-                    if (oi === q.answer) { border = "var(--success)"; bg = "rgba(58,202,116,0.16)"; }
-                    else if (chosen) { border = "var(--danger)"; bg = "rgba(255,90,96,0.14)"; }
+                    extraStyle = "";
+                    if (oi === q.answer) cls += " is-correct";
+                    else if (chosen) cls += " is-wrong";
                   }
                   return `
-                    <button type="button" class="ko" data-pick="${oi}" style="text-align:left;padding:12px 16px;border-radius:10px;border:2px solid ${border};background:${bg};cursor:pointer;font-size:16px;font-weight:500;">
+                    <button type="button" class="ko ${cls}" data-pick="${oi}" style="${extraStyle}">
                       ${["①", "②", "③", "④"][oi]} ${opt}
                     </button>
                   `;
