@@ -1,6 +1,6 @@
-import { store, speakKoreanTTS } from "../store.js?v=20261126-6";
-import { ico } from "../icons.js?v=20261126-6";
-import { analyzePronunciationRules, conjugateKoreanPredicate } from "../korean-engine.js?v=20261126-6";
+import { store, speakKoreanTTS } from "../store.js?v=20261126-7";
+import { ico } from "../icons.js?v=20261126-7";
+import { analyzePronunciationRules, conjugateKoreanPredicate } from "../korean-engine.js?v=20261126-7";
 
 const PARTICLE_NOTES = [
   { suffix: "에서는", role: "Tiểu từ Nơi diễn ra hành động + Nhấn mạnh chủ đề" },

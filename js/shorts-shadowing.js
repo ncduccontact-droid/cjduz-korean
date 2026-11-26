@@ -1,5 +1,5 @@
-import { store, playAudio, speakKoreanTTS } from "./store.js?v=20261126-6";
-import { analyzePronunciationRules } from "./korean-engine.js?v=20261126-6";
+import { store, playAudio, speakKoreanTTS } from "./store.js?v=20261126-7";
+import { analyzePronunciationRules } from "./korean-engine.js?v=20261126-7";
 
 // Curated Real YouTube Shorts Shadowing Library (from 6F0uUJgeJQI, @Tienghanvoihailey & @hongtuoissem)
 export const YOUTUBE_SHORTS_CLIPS = [

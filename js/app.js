@@ -1,15 +1,15 @@
-import { store, UI_THEMES, playAudio, preloadAudioUrls, speakKoreanTTS } from "./store.js?v=20261126-6";
-import { ico, daisyLogoSVG } from "./icons.js?v=20261126-6";
-import { conjugateKoreanPredicate } from "./korean-engine.js?v=20261126-6";
-import { openAuthModal, renderMandatoryAuthGate } from "./auth-modal.js?v=20261126-6";
-import { buildUrl, parseUrl, getAncestorChain } from "./router.js?v=20261126-6";
-import { renderHomeView } from "./views/home.js?v=20261126-6";
-import { renderTheoryView } from "./views/theory.js?v=20261126-6";
-import { renderRoadmapView } from "./views/roadmap.js?v=20261126-6";
-import { renderSkillsPracticeView } from "./views/skills-practice.js?v=20261126-6";
-import { renderTopikPracticeView } from "./views/topik-practice.js?v=20261126-6";
-import { renderMockTestView } from "./views/mocktest.js?v=20261126-6";
-import { renderCheckAndToolsView } from "./views/check-tools.js?v=20261126-6";
+import { store, UI_THEMES, playAudio, preloadAudioUrls, speakKoreanTTS } from "./store.js?v=20261126-7";
+import { ico, daisyLogoSVG } from "./icons.js?v=20261126-7";
+import { conjugateKoreanPredicate } from "./korean-engine.js?v=20261126-7";
+import { openAuthModal, renderMandatoryAuthGate } from "./auth-modal.js?v=20261126-7";
+import { buildUrl, parseUrl, getAncestorChain } from "./router.js?v=20261126-7";
+import { renderHomeView } from "./views/home.js?v=20261126-7";
+import { renderTheoryView } from "./views/theory.js?v=20261126-7";
+import { renderRoadmapView, getGuidedStudyPlan } from "./views/roadmap.js?v=20261126-7";
+import { renderSkillsPracticeView } from "./views/skills-practice.js?v=20261126-7";
+import { renderTopikPracticeView } from "./views/topik-practice.js?v=20261126-7";
+import { renderMockTestView } from "./views/mocktest.js?v=20261126-7";
+import { renderCheckAndToolsView } from "./views/check-tools.js?v=20261126-7";
 
 const appRoot = document.getElementById("app-root");
 const modalRoot = document.getElementById("modal-root");
@@ -28,6 +28,67 @@ const db = {
 let currentRoute = "home";
 let currentParams = {};
 let activeCleanups = [];
+let activeGuidedSession = null; // { day, stepIdx, totalSteps, label }
+
+function startGuidedStep(meta) {
+  activeGuidedSession = meta;
+}
+
+function renderGuidedRibbon() {
+  if (!trialSlot) return;
+  if (!store.isAuthenticated() || currentRoute === "home" || currentRoute === "roadmap") {
+    trialSlot.innerHTML = "";
+    return;
+  }
+
+  // Always compute live Today's next step so even if user entered a tab directly, they see what's next today!
+  const plan = getGuidedStudyPlan(db, navigate, startGuidedStep);
+  const { activeDay, nextTask } = plan;
+  const gDay = activeGuidedSession?.day || activeDay.day;
+  const gIdx = activeGuidedSession ? activeGuidedSession.stepIdx : nextTask.stepIdx;
+  const dayObj = plan.days.find((d) => d.day === gDay) || activeDay;
+  const curStep = dayObj.tasks[gIdx] || nextTask;
+  const isLastStepInDay = curStep.stepIdx >= dayObj.totalSteps - 1;
+
+  trialSlot.innerHTML = `
+    <div class="guided-active-bar">
+      <div class="guided-active-inner">
+        <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;min-width:0;">
+          <span class="badge-orange" style="padding:2px 9px;font-size:12px;">Ngày ${dayObj.day} · Bước ${curStep.stepIdx + 1}/${dayObj.totalSteps}</span>
+          <strong style="color:var(--text-main);">${curStep.label}</strong>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button type="button" class="btn-primary" id="btn-complete-guided-step" style="padding:5px 14px;font-size:13px;">
+            ${isLastStepInDay ? `🎉 Hoàn thành Ngày ${dayObj.day}` : `✔ Xong bước này · Qua Bước ${curStep.stepIdx + 2} →`}
+          </button>
+          <button type="button" class="btn-outline-teal" id="btn-guided-back-home" style="padding:5px 11px;font-size:12.5px;">
+            Hôm nay học gì?
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  trialSlot.querySelector("#btn-complete-guided-step").addEventListener("click", () => {
+    store.setRoadmapStepDone(dayObj.day, curStep.stepIdx, dayObj.totalSteps, true);
+    const updatedPlan = getGuidedStudyPlan(db, navigate, startGuidedStep);
+    if (isLastStepInDay) {
+      activeGuidedSession = null;
+      navigate("home");
+    } else {
+      const nextInSameDay = updatedPlan.days.find((d) => d.day === dayObj.day)?.tasks.find((t) => !t.done);
+      if (nextInSameDay) nextInSameDay.go();
+      else {
+        activeGuidedSession = null;
+        navigate("home");
+      }
+    }
+  });
+
+  trialSlot.querySelector("#btn-guided-back-home").addEventListener("click", () => {
+    navigate("home");
+  });
+}
 
 function registerCleanup(fn) {
   if (typeof fn === "function") activeCleanups.push(fn);
@@ -91,7 +152,7 @@ function renderThemePopover() {
 
 function updateNavUI() {
   const authed = store.isAuthenticated();
-  if (trialSlot) trialSlot.innerHTML = "";
+  renderGuidedRibbon();
 
   document.querySelectorAll(".nav-pill").forEach((pill) => {
     pill.classList.toggle("active", authed && pill.dataset.route === currentRoute);
@@ -150,7 +211,7 @@ export function navigate(route, params = {}, opts = {}) {
     });
   }
 
-  if (route === "home") return renderHomeView(appRoot, db, navigate);
+  if (route === "home") return renderHomeView(appRoot, db, navigate, startGuidedStep);
   if (route === "theory") return renderTheoryView(appRoot, db, navigate, params);
   if (route === "roadmap") {
     return renderRoadmapView(appRoot, db, navigate, () => {

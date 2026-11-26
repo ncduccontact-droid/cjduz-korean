@@ -1,5 +1,5 @@
-import { store, DEFAULT_ROADMAP_PROFILE } from "./store.js?v=20261126-6";
-import { ico, daisyLogoSVG } from "./icons.js?v=20261126-6";
+import { store, DEFAULT_ROADMAP_PROFILE } from "./store.js?v=20261126-7";
+import { ico, daisyLogoSVG } from "./icons.js?v=20261126-7";
 
 let authConfigCache = null;
 

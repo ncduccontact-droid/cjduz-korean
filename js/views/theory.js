@@ -1,8 +1,8 @@
-import { store, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261126-6";
-import { ico } from "../icons.js?v=20261126-6";
-import { analyzePronunciationRules, appendJamoToText } from "../korean-engine.js?v=20261126-6";
-import { HANGEUL_DATA, GRAMMAR_COMPARISONS, HANJA_ROOTS, FREQUENT_TOPIK_EXPRESSIONS, TEXTBOOK_SERIES } from "../curated-content.js?v=20261126-6";
-import { renderChapterExercises } from "../chapter-exercises.js?v=20261126-6";
+import { store, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261126-7";
+import { ico } from "../icons.js?v=20261126-7";
+import { analyzePronunciationRules, appendJamoToText } from "../korean-engine.js?v=20261126-7";
+import { HANGEUL_DATA, GRAMMAR_COMPARISONS, HANJA_ROOTS, FREQUENT_TOPIK_EXPRESSIONS, TEXTBOOK_SERIES } from "../curated-content.js?v=20261126-7";
+import { renderChapterExercises } from "../chapter-exercises.js?v=20261126-7";
 
 export function renderTheoryView(root, db, navigate, params = {}) {
   const sub = params.sub || "index";

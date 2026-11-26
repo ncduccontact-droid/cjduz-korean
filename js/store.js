@@ -37,6 +37,7 @@ function createFreshState(roadmapProfile = DEFAULT_ROADMAP_PROFILE) {
     completedLessons: {},
     chapterHomeworkDone: {},
     roadmapDone: {},
+    roadmapStepDone: {},
     partStats: {},
     mistakes: [],
     examHistory: [],
@@ -258,7 +259,28 @@ export const store = {
     };
     if (newProfile.targetLevel) this.state.targetLevel = newProfile.targetLevel;
     if (newProfile.examDate) this.state.examDate = newProfile.examDate;
-    if (resetCheckedDays) this.state.roadmapDone = {};
+    if (resetCheckedDays) {
+      this.state.roadmapDone = {};
+      this.state.roadmapStepDone = {};
+    }
+    this.save();
+  },
+
+  setRoadmapStepDone(day, stepIdx, totalSteps, val = true) {
+    if (!this.state.roadmapStepDone) this.state.roadmapStepDone = {};
+    const key = `d${day}_${stepIdx}`;
+    if (val) this.state.roadmapStepDone[key] = true;
+    else delete this.state.roadmapStepDone[key];
+
+    // Sync whole-day flag automatically
+    let allDone = true;
+    for (let i = 0; i < totalSteps; i++) {
+      if (!this.state.roadmapStepDone[`d${day}_${i}`]) allDone = false;
+    }
+    if (allDone) this.state.roadmapDone[day] = true;
+    else delete this.state.roadmapDone[day];
+
+    this.touchStreak();
     this.save();
   },
 

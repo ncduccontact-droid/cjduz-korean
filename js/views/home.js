@@ -1,13 +1,17 @@
-import { store } from "../store.js?v=20261126-6";
-import { ico } from "../icons.js?v=20261126-6";
+import { store } from "../store.js?v=20261126-7";
+import { ico } from "../icons.js?v=20261126-7";
+import { getGuidedStudyPlan, STAGE_LABELS } from "./roadmap.js?v=20261126-7";
 
-export function renderHomeView(root, db, navigate) {
+export function renderHomeView(root, db, navigate, startGuidedStep = null) {
   const s = store.state;
   const allVocab = [...db.sc1Vocab, ...db.sejongVocab, ...db.topik1Bank];
   const masteredCount = allVocab.filter((c) => store.isMastered(c.id)).length;
   const dueCount = store.getDueCardIds(allVocab).length;
-  const starredCount = allVocab.filter((c) => s.srs[c.id]?.starred).length;
   const daysLeft = Math.max(0, Math.ceil((new Date(s.examDate).getTime() - Date.now()) / 86400000));
+
+  const plan = getGuidedStudyPlan(db, navigate, startGuidedStep);
+  const { profile, days, activeDay, nextTask, completedDaysCount } = plan;
+  const roadmapPct = Math.round((completedDaysCount / days.length) * 100);
 
   const levels = [
     {
@@ -68,52 +72,114 @@ export function renderHomeView(root, db, navigate) {
 
   root.innerHTML = `
     <div class="container-web">
-      <!-- Clean, Low-Clutter Hero Card -->
-      <section class="prediction-banner">
-        <div style="max-width:650px;">
-          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
-            <span class="badge-orange">${ico("star", 14)} ${s.targetLevel}</span>
-            <span class="meta-chip">Còn ${daysLeft} ngày thi</span>
-            <span class="meta-chip" style="color:var(--primary-1);">${ico("cloud", 14)} Đã đồng bộ tài khoản</span>
+      <!-- SMART TODAY'S GUIDED STUDY PLAN ("HÔM NAY HỌC GÌ & HỌC TIẾP THEO CÁI GÌ?") -->
+      <section class="today-plan-grid" style="margin-bottom:24px;">
+        <!-- LEFT: TODAY'S 3-STEP CHECKLIST + NEXT-UP SPOTLIGHT -->
+        <div class="box-kind" style="background:linear-gradient(135deg,var(--primary-3) 0%,#FFFFFF 65%);padding:20px 22px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <span class="badge-orange">📍 Hôm nay · Ngày ${activeDay.day}/30</span>
+              <strong style="font-size:16.5px;color:var(--primary-1);">${activeDay.shortTopic}</strong>
+            </div>
+            <span class="meta-chip" style="background:#FFFFFF;color:var(--primary-1);">
+              Đã xong ${activeDay.doneSteps}/${activeDay.totalSteps} bước hôm nay
+            </span>
           </div>
 
-          <h1 style="margin:0 0 8px;font-size:24px;font-weight:800;">
-            Chào ${store.session.user?.name || "bạn"}! Học tiếp ${s.lastLesson.title}
-          </h1>
+          <!-- BIG SPOTLIGHT: EXACT NEXT STEP TO DO RIGHT NOW -->
+          <div class="next-up-spotlight">
+            <div>
+              <div style="font-size:12px;font-weight:800;color:var(--yellow-lip);margin-bottom:3px;">
+                HỌC TIẾP THEO · BƯỚC ${nextTask.stepIdx + 1}/${activeDay.totalSteps}
+              </div>
+              <strong style="font-size:18.5px;display:block;color:var(--text-main);margin-bottom:2px;">
+                ${nextTask.label}
+              </strong>
+              <span style="font-size:13px;color:var(--text-muted);">${nextTask.hint}</span>
+            </div>
 
-          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
-            <span class="meta-chip">Đã thuộc: <strong style="color:var(--primary-1);">${masteredCount} từ</strong></span>
-            <span class="meta-chip">Đến hạn ôn: <strong style="color:#D97706;">${dueCount} thẻ</strong></span>
-            <span class="meta-chip">Đánh dấu sao: <strong>${starredCount}</strong></span>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <button type="button" class="btn-primary" id="btn-start-next-step" style="padding:11px 22px;font-size:15px;">
+                ▶ Vào học Bước ${nextTask.stepIdx + 1} ngay
+              </button>
+              ${dueCount > 0 ? `
+                <button type="button" class="btn-orange" id="btn-home-due-srs" title="Thẻ từ vựng đến hạn ôn hôm nay">
+                  ${ico("cards", 16)} Ôn ${dueCount} từ đến hạn
+                </button>
+              ` : ""}
+            </div>
           </div>
 
-          <div style="display:flex;flex-wrap:wrap;gap:10px;">
-            <button class="btn-primary" id="btn-continue-lesson">
-              ${ico("book", 17)} Học tiếp bài đang dở
-            </button>
-            <button class="btn-orange" id="btn-review-now">
-              ${ico("cards", 17)} Ôn thẻ SRS ${dueCount > 0 ? `(${dueCount})` : ""}
-            </button>
-            <button class="btn-outline-teal" id="btn-go-shadowing">
-              ${ico("video", 17)} Shadowing Shorts
-            </button>
+          <!-- 3-STEP VISUAL STEPPER OF TODAY -->
+          <div class="today-stepper">
+            ${activeDay.tasks.map((t) => {
+              const isNext = !t.done && t.stepIdx === nextTask.stepIdx;
+              return `
+                <div class="today-step-row ${t.done ? "is-done" : (isNext ? "is-next" : "")}">
+                  <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+                    <button type="button" class="step-check-btn ${t.done ? "checked" : ""}" data-home-chk="${activeDay.day}" data-sidx="${t.stepIdx}" data-stotal="${activeDay.totalSteps}" title="Bấm để đánh dấu xong bước này">✓</button>
+                    <div style="min-width:0;">
+                      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                        <span style="font-size:11.5px;font-weight:800;color:${t.done ? "#15803D" : (isNext ? "#B45309" : "var(--primary-1)")};">
+                          ${t.tag}
+                        </span>
+                        <span style="font-size:12px;color:var(--text-muted);">· ${t.hint}</span>
+                      </div>
+                      <strong style="font-size:14.5px;display:block;${t.done ? "text-decoration:line-through;color:var(--text-muted);" : "color:var(--text-main);"}">
+                        ${t.label}
+                      </strong>
+                    </div>
+                  </div>
+
+                  <button type="button" class="${isNext ? "btn-orange" : "btn-outline-teal"}" data-home-go="${t.stepIdx}" style="padding:6px 14px;font-size:13px;flex-shrink:0;">
+                    ${t.done ? "Xem lại" : (isNext ? "Học tiếp →" : "Mở")}
+                  </button>
+                </div>
+              `;
+            }).join("")}
           </div>
         </div>
 
-        <div class="box-kind" style="min-width:240px;padding:16px 18px;">
-          <div style="font-size:13px;color:var(--text-muted);font-weight:700;margin-bottom:8px;">Mục tiêu của bạn</div>
-          <select id="home-target-select" class="box-select" style="width:100%;margin-bottom:10px;">
-            ${["TOPIK I - Cấp 1", "TOPIK I - Cấp 2", "TOPIK II - Cấp 3", "TOPIK II - Cấp 4", "TOPIK II - Cấp 5", "TOPIK II - Cấp 6"]
-              .map((lv) => `<option value="${lv}" ${s.targetLevel === lv ? "selected" : ""}>${lv}</option>`)
-              .join("")}
-          </select>
-          <input type="date" id="home-exam-date" value="${s.examDate}" style="width:100%;padding:7px 12px;border-radius:99px;border:1.5px solid var(--border-card);font-size:13.5px;font-weight:600;" />
+        <!-- RIGHT: OVERALL ROADMAP SUMMARY & GOAL CONTROL -->
+        <div class="box-kind" style="display:flex;flex-direction:column;justify-content:space-between;padding:20px;">
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+              <strong style="font-size:16px;color:var(--primary-1);">${ico("compass", 18)} Tiến độ Lộ trình</strong>
+              <span class="meta-chip" style="color:var(--primary-1);">${ico("cloud", 13)} Tự lưu Cloud</span>
+            </div>
+
+            <div style="background:var(--bg-body);border:1px solid var(--border-card);border-radius:14px;padding:12px 14px;margin-bottom:12px;">
+              <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;">
+                <span>Chặng: <strong>${STAGE_LABELS[profile.startStage] || STAGE_LABELS.sc1}</strong></span>
+                <strong style="color:var(--primary-1);">${completedDaysCount}/30 ngày (${roadmapPct}%)</strong>
+              </div>
+              <div class="progress-track">
+                <div class="progress-fill" style="width:${roadmapPct}%"></div>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:12.5px;color:var(--text-muted);margin-top:8px;">
+                <span>Đã thuộc: <strong style="color:var(--text-main);">${masteredCount} từ</strong></span>
+                <span>Còn <strong style="color:var(--text-main);">${daysLeft} ngày</strong> tới kỳ thi</span>
+              </div>
+            </div>
+
+            <label style="font-size:12px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:4px;">Mục tiêu &amp; Ngày thi dự kiến</label>
+            <select id="home-target-select" class="box-select" style="width:100%;margin-bottom:8px;">
+              ${["TOPIK I - Cấp 1", "TOPIK I - Cấp 2", "TOPIK II - Cấp 3", "TOPIK II - Cấp 4", "TOPIK II - Cấp 5", "TOPIK II - Cấp 6"]
+                .map((lv) => `<option value="${lv}" ${s.targetLevel === lv ? "selected" : ""}>${lv}</option>`)
+                .join("")}
+            </select>
+            <input type="date" id="home-exam-date" value="${s.examDate}" style="width:100%;padding:7px 12px;border-radius:99px;border:1.5px solid var(--border-card);font-size:13.5px;font-weight:600;" />
+          </div>
+
+          <button type="button" class="btn-outline-teal" id="btn-open-roadmap" style="width:100%;justify-content:center;margin-top:14px;">
+            ${ico("compass", 16)} Xem trọn bộ 30 ngày &amp; Đổi lộ trình
+          </button>
         </div>
       </section>
 
-      <!-- 4 Core Study Modules (Clean Icon + Short Label) -->
+      <!-- 4 Core Study Modules (Free Exploration Anytime) -->
       <div class="section-head">
-        <h2>4 bước học trọng tâm mỗi ngày</h2>
+        <h2>Tự chọn học phần nhanh</h2>
       </div>
       <div class="grid-2">
         <div class="theory-card" data-quick="vocab-review">
@@ -161,10 +227,9 @@ export function renderHomeView(root, db, navigate) {
         </div>
       </div>
 
-      <!-- 6 TOPIK Level Cards (Airy Soft-Pastel Cards) -->
+      <!-- 6 TOPIK Level Cards -->
       <div class="section-head">
-        <h2>Lộ trình 6 cấp TOPIK</h2>
-        <button class="btn-outline-teal" id="btn-open-roadmap">${ico("compass", 16)} Lộ trình 30 ngày</button>
+        <h2>Khung kiến thức 6 cấp TOPIK</h2>
       </div>
       <div class="grid-3">
         ${levels.map((lv, idx) => `
@@ -200,11 +265,28 @@ export function renderHomeView(root, db, navigate) {
     </div>
   `;
 
-  root.querySelector("#btn-continue-lesson").addEventListener("click", () => {
-    navigate("theory", { sub: "lesson-detail", book: s.lastLesson.book, lesson: s.lastLesson.lesson });
+  root.querySelector("#btn-start-next-step").addEventListener("click", () => nextTask.go());
+  const dueBtn = root.querySelector("#btn-home-due-srs");
+  if (dueBtn) dueBtn.addEventListener("click", () => navigate("theory", { sub: "vocab-review" }));
+
+  root.querySelectorAll("[data-home-go]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const idx = Number(btn.dataset.homeGo);
+      activeDay.tasks[idx]?.go();
+    });
   });
-  root.querySelector("#btn-review-now").addEventListener("click", () => navigate("theory", { sub: "vocab-review" }));
-  root.querySelector("#btn-go-shadowing").addEventListener("click", () => navigate("practice", { sub: "skills", skill: "shadowing" }));
+
+  root.querySelectorAll("[data-home-chk]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const dy = Number(btn.dataset.homeChk);
+      const si = Number(btn.dataset.sidx);
+      const st = Number(btn.dataset.stotal);
+      const cur = Boolean(store.state.roadmapStepDone?.[`d${dy}_${si}`]);
+      store.setRoadmapStepDone(dy, si, st, !cur);
+      renderHomeView(root, db, navigate, startGuidedStep);
+    });
+  });
+
   root.querySelector("#btn-open-roadmap").addEventListener("click", () => navigate("roadmap"));
   root.querySelector("#btn-mia-writing").addEventListener("click", () => navigate("practice", { sub: "topik2", skill: "writing" }));
   root.querySelector("#btn-mia-check").addEventListener("click", () => navigate("check-tools", { tab: "mistakes" }));
@@ -212,11 +294,12 @@ export function renderHomeView(root, db, navigate) {
   root.querySelector("#home-target-select").addEventListener("change", (e) => {
     store.state.targetLevel = e.target.value;
     store.save();
+    renderHomeView(root, db, navigate, startGuidedStep);
   });
   root.querySelector("#home-exam-date").addEventListener("change", (e) => {
     store.state.examDate = e.target.value;
     store.save();
-    renderHomeView(root, db, navigate);
+    renderHomeView(root, db, navigate, startGuidedStep);
   });
 
   root.querySelectorAll("[data-quick]").forEach((el) => {
