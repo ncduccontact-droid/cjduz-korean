@@ -26,11 +26,13 @@ function todayISO() {
   return new Date().toISOString().slice(0, 10);
 }
 
+export const DEFAULT_THEME_ID = "jade_grad";
+
 export const UI_THEMES = [
-  { id: "sky", name: "Pastel Sexy Blue", desc: "Xanh dương pastel tươi sáng chuẩn D ● TOPIK", swatch: "#007BFF", accent: "#B0E0E6" },
-  { id: "uma", name: "UMA Ice Cloud", desc: "Xanh băng mây trắng trong trẻo (Ảnh 2)", swatch: "#2496FF", accent: "#BCE4FF" },
-  { id: "powder", name: "Powder Aqua", desc: "Xanh phấn #B0E0E6 dịu mát (Ảnh 3)", swatch: "#0F86EB", accent: "#B0E0E6" },
-  { id: "mint_sky", name: "Mint Sky Pastel", desc: "Xanh bạc hà pastel nhẹ nhàng", swatch: "#149E8E", accent: "#BEECE6" }
+  { id: "jade_grad", name: "Ngọc Bích Chuyển Sắc", desc: "Gradient xanh ngọc – bạc hà dịu mắt chuẩn D ● TOPIK", swatch: "linear-gradient(135deg,#0D9488,#10B981,#2DD4BF)", accent: "#5EEAD4" },
+  { id: "jade_aurora", name: "Ngọc Lục Bảo Aurora", desc: "Thanh điều hướng xanh ngọc đậm chuyển sắc sang trọng", swatch: "linear-gradient(135deg,#096B63,#10B981,#2DD4BF)", accent: "#99F6E4" },
+  { id: "celadon_mist", name: "Ngọc Sương Mai", desc: "Xanh ngọc bích pha sương trắng nhẹ nhàng", swatch: "linear-gradient(135deg,#129B8E,#34D399,#A7F3D0)", accent: "#A7F3D0" },
+  { id: "lagoon_jade", name: "Ngọc Lam Biển", desc: "Gradient xanh ngọc pha lam ngọc tươi mát", swatch: "linear-gradient(135deg,#0E9F9A,#14B8A6,#38BDF8)", accent: "#67E8F9" }
 ];
 
 export const BOOK_SURVEY_OPTIONS = [
@@ -54,8 +56,8 @@ export const DEFAULT_ROADMAP_PROFILE = {
 
 function createFreshState(roadmapProfile = DEFAULT_ROADMAP_PROFILE) {
   return {
-    uiTheme: "sky",
-    onboardingCompleted: isLocalPreviewHost(),
+    uiTheme: DEFAULT_THEME_ID,
+    onboardingCompleted: true,
     targetLevel: roadmapProfile.targetLevel || "TOPIK II - Cấp 4",
     examDate: roadmapProfile.examDate || "2027-04-18",
     roadmapProfile: { ...DEFAULT_ROADMAP_PROFILE, ...roadmapProfile },
@@ -118,14 +120,18 @@ function loadSavedTokenMeta() {
   return { mode: "guest", token: "", user: null };
 }
 
+function normalizeThemeId(themeId) {
+  return UI_THEMES.some((t) => t.id === themeId) ? themeId : DEFAULT_THEME_ID;
+}
+
 function loadInitialState() {
   const base = createFreshState();
-  if (isLocalPreviewHost() && typeof sessionStorage !== "undefined") {
+  if (typeof sessionStorage !== "undefined") {
     try {
       const raw = sessionStorage.getItem(LOCAL_PREVIEW_STATE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
-        return { ...base, ...parsed, onboardingCompleted: true };
+        return { ...base, ...parsed, uiTheme: normalizeThemeId(parsed.uiTheme), onboardingCompleted: true };
       }
     } catch {}
   }
@@ -133,7 +139,7 @@ function loadInitialState() {
 }
 
 function applyDocumentTheme(themeId) {
-  const valid = UI_THEMES.some((t) => t.id === themeId) ? themeId : "sky";
+  const valid = normalizeThemeId(themeId);
   if (typeof document !== "undefined") {
     document.documentElement.dataset.theme = valid;
   }
@@ -175,7 +181,7 @@ export const store = {
   },
 
   setTheme(themeId) {
-    const valid = UI_THEMES.some((t) => t.id === themeId) ? themeId : "sky";
+    const valid = normalizeThemeId(themeId);
     this.state.uiTheme = valid;
     applyDocumentTheme(valid);
     this.save();
@@ -238,14 +244,13 @@ export const store = {
 
   save(skipCloud = false) {
     this.state.updatedAt = Date.now();
-    const validTheme = UI_THEMES.some((t) => t.id === this.state.uiTheme) ? this.state.uiTheme : "sky";
+    const validTheme = normalizeThemeId(this.state.uiTheme);
     this.state.uiTheme = validTheme;
     applyDocumentTheme(validTheme);
     try {
       if (this.hasCloudAccount()) {
         localStorage.setItem(AUTH_TOKEN_KEY, JSON.stringify(this.session));
-      }
-      if (isLocalPreviewHost() && typeof sessionStorage !== "undefined") {
+      } else if (typeof sessionStorage !== "undefined") {
         sessionStorage.setItem(LOCAL_PREVIEW_STATE_KEY, JSON.stringify(this.state));
       }
     } catch {}
@@ -261,7 +266,7 @@ export const store = {
     }
   },
 
-  applyAuthenticatedUser(token, userObj, syncBack = false) {
+  applyAuthenticatedUser(token, userObj, syncBack = false, isNewSignup = false) {
     const serverState = userObj.state && Object.keys(userObj.state).length > 0
       ? userObj.state
       : createFreshState(userObj.roadmapProfile || DEFAULT_ROADMAP_PROFILE);
@@ -278,9 +283,15 @@ export const store = {
       }
     };
 
+    const normalizedTheme = normalizeThemeId(serverState.uiTheme);
+    const upgradedLegacyTheme = normalizedTheme !== serverState.uiTheme;
+    const upgradedOnboarding = !isNewSignup && !serverState.onboardingCompleted;
+
     this.state = {
       ...createFreshState(userObj.roadmapProfile),
       ...serverState,
+      uiTheme: normalizedTheme,
+      onboardingCompleted: isNewSignup ? false : true,
       roadmapProfile: {
         ...DEFAULT_ROADMAP_PROFILE,
         ...(userObj.roadmapProfile || {}),
@@ -289,7 +300,7 @@ export const store = {
     };
     this.syncStatus = "synced";
     applyDocumentTheme(this.state.uiTheme);
-    this.save(!syncBack);
+    this.save(!(syncBack || upgradedLegacyTheme || upgradedOnboarding));
   },
 
   async logout() {
@@ -312,7 +323,7 @@ export const store = {
       localStorage.removeItem("cjduz_auth_session_v2");
       if (typeof sessionStorage !== "undefined") sessionStorage.removeItem(LOCAL_PREVIEW_STATE_KEY);
     } catch {}
-    applyDocumentTheme("sky");
+    applyDocumentTheme(DEFAULT_THEME_ID);
     this.notify();
   },
 

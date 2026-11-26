@@ -1,5 +1,5 @@
-import { store, isLocalPreviewHost, BOOK_SURVEY_OPTIONS, DEFAULT_ROADMAP_PROFILE } from "./store.js?v=20261126-12";
-import { ico, daisyLogoSVG } from "./icons.js?v=20261126-12";
+import { store, isLocalPreviewHost, BOOK_SURVEY_OPTIONS, DEFAULT_ROADMAP_PROFILE } from "./store.js?v=20261127-01";
+import { ico, daisyLogoSVG } from "./icons.js?v=20261127-01";
 
 let authConfigCache = null;
 
@@ -327,14 +327,252 @@ export async function renderMandatoryAuthGate(appRoot, onAuthenticated) {
 }
 
 // ============================================================================
-// HỒ SƠ HỌC VIÊN MODAL (Allows re-setting Roadmap Book Q1->Q6 anytime!)
+// HỒ SƠ HỌC VIÊN & MODAL ĐĂNG NHẬP / KHẢO SÁT (Never traps tab navigation!)
 // ============================================================================
 export async function openAuthModal(modalRoot, initialView = "profile", onCompleted = () => {}) {
-  if (!store.isAuthenticated()) {
-    modalRoot.innerHTML = "";
-    onCompleted();
+  if (!modalRoot) return;
+
+  // 1. Post-Signup Book 1-6 Survey Modal (Dismissible anytime -> defaults to Quyển 1)
+  if (initialView === "survey") {
+    const cur = store.state.roadmapProfile || DEFAULT_ROADMAP_PROFILE;
+    let pickedBook = cur.startBook || "q1";
+    let pickedTrack = cur.focusTrack || "balanced";
+    let pickedMins = Number(cur.dailyMinutes || 30);
+    const userName = store.session.user?.name || "bạn";
+
+    function renderSurveyModal() {
+      const activeOpt = BOOK_SURVEY_OPTIONS.find((b) => b.id === pickedBook) || BOOK_SURVEY_OPTIONS[1];
+      modalRoot.innerHTML = `
+        <div class="modal-backdrop" id="auth-modal-bg">
+          <div class="modal-panel" style="max-width:640px;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px;">
+              <div style="display:flex;align-items:center;gap:10px;">
+                ${daisyLogoSVG(36)}
+                <div>
+                  <span class="badge-orange">Khảo sát lộ trình cá nhân</span>
+                  <strong style="font-size:18px;display:block;color:var(--text-main);margin-top:2px;">
+                    Chào ${userName}! Bạn muốn học từ Quyển mấy?
+                  </strong>
+                </div>
+              </div>
+              <button type="button" id="close-survey-modal" title="Đóng và mặc định Quyển 1" style="background:var(--bg-body);border:1.5px solid var(--border-card);width:34px;height:34px;border-radius:10px;font-size:18px;cursor:pointer;flex-shrink:0;">×</button>
+            </div>
+
+            <div class="survey-book-grid" style="margin-bottom:14px;">
+              ${BOOK_SURVEY_OPTIONS.map((b) => `
+                <button type="button" class="survey-book-card ${b.id === pickedBook ? "selected" : ""}" data-sbook="${b.id}">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;">
+                    <span class="badge-orange" style="${b.id === pickedBook ? "background:var(--brand-grad);color:#FFF;border-color:transparent;" : ""}">${b.badge}</span>
+                    <span style="font-size:11px;font-weight:700;color:var(--primary-1);">${b.defaultTarget}</span>
+                  </div>
+                  <strong style="font-size:14px;display:block;color:var(--text-main);">${b.title}</strong>
+                  <span style="font-size:12px;color:var(--text-muted);">${b.sub}</span>
+                </button>
+              `).join("")}
+            </div>
+
+            <div class="grid-2" style="margin-bottom:16px;gap:10px;">
+              <div>
+                <label style="display:block;font-size:12.5px;font-weight:700;color:var(--primary-1);margin-bottom:5px;">Định hướng ưu tiên</label>
+                <select id="sv-track" class="box-select" style="width:100%;">
+                  <option value="balanced" ${pickedTrack === "balanced" ? "selected" : ""}>Song hành TOPIK × Giao tiếp</option>
+                  <option value="topik_intensive" ${pickedTrack === "topik_intensive" ? "selected" : ""}>Chuyên sâu giải đề TOPIK</option>
+                  <option value="speaking_first" ${pickedTrack === "speaking_first" ? "selected" : ""}>Ưu tiên Shadowing Shorts &amp; Nói</option>
+                </select>
+              </div>
+              <div>
+                <label style="display:block;font-size:12.5px;font-weight:700;color:var(--primary-1);margin-bottom:5px;">Quỹ thời gian mỗi ngày</label>
+                <select id="sv-mins" class="box-select" style="width:100%;">
+                  <option value="15" ${pickedMins === 15 ? "selected" : ""}>15 phút / ngày · Nhẹ nhàng</option>
+                  <option value="30" ${pickedMins === 30 ? "selected" : ""}>30 phút / ngày · Tiêu chuẩn</option>
+                  <option value="60" ${pickedMins === 60 ? "selected" : ""}>60 phút / ngày · Tăng tốc</option>
+                </select>
+              </div>
+            </div>
+
+            <button type="button" class="btn-primary" id="btn-finish-survey-modal" style="width:100%;padding:12px;font-size:15px;">
+              ▶ Bắt đầu lộ trình từ ${activeOpt.badge} ngay
+            </button>
+          </div>
+        </div>
+      `;
+
+      const finishWith = (resetDays) => {
+        const opt = BOOK_SURVEY_OPTIONS.find((b) => b.id === pickedBook) || BOOK_SURVEY_OPTIONS[1];
+        const tr = modalRoot.querySelector("#sv-track")?.value || pickedTrack;
+        const mn = Number(modalRoot.querySelector("#sv-mins")?.value || pickedMins);
+        store.updateRoadmapProfile({
+          startBook: pickedBook,
+          focusTrack: tr,
+          dailyMinutes: mn,
+          targetLevel: opt.defaultTarget
+        }, resetDays);
+        modalRoot.innerHTML = "";
+        onCompleted();
+      };
+
+      modalRoot.querySelectorAll("[data-sbook]").forEach((b) => {
+        b.addEventListener("click", () => {
+          pickedBook = b.dataset.sbook;
+          pickedTrack = modalRoot.querySelector("#sv-track")?.value || pickedTrack;
+          pickedMins = Number(modalRoot.querySelector("#sv-mins")?.value || pickedMins);
+          renderSurveyModal();
+        });
+      });
+      modalRoot.querySelector("#btn-finish-survey-modal").addEventListener("click", () => finishWith(true));
+      modalRoot.querySelector("#close-survey-modal").addEventListener("click", () => {
+        store.state.onboardingCompleted = true;
+        store.save();
+        modalRoot.innerHTML = "";
+        onCompleted();
+      });
+      modalRoot.querySelector("#auth-modal-bg").addEventListener("click", (e) => {
+        if (e.target.id === "auth-modal-bg") {
+          store.state.onboardingCompleted = true;
+          store.save();
+          modalRoot.innerHTML = "";
+          onCompleted();
+        }
+      });
+    }
+
+    renderSurveyModal();
     return;
   }
+
+  // 2. Guest Sign-In / Sign-Up Modal (Clean & dismissible!)
+  if (!store.isAuthenticated()) {
+    const cfg = await fetchAuthConfig();
+    let view = initialView === "register" ? "register" : "login";
+    let pendingEmail = "";
+    let devOtpHint = "";
+    let statusMsg = "";
+    let statusType = "info";
+    const draft = { name: "", email: "", password: "" };
+
+    function renderGuestModal() {
+      const alertHTML = statusMsg ? `
+        <div style="margin-bottom:12px;padding:10px 14px;border-radius:12px;font-size:13.5px;font-weight:600;background:${statusType === "error" ? "rgba(244,63,94,0.12)" : "rgba(16,185,129,0.14)"};color:${statusType === "error" ? "var(--danger)" : "var(--primary-4)"};">
+          ${statusMsg}
+          ${devOtpHint ? `<div style="margin-top:6px;background:#FFF;padding:6px 10px;border-radius:8px;color:#0F766E;">Mã OTP: <strong>${devOtpHint}</strong></div>` : ""}
+        </div>
+      ` : "";
+
+      let formBody = "";
+      if (view === "login") {
+        formBody = `
+          <div style="display:flex;gap:8px;margin-bottom:14px;">
+            <button type="button" class="btn-skill active" style="flex:1;justify-content:center;" data-v="login">Đăng nhập</button>
+            <button type="button" class="btn-skill" style="flex:1;justify-content:center;" data-v="register">Tạo tài khoản</button>
+          </div>
+          <div id="gate-google-slot" style="margin-bottom:10px;">
+            <button type="button" class="google-btn" id="gate-google-btn">
+              ${GOOGLE_SVG}
+              <span>Đăng nhập bằng Google</span>
+            </button>
+          </div>
+          <form id="gate-login-form" style="display:flex;flex-direction:column;gap:10px;">
+            <input id="gl-email" type="email" required placeholder="Email đã đăng ký..." style="padding:11px 16px;border-radius:99px;border:1.5px solid var(--border-card);" />
+            <input id="gl-pw" type="password" required placeholder="Mật khẩu..." style="padding:11px 16px;border-radius:99px;border:1.5px solid var(--border-card);" />
+            <div style="display:flex;justify-content:space-between;font-size:12.5px;">
+              <button type="button" data-v="forgot" style="background:none;border:none;color:var(--primary-1);font-weight:700;cursor:pointer;padding:0;">Quên mật khẩu?</button>
+              <span style="color:var(--text-muted);">Đồng bộ Cloud D ● TOPIK</span>
+            </div>
+            <button type="submit" class="btn-primary" style="width:100%;padding:12px;margin-top:4px;">Đăng nhập &amp; Đồng bộ tiến độ</button>
+          </form>
+        `;
+      } else if (view === "register") {
+        formBody = `
+          <div style="display:flex;gap:8px;margin-bottom:14px;">
+            <button type="button" class="btn-skill" style="flex:1;justify-content:center;" data-v="login">Đăng nhập</button>
+            <button type="button" class="btn-skill active" style="flex:1;justify-content:center;" data-v="register">Tạo tài khoản</button>
+          </div>
+          <div id="gate-google-slot" style="margin-bottom:10px;">
+            <button type="button" class="google-btn" id="gate-google-btn">
+              ${GOOGLE_SVG}
+              <span>Tiếp tục nhanh bằng Google</span>
+            </button>
+          </div>
+          <form id="gate-reg-form" style="display:flex;flex-direction:column;gap:10px;">
+            <input id="gr-name" required value="${draft.name}" placeholder="Họ tên / Biệt danh của bạn..." style="padding:11px 16px;border-radius:99px;border:1.5px solid var(--border-card);" />
+            <input id="gr-email" type="email" required value="${draft.email}" placeholder="Email cá nhân (lưu tiến độ Cloud)..." style="padding:11px 16px;border-radius:99px;border:1.5px solid var(--border-card);" />
+            <input id="gr-pw" type="password" required minlength="6" placeholder="Mật khẩu (tối thiểu 6 ký tự)..." style="padding:11px 16px;border-radius:99px;border:1.5px solid var(--border-card);" />
+            <button type="submit" class="btn-primary" style="width:100%;padding:12px;margin-top:4px;">
+              Tạo tài khoản → Chọn Quyển học
+            </button>
+          </form>
+        `;
+      } else if (view === "verify-otp") {
+        formBody = `
+          <p style="margin:0 0 12px;font-size:14px;color:var(--text-muted);">Nhập mã OTP 6 chữ số gửi tới <strong>${pendingEmail}</strong>:</p>
+          <form id="gate-otp-form" style="display:flex;flex-direction:column;gap:10px;">
+            <input id="go-otp" required maxlength="6" placeholder="6 chữ số OTP..." style="text-align:center;font-size:24px;font-weight:800;letter-spacing:6px;padding:12px;border-radius:14px;border:2px solid var(--primary);" />
+            <button type="submit" class="btn-primary">Xác thực &amp; Chọn lộ trình</button>
+            <button type="button" class="btn-outline-teal" data-v="register" style="justify-content:center;">← Quay lại</button>
+          </form>
+        `;
+      } else if (view === "forgot") {
+        formBody = `
+          <form id="gate-forgot-form" style="display:flex;flex-direction:column;gap:10px;">
+            <input id="gf-email" type="email" required placeholder="Nhập Email đã đăng ký..." style="padding:11px 16px;border-radius:99px;border:1.5px solid var(--primary);" />
+            <button type="submit" class="btn-primary">Gửi mã khôi phục</button>
+            <button type="button" class="btn-outline-teal" data-v="login" style="justify-content:center;">← Quay lại Đăng nhập</button>
+          </form>
+        `;
+      } else if (view === "reset-otp") {
+        formBody = `
+          <form id="gate-reset-form" style="display:flex;flex-direction:column;gap:10px;">
+            <input id="grs-otp" required maxlength="6" placeholder="Mã OTP 6 số..." style="text-align:center;font-size:20px;font-weight:800;letter-spacing:5px;padding:10px;border-radius:12px;border:1.5px solid var(--primary);" />
+            <input id="grs-pw" type="password" required minlength="6" placeholder="Mật khẩu mới..." style="padding:11px 16px;border-radius:99px;border:1.5px solid var(--border-card);" />
+            <button type="submit" class="btn-primary">Lưu mật khẩu &amp; Đăng nhập</button>
+          </form>
+        `;
+      }
+
+      modalRoot.innerHTML = `
+        <div class="modal-backdrop" id="auth-modal-bg">
+          <div class="modal-panel" style="max-width:480px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+              <strong style="font-size:18px;color:var(--primary-1);display:flex;align-items:center;gap:8px;">
+                ${daisyLogoSVG(26)} Tài khoản D ● TOPIK Cloud
+              </strong>
+              <button type="button" id="close-auth-modal" style="background:var(--bg-body);border:1.5px solid var(--border-card);width:34px;height:34px;border-radius:10px;font-size:18px;cursor:pointer;">×</button>
+            </div>
+            ${alertHTML}
+            ${formBody}
+          </div>
+        </div>
+      `;
+
+      const closeGuest = () => { modalRoot.innerHTML = ""; };
+      modalRoot.querySelector("#close-auth-modal").addEventListener("click", closeGuest);
+      modalRoot.querySelector("#auth-modal-bg").addEventListener("click", (e) => {
+        if (e.target.id === "auth-modal-bg") closeGuest();
+      });
+
+      bindAuthHandlers(modalRoot, cfg, {
+        getView: () => view,
+        setView: (v) => { view = v; statusMsg = ""; devOtpHint = ""; renderGuestModal(); },
+        setAlert: (m, t = "error", hint = "") => { statusMsg = m; statusType = t; devOtpHint = hint; renderGuestModal(); },
+        getPendingEmail: () => pendingEmail,
+        setPendingEmail: (em) => { pendingEmail = em; },
+        draft,
+        onSuccess: (isNewAccount = false) => {
+          if (isNewAccount) {
+            openAuthModal(modalRoot, "survey", onCompleted);
+          } else {
+            modalRoot.innerHTML = "";
+            onCompleted();
+          }
+        }
+      });
+    }
+
+    renderGuestModal();
+    return;
+  }
+
+  // 3. Signed-in Profile & Roadmap Settings Modal
   const u = store.session.user;
   let msg = "";
 
@@ -350,11 +588,11 @@ export async function openAuthModal(modalRoot, initialView = "profile", onComple
             <button type="button" id="close-auth-modal" style="background:var(--bg-body);border:1.5px solid var(--border-card);width:34px;height:34px;border-radius:10px;font-size:18px;cursor:pointer;">×</button>
           </div>
 
-          ${msg ? `<div style="margin-bottom:12px;padding:9px 12px;border-radius:10px;background:rgba(34,197,94,0.14);color:var(--primary-4);font-weight:700;font-size:13.5px;">${msg}</div>` : ""}
+          ${msg ? `<div style="margin-bottom:12px;padding:9px 12px;border-radius:10px;background:rgba(16,185,129,0.14);color:var(--primary-4);font-weight:700;font-size:13.5px;">${msg}</div>` : ""}
 
           <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--bg-body);border:1px solid var(--border-card);padding:12px 14px;border-radius:14px;margin-bottom:12px;">
             <div style="display:flex;align-items:center;gap:12px;">
-              <div style="width:42px;height:42px;border-radius:13px;background:var(--primary);color:#FFF;display:grid;place-items:center;font-weight:800;font-size:17px;">
+              <div style="width:42px;height:42px;border-radius:13px;background:var(--brand-grad);color:#FFF;display:grid;place-items:center;font-weight:800;font-size:17px;">
                 ${(u.name || u.email)[0].toUpperCase()}
               </div>
               <div>
@@ -375,7 +613,7 @@ export async function openAuthModal(modalRoot, initialView = "profile", onComple
           <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;">
             <button type="button" class="btn-primary" id="btn-save-prof">${ico("cloud", 16)} Lưu cài đặt lộ trình</button>
             ${isLocalPreviewHost() ? `
-              <button type="button" class="btn-outline-teal" id="btn-preview-survey">Xem thử Khảo sát đầu vào</button>
+              <button type="button" class="btn-outline-teal" id="btn-preview-survey">Mở Khảo sát chọn Quyển</button>
             ` : `
               <button type="button" class="btn-outline-teal" id="btn-logout-acc" style="border-color:var(--danger);color:var(--danger);">Đăng xuất</button>
             `}
@@ -408,8 +646,7 @@ export async function openAuthModal(modalRoot, initialView = "profile", onComple
     const prevSurveyBtn = modalRoot.querySelector("#btn-preview-survey");
     if (prevSurveyBtn) {
       prevSurveyBtn.addEventListener("click", () => {
-        window._forcePreviewSurvey = true;
-        close();
+        openAuthModal(modalRoot, "survey", onCompleted);
       });
     }
     const logoutBtn = modalRoot.querySelector("#btn-logout-acc");
@@ -505,9 +742,8 @@ function bindAuthHandlers(container, cfg, ctx) {
       const data = await res.json();
       if (data.ok) {
         if (data.autoActivated && data.token && data.user) {
-          store.applyAuthenticatedUser(data.token, data.user);
-          store.state.onboardingCompleted = false;
-          ctx.onSuccess();
+          store.applyAuthenticatedUser(data.token, data.user, false, true);
+          ctx.onSuccess(true);
           return;
         }
         ctx.setPendingEmail(data.email);
@@ -533,12 +769,8 @@ function bindAuthHandlers(container, cfg, ctx) {
       });
       const data = await res.json();
       if (data.ok) {
-        store.applyAuthenticatedUser(data.token, data.user);
-        // Existing users who already had roadmapProfile without explicit onboardingCompleted=false skip straight in unless startBook wasn't chosen
-        if (data.user.state && data.user.state.onboardingCompleted === undefined && data.user.state.roadmapProfile?.startBook) {
-          store.state.onboardingCompleted = true;
-        }
-        ctx.onSuccess();
+        store.applyAuthenticatedUser(data.token, data.user, false, false);
+        ctx.onSuccess(false);
       } else {
         ctx.setAlert(data.error || "Email hoặc mật khẩu không đúng.");
       }
@@ -558,9 +790,8 @@ function bindAuthHandlers(container, cfg, ctx) {
       });
       const data = await res.json();
       if (data.ok) {
-        store.applyAuthenticatedUser(data.token, data.user);
-        store.state.onboardingCompleted = false;
-        ctx.onSuccess();
+        store.applyAuthenticatedUser(data.token, data.user, false, true);
+        ctx.onSuccess(true);
       } else {
         ctx.setAlert(data.error || "Mã OTP không hợp lệ.");
       }

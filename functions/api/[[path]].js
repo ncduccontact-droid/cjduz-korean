@@ -104,15 +104,15 @@ async function sendTransactionalEmail(env, toEmail, subject, htmlContent) {
 
 function otpHtml(title, name, code, sender) {
   return `
-    <div style="font-family:Inter,Arial,sans-serif;max-width:540px;margin:0 auto;border:1px solid #C3E2FF;border-radius:16px;overflow:hidden;">
-      <div style="background:#E3F3FF;color:#0B2D50;padding:18px 24px;font-weight:800;font-size:19px;border-bottom:2px solid #9BCEFA;">D <span style="color:#007BFF;">●</span> TOPIK · docusync.online</div>
-      <div style="padding:24px;color:#0B2D50;">
-        <h2 style="margin:0 0 10px;color:#007BFF;">${title}</h2>
+    <div style="font-family:Inter,Arial,sans-serif;max-width:540px;margin:0 auto;border:1px solid #BCE9DF;border-radius:16px;overflow:hidden;">
+      <div style="background:linear-gradient(110deg,#CCFBF1 0%,#E0FCF6 50%,#CFF7EE 100%);color:#073B36;padding:18px 24px;font-weight:800;font-size:19px;border-bottom:2px solid #84DEC9;">D <span style="color:#0D9488;">●</span> TOPIK · docusync.online</div>
+      <div style="padding:24px;color:#083833;">
+        <h2 style="margin:0 0 10px;color:#0D9488;">${title}</h2>
         <p>Xin chào <strong>${name}</strong>,</p>
-        <div style="background:#E6F4FF;border:1px solid #C3E2FF;border-radius:12px;padding:16px;text-align:center;margin:18px 0;">
-          <span style="font-size:30px;font-weight:800;letter-spacing:6px;color:#005EC4;">${code}</span>
+        <div style="background:#E6FAF5;border:1px solid #BCE9DF;border-radius:12px;padding:16px;text-align:center;margin:18px 0;">
+          <span style="font-size:30px;font-weight:800;letter-spacing:6px;color:#0A7067;">${code}</span>
         </div>
-        <p style="font-size:13px;color:#4A6A8A;">Hỗ trợ học viên bởi ${sender} · Hiệu lực 15 phút.</p>
+        <p style="font-size:13px;color:#466E69;">Hỗ trợ học viên bởi ${sender} · Hiệu lực 15 phút.</p>
       </div>
     </div>
   `;

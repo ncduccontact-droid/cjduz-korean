@@ -1,8 +1,8 @@
-import { store, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261126-12";
-import { ico } from "../icons.js?v=20261126-12";
-import { analyzePronunciationRules, conjugateKoreanPredicate } from "../korean-engine.js?v=20261126-12";
-import { renderChapterExercises } from "../chapter-exercises.js?v=20261126-12";
-import { renderShortsShadowingStudio } from "../shorts-shadowing.js?v=20261126-12";
+import { store, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261127-01";
+import { ico } from "../icons.js?v=20261127-01";
+import { analyzePronunciationRules, conjugateKoreanPredicate } from "../korean-engine.js?v=20261127-01";
+import { renderChapterExercises } from "../chapter-exercises.js?v=20261127-01";
+import { renderShortsShadowingStudio } from "../shorts-shadowing.js?v=20261127-01";
 
 const READING_PASSAGES = [
   {

@@ -15,11 +15,19 @@ export function playSakuraPageIntro() {
     veil.id = "sakura-intro-veil";
     document.body.appendChild(veil);
   }
+  // Never block touch or click events on mobile/desktop during intro animation
+  veil.style.pointerEvents = "none";
 
   const canvas = document.createElement("canvas");
   canvas.id = "sakura-intro-canvas";
   canvas.style.cssText = "position:fixed;inset:0;width:100vw;height:100vh;z-index:9999;pointer-events:none;";
   document.body.appendChild(canvas);
+
+  // Hard failsafe cleanup so throttled background/low-power mobile tabs always clear overlay
+  const failsafeTimer = setTimeout(() => {
+    if (veil) { veil.remove(); veil = null; }
+    canvas.remove();
+  }, 2400);
 
   const ctx = canvas.getContext("2d");
   const dpr = Math.min(2, window.devicePixelRatio || 1);
@@ -38,9 +46,9 @@ export function playSakuraPageIntro() {
   const PETAL_COLORS = [
     ["#FFD8E6", "#FFB2C9"],
     ["#FFE6F0", "#FFC4D8"],
-    ["#E3F4FF", "#9AD4FF"],
+    ["#DCFCE7", "#6EE7B7"],
     ["#FFF2F7", "#FFD2E2"],
-    ["#D4EEFF", "#7AC3FA"]
+    ["#CCFBF1", "#5EEAD4"]
   ];
 
   // Create 82 multi-depth sakura petals + 7 full 5-petal blossoms sweeping from bottom-left / left to top-right / right
@@ -189,6 +197,7 @@ export function playSakuraPageIntro() {
     if (elapsed < TOTAL_DURATION && alive > 0) {
       requestAnimationFrame(frame);
     } else {
+      clearTimeout(failsafeTimer);
       if (veil) veil.remove();
       canvas.remove();
     }

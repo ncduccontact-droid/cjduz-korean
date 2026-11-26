@@ -1,6 +1,6 @@
-import { store, getBookWords, evaluateRoadmapScore } from "../store.js?v=20261126-12";
-import { ico, daisyLogoSVG } from "../icons.js?v=20261126-12";
-import { getGuidedStudyPlan, STAGE_LABELS } from "./roadmap.js?v=20261126-12";
+import { store, getBookWords, evaluateRoadmapScore } from "../store.js?v=20261127-01";
+import { ico, daisyLogoSVG } from "../icons.js?v=20261127-01";
+import { getGuidedStudyPlan, STAGE_LABELS } from "./roadmap.js?v=20261127-01";
 
 export function renderHomeView(root, db, navigate, startGuidedStep = null, openProfileSettings = null, modalRoot = null) {
   const s = store.state;
@@ -254,7 +254,7 @@ export function renderHomeView(root, db, navigate, startGuidedStep = null, openP
               <strong style="font-size:15px;color:var(--primary-4);">Tiếp sức Admin duy trì D ● TOPIK</strong>
             </div>
             <div style="font-size:12.5px;color:var(--text-muted);margin-bottom:8px;">
-              Mời Admin một ly trà nhỏ nếu web giúp bạn học vui hơn nha 💙
+              Mời Admin một ly trà nhỏ nếu web giúp bạn học vui hơn nha 🌿
             </div>
             <div style="display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin-bottom:8px;">
               <span class="meta-chip" style="background:#FFFFFF;color:var(--primary-1);font-weight:800;">VIETCOMBANK</span>
@@ -290,7 +290,7 @@ export function renderHomeView(root, db, navigate, startGuidedStep = null, openP
             <button type="button" id="close-qr-modal" style="background:var(--bg-body);border:1.5px solid var(--border-card);width:32px;height:32px;border-radius:10px;font-size:18px;cursor:pointer;">×</button>
           </div>
           <p style="margin:0 0 12px;font-size:13.5px;color:var(--text-muted);">
-            Cảm ơn bạn đã đồng hành và tiếp thêm động lực cho D ● TOPIK 💙
+            Cảm ơn bạn đã đồng hành và tiếp thêm động lực cho D ● TOPIK 🌿
           </p>
           <img src="/media/vietqr_admin.jpg" alt="VietQR VIETCOMBANK 0201000736282 NGUYEN CHI DUC" style="width:100%;max-width:270px;border-radius:16px;border:2px solid var(--border-card);padding:6px;background:#FFF;margin-bottom:12px;" />
           <div style="background:var(--bg-body);border:1px solid var(--border-card);border-radius:14px;padding:10px 14px;font-size:13.5px;line-height:1.6;">

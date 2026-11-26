@@ -1,16 +1,16 @@
-import { store, UI_THEMES, isLocalPreviewHost, playAudio, preloadAudioUrls, speakKoreanTTS } from "./store.js?v=20261126-12";
-import { ico, daisyLogoSVG } from "./icons.js?v=20261126-12";
-import { conjugateKoreanPredicate } from "./korean-engine.js?v=20261126-12";
-import { openAuthModal, renderMandatoryAuthGate, renderOnboardingSurvey } from "./auth-modal.js?v=20261126-12";
-import { playSakuraPageIntro } from "./sakura-intro.js?v=20261126-12";
-import { buildUrl, parseUrl, getAncestorChain } from "./router.js?v=20261126-12";
-import { renderHomeView } from "./views/home.js?v=20261126-12";
-import { renderTheoryView } from "./views/theory.js?v=20261126-12";
-import { renderRoadmapView, getGuidedStudyPlan } from "./views/roadmap.js?v=20261126-12";
-import { renderSkillsPracticeView } from "./views/skills-practice.js?v=20261126-12";
-import { renderTopikPracticeView } from "./views/topik-practice.js?v=20261126-12";
-import { renderMockTestView } from "./views/mocktest.js?v=20261126-12";
-import { renderCheckAndToolsView } from "./views/check-tools.js?v=20261126-12";
+import { store, UI_THEMES, isLocalPreviewHost, playAudio, preloadAudioUrls, speakKoreanTTS } from "./store.js?v=20261127-01";
+import { ico, daisyLogoSVG } from "./icons.js?v=20261127-01";
+import { conjugateKoreanPredicate } from "./korean-engine.js?v=20261127-01";
+import { openAuthModal, renderMandatoryAuthGate, renderOnboardingSurvey } from "./auth-modal.js?v=20261127-01";
+import { playSakuraPageIntro } from "./sakura-intro.js?v=20261127-01";
+import { buildUrl, parseUrl, getAncestorChain } from "./router.js?v=20261127-01";
+import { renderHomeView } from "./views/home.js?v=20261127-01";
+import { renderTheoryView } from "./views/theory.js?v=20261127-01";
+import { renderRoadmapView, getGuidedStudyPlan } from "./views/roadmap.js?v=20261127-01";
+import { renderSkillsPracticeView } from "./views/skills-practice.js?v=20261127-01";
+import { renderTopikPracticeView } from "./views/topik-practice.js?v=20261127-01";
+import { renderMockTestView } from "./views/mocktest.js?v=20261127-01";
+import { renderCheckAndToolsView } from "./views/check-tools.js?v=20261127-01";
 
 const appRoot = document.getElementById("app-root");
 const modalRoot = document.getElementById("modal-root");
@@ -31,6 +31,17 @@ let currentRoute = "home";
 let currentParams = {};
 let activeCleanups = [];
 let activeGuidedSession = null; // { day, stepIdx, totalSteps, label }
+let isDataBooted = false;
+let navWired = false;
+
+const ROUTE_LABELS = {
+  home: "Trang chủ",
+  theory: "Lý thuyết & Sách 1–6",
+  practice: "Luyện tập & Shadowing",
+  "mock-test": "Đề thi TOPIK",
+  roadmap: "Lộ trình 30 ngày",
+  "check-tools": "Công cụ tiếng Hàn"
+};
 
 function startGuidedStep(meta) {
   activeGuidedSession = meta;
@@ -38,8 +49,33 @@ function startGuidedStep(meta) {
 
 function renderGuidedRibbon() {
   if (!trialSlot) return;
-  const ready = store.isAuthenticated() && (isLocalPreviewHost() || store.state.onboardingCompleted);
-  if (!ready || currentRoute === "home" || currentRoute === "roadmap") {
+
+  if (!store.isAuthenticated() && currentRoute === "home") {
+    trialSlot.innerHTML = `
+      <div class="guided-active-bar">
+        <div class="guided-active-inner">
+          <div style="display:flex;align-items:center;gap:8px;font-size:13px;min-width:0;flex-wrap:wrap;">
+            <span class="badge-orange">${ico("cloud", 13)} Chế độ xem &amp; học nhanh</span>
+            <span style="color:var(--text-main);font-weight:600;">Đăng nhập để lưu tiến độ Cloud &amp; cá nhân hóa Quyển 1–6</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+            <button type="button" class="btn-primary" id="btn-banner-login" style="padding:5px 14px;font-size:12.5px;">
+              Đăng nhập / Tạo tài khoản
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+    trialSlot.querySelector("#btn-banner-login")?.addEventListener("click", () => {
+      openAuthModal(modalRoot, "login", () => {
+        updateNavUI();
+        navigate(currentRoute, currentParams, { replace: true });
+      });
+    });
+    return;
+  }
+
+  if (!isDataBooted || currentRoute === "home" || currentRoute === "roadmap") {
     trialSlot.innerHTML = "";
     return;
   }
@@ -126,10 +162,10 @@ function hydrateStaticChromeIcons() {
 function renderThemePopover() {
   const pop = document.getElementById("theme-popover");
   if (!pop) return;
-  const activeId = store.state.uiTheme || "sky";
+  const activeId = store.state.uiTheme || "jade_grad";
   pop.innerHTML = `
     <div style="font-size:12.5px;font-weight:800;color:var(--text-muted);padding:2px 4px 4px;">
-      Chọn phối màu giao diện (Xem trước)
+      Chọn dải màu Xanh Ngọc (Gradient)
     </div>
     ${UI_THEMES.map((t) => `
       <button type="button" class="theme-opt-btn ${t.id === activeId ? "active" : ""}" data-pick-theme="${t.id}">
@@ -158,10 +194,10 @@ function updateNavUI() {
   renderGuidedRibbon();
 
   document.querySelectorAll(".nav-pill").forEach((pill) => {
-    pill.classList.toggle("active", authed && pill.dataset.route === currentRoute);
+    pill.classList.toggle("active", pill.dataset.route === currentRoute);
   });
   document.querySelectorAll(".mobile-tab-btn").forEach((btn) => {
-    btn.classList.toggle("active", authed && btn.dataset.mroute === currentRoute);
+    btn.classList.toggle("active", btn.dataset.mroute === currentRoute);
   });
 
   const streakEl = document.getElementById("streak-count");
@@ -172,17 +208,19 @@ function updateNavUI() {
   const dot = document.getElementById("cloud-sync-dot");
   if (dot) {
     dot.classList.toggle("syncing", store.syncStatus === "syncing");
-    dot.title = store.syncStatus === "syncing" ? "Đang lưu lên tài khoản..." : "Đã lưu an toàn trên tài khoản";
+    dot.title = store.syncStatus === "syncing" ? "Đang lưu lên tài khoản..." : (authed ? "Đã lưu an toàn trên tài khoản" : "Chạm để đăng nhập đồng bộ Cloud");
   }
 
   const footerBadge = document.getElementById("footer-sync-badge");
   if (footerBadge) {
     if (isLocalPreviewHost() && !store.hasCloudAccount()) {
       footerBadge.innerHTML = `${ico("cloud", 15)} Chế độ Review Local · Đã bỏ qua đăng nhập`;
-    } else {
+    } else if (authed) {
       footerBadge.innerHTML = store.syncStatus === "syncing"
         ? `${ico("cloud", 15)} Đang đồng bộ lên tài khoản...`
-        : `${ico("cloud", 15)} Tiến độ lưu theo tài khoản (${authed ? store.session.user.email : "Cloud"})`;
+        : `${ico("cloud", 15)} Tiến độ lưu theo tài khoản (${store.session.user.email})`;
+    } else {
+      footerBadge.innerHTML = `${ico("cloud", 15)} Đăng nhập để đồng bộ tiến độ lên Cloud`;
     }
   }
 
@@ -195,10 +233,13 @@ function updateNavUI() {
 
 export function navigate(route, params = {}, opts = {}) {
   runViewCleanups();
-  currentRoute = route;
-  currentParams = params;
+  if (modalRoot && !opts.keepModal) {
+    modalRoot.innerHTML = "";
+  }
+  currentRoute = route || "home";
+  currentParams = params || {};
 
-  const targetUrl = buildUrl(route, params);
+  const targetUrl = buildUrl(currentRoute, currentParams);
   if (!opts.fromPopState) {
     if (opts.replace) {
       window.history.replaceState({ cjduz: true, path: targetUrl }, "", targetUrl);
@@ -208,45 +249,34 @@ export function navigate(route, params = {}, opts = {}) {
   }
 
   updateNavUI();
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  window.scrollTo({ top: 0, behavior: "auto" });
 
-  if (!isLocalPreviewHost() && !store.isAuthenticated()) {
-    return renderMandatoryAuthGate(appRoot, () => {
-      updateNavUI();
-      preloadAudioUrls(db.sc1Vocab.slice(0, 16).map((w) => w.wordAudio));
-      navigate(currentRoute, currentParams, { replace: true });
-    });
-  }
-
-  // Mandatory First-Time Book Survey on Production (skipped automatically on localhost review unless user clicks Preview Survey)
-  if ((!isLocalPreviewHost() && !store.state.onboardingCompleted) || window._forcePreviewSurvey) {
-    return renderOnboardingSurvey(appRoot, () => {
-      window._forcePreviewSurvey = false;
-      updateNavUI();
-      navigate("home", {}, { replace: true });
-    });
+  if (!isDataBooted) {
+    appRoot.innerHTML = `<div class="container-web"><div class="box-kind" style="text-align:center;padding:36px;">Đang mở mục <strong>${ROUTE_LABELS[currentRoute] || "học tập"}</strong>...</div></div>`;
+    return;
   }
 
   const openProfileSettings = () => {
-    openAuthModal(modalRoot, "profile", () => {
+    openAuthModal(modalRoot, store.isAuthenticated() ? "profile" : "login", () => {
       updateNavUI();
       navigate(currentRoute, currentParams, { replace: true });
     });
   };
 
-  if (route === "home") return renderHomeView(appRoot, db, navigate, startGuidedStep, openProfileSettings, modalRoot);
-  if (route === "theory") return renderTheoryView(appRoot, db, navigate, params);
-  if (route === "roadmap") {
+  if (currentRoute === "home") return renderHomeView(appRoot, db, navigate, startGuidedStep, openProfileSettings, modalRoot);
+  if (currentRoute === "theory") return renderTheoryView(appRoot, db, navigate, currentParams);
+  if (currentRoute === "roadmap") {
     return renderRoadmapView(appRoot, db, navigate, openProfileSettings);
   }
-  if (route === "practice") {
-    if (params.sub === "topik1" || params.sub === "topik2") {
-      return renderTopikPracticeView(appRoot, db, navigate, params, registerCleanup);
+  if (currentRoute === "practice") {
+    if (currentParams.sub === "topik1" || currentParams.sub === "topik2") {
+      return renderTopikPracticeView(appRoot, db, navigate, currentParams, registerCleanup);
     }
-    return renderSkillsPracticeView(appRoot, db, navigate, params);
+    return renderSkillsPracticeView(appRoot, db, navigate, currentParams);
   }
-  if (route === "mock-test") return renderMockTestView(appRoot, db, navigate, params, registerCleanup);
-  if (route === "check-tools") return renderCheckAndToolsView(appRoot, db, navigate, params);
+  if (currentRoute === "mock-test") return renderMockTestView(appRoot, db, navigate, currentParams, registerCleanup);
+  if (currentRoute === "check-tools") return renderCheckAndToolsView(appRoot, db, navigate, currentParams);
+  return renderHomeView(appRoot, db, navigate, startGuidedStep, openProfileSettings, modalRoot);
 }
 
 function initHierarchicalHistory() {
@@ -274,10 +304,6 @@ function initHierarchicalHistory() {
 }
 
 function openQuickLookupModal() {
-  if (!store.isAuthenticated()) {
-    navigate("home");
-    return;
-  }
   const extraBookWords = (db.books6 || []).filter((b) => b.bookId !== "q1").flatMap((b) => b.vocab || []);
   const allItems = [...db.sc1Vocab, ...extraBookWords, ...db.sejongVocab, ...db.topik1Bank, ...db.customVocab];
   let q = "";
@@ -367,38 +393,10 @@ function openQuickLookupModal() {
   });
 }
 
-async function initApp() {
-  playSakuraPageIntro();
-  hydrateStaticChromeIcons();
-  appRoot.innerHTML = `<div class="container-web"><div class="box-kind" style="text-align:center;padding:36px;">Đang tải dữ liệu học tập từ tài khoản...</div></div>`;
+function wireNavigationEventsOnce() {
+  if (navWired) return;
+  navWired = true;
 
-  const [sc1V, sc1G, sjV, tp1, books6Res, fullSys, custom] = await Promise.all([
-    fetch("/data/sc1_vocab.json").then((r) => r.json()),
-    fetch("/data/sc1_grammar.json").then((r) => r.json()),
-    fetch("/data/sejong_vocab.json").then((r) => r.json()),
-    fetch("/data/topik1_bank.json").then((r) => r.json()),
-    fetch("/data/books_1_to_6_curriculum.json").then((r) => r.json()).catch(() => ({ books: [] })),
-    fetch("/data/topik_full_system.json").then((r) => r.json()).catch(() => ({ taxonomy: { topik1: {}, topik2: {} }, itemPool: {}, exams: { topik1: [], topik2: [] } })),
-    fetch("/api/custom-decks").then((r) => r.json()).catch(() => [])
-  ]);
-
-  db.sc1Vocab = sc1V;
-  db.sc1Grammar = sc1G;
-  db.sejongVocab = sjV;
-  db.topik1Bank = tp1;
-  db.books6 = books6Res.books || [];
-  db.topikFullSystem = fullSys;
-  db.customDecks = custom;
-  db.customVocab = custom.flatMap((d) => d.items || []);
-
-  await store.restoreCloudSession();
-  if (store.isAuthenticated()) {
-    store.touchStreak();
-    preloadAudioUrls(db.sc1Vocab.slice(0, 16).map((w) => w.wordAudio));
-  }
-  store.subscribe(updateNavUI);
-
-  // Theme Popover toggle
   const themeWrap = document.getElementById("theme-menu-wrap");
   const themeBtn = document.getElementById("btn-theme-toggle");
   if (themeBtn && themeWrap) {
@@ -412,50 +410,110 @@ async function initApp() {
     });
   }
 
-  document.getElementById("brand-home-btn").addEventListener("click", () => navigate("home"));
-  document.querySelectorAll(".nav-pill[data-route]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const r = btn.dataset.route;
-      if (r === "practice") navigate("practice", { sub: "skills", skill: "shadowing" });
-      else if (r === "mock-test") navigate("mock-test", { sub: "topik1", viewMode: "exams", category: "all" });
-      else navigate(r);
-    });
-  });
+  const triggerRouteFromNav = (r) => {
+    if (r === "practice") navigate("practice", { sub: "skills", skill: "shadowing" });
+    else if (r === "mock-test") navigate("mock-test", { sub: "topik1", viewMode: "exams", category: "all" });
+    else navigate(r);
+  };
 
-  document.querySelectorAll(".mobile-tab-btn[data-mroute]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const r = btn.dataset.mroute;
-      if (r === "practice") navigate("practice", { sub: "skills", skill: "shadowing" });
-      else if (r === "mock-test") navigate("mock-test", { sub: "topik1", viewMode: "exams", category: "all" });
-      else navigate(r);
-    });
-  });
-
-  document.querySelectorAll(".dropdown-link[data-route]").forEach((btn) => {
-    btn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      const params = { sub: btn.dataset.sub };
-      if (btn.dataset.vmode) params.viewMode = btn.dataset.vmode;
-      if (btn.dataset.cat) params.category = btn.dataset.cat;
-      navigate(btn.dataset.route, params);
-    });
-  });
-
-  document.getElementById("open-quick-tool-btn").addEventListener("click", openQuickLookupModal);
-  document.getElementById("open-auth-btn").addEventListener("click", () => {
-    if (!store.isAuthenticated()) {
-      navigate("home");
+  // Delegated click handler on document so mobile bottom tabs & desktop pills ALWAYS fire on first tap!
+  document.addEventListener("click", (e) => {
+    const mBtn = e.target.closest(".mobile-tab-btn[data-mroute]");
+    if (mBtn) {
+      e.preventDefault();
+      triggerRouteFromNav(mBtn.dataset.mroute);
       return;
     }
-    openAuthModal(modalRoot, "profile", () => {
+
+    const dropBtn = e.target.closest(".dropdown-link[data-route]");
+    if (dropBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      const params = { sub: dropBtn.dataset.sub };
+      if (dropBtn.dataset.vmode) params.viewMode = dropBtn.dataset.vmode;
+      if (dropBtn.dataset.cat) params.category = dropBtn.dataset.cat;
+      navigate(dropBtn.dataset.route, params);
+      return;
+    }
+
+    const dBtn = e.target.closest(".nav-pill[data-route]");
+    if (dBtn) {
+      e.preventDefault();
+      triggerRouteFromNav(dBtn.dataset.route);
+      return;
+    }
+
+    if (e.target.closest("#brand-home-btn")) {
+      navigate("home");
+    }
+  });
+
+  document.getElementById("open-quick-tool-btn")?.addEventListener("click", openQuickLookupModal);
+  document.getElementById("open-auth-btn")?.addEventListener("click", () => {
+    openAuthModal(modalRoot, store.isAuthenticated() ? "profile" : "login", () => {
       updateNavUI();
       navigate(currentRoute, currentParams, { replace: true });
     });
   });
+}
+
+function safeJsonFetch(url, fallback) {
+  return fetch(url)
+    .then((r) => (r.ok ? r.json() : fallback))
+    .catch(() => fallback);
+}
+
+async function initApp() {
+  store.init();
+  playSakuraPageIntro();
+  hydrateStaticChromeIcons();
+
+  const initialParsed = parseUrl(window.location.pathname);
+  currentRoute = initialParsed.route;
+  currentParams = initialParsed.params;
 
   initHierarchicalHistory();
-  const initialRoute = parseUrl(window.location.pathname);
-  navigate(initialRoute.route, initialRoute.params, { fromPopState: true });
+  wireNavigationEventsOnce();
+  updateNavUI();
+
+  appRoot.innerHTML = `<div class="container-web"><div class="box-kind" style="text-align:center;padding:36px;">Đang tải dữ liệu học tập D ● TOPIK...</div></div>`;
+
+  const [sc1V, sc1G, sjV, tp1, books6Res, fullSys, custom] = await Promise.all([
+    safeJsonFetch("/data/sc1_vocab.json", []),
+    safeJsonFetch("/data/sc1_grammar.json", []),
+    safeJsonFetch("/data/sejong_vocab.json", []),
+    safeJsonFetch("/data/topik1_bank.json", []),
+    safeJsonFetch("/data/books_1_to_6_curriculum.json", { books: [] }),
+    safeJsonFetch("/data/topik_full_system.json", { taxonomy: { topik1: {}, topik2: {} }, itemPool: {}, exams: { topik1: [], topik2: [] } }),
+    safeJsonFetch("/api/custom-decks", [])
+  ]);
+
+  db.sc1Vocab = sc1V || [];
+  db.sc1Grammar = sc1G || [];
+  db.sejongVocab = sjV || [];
+  db.topik1Bank = tp1 || [];
+  db.books6 = books6Res?.books || [];
+  db.topikFullSystem = fullSys || { taxonomy: { topik1: {}, topik2: {} }, itemPool: {}, exams: { topik1: [], topik2: [] } };
+  db.customDecks = custom || [];
+  db.customVocab = (custom || []).flatMap((d) => d.items || []);
+
+  isDataBooted = true;
+  store.subscribe(updateNavUI);
+
+  // Render immediately so user never waits on cloud auth network roundtrip
+  navigate(currentRoute, currentParams, { fromPopState: true });
+
+  // Restore Cloud session in background & refresh UI smoothly if logged in
+  store.restoreCloudSession().then(() => {
+    if (store.isAuthenticated()) {
+      store.touchStreak();
+      preloadAudioUrls(db.sc1Vocab.slice(0, 16).map((w) => w.wordAudio));
+    }
+    updateNavUI();
+    if (currentRoute === "home" || currentRoute === "roadmap") {
+      navigate(currentRoute, currentParams, { replace: true, keepModal: true });
+    }
+  }).catch(() => {});
 }
 
 initApp();

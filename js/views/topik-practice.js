@@ -1,5 +1,5 @@
-import { store, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261126-12";
-import { WONGOKJI_PROMPTS, TOPIK_SPEAKING_TASKS } from "../topik-bank.js?v=20261126-12";
+import { store, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261127-01";
+import { WONGOKJI_PROMPTS, TOPIK_SPEAKING_TASKS } from "../topik-bank.js?v=20261127-01";
 
 export function renderTopikPracticeView(root, db, navigate, params = {}, registerCleanup = () => {}) {
   const sys = db.topikFullSystem || { taxonomy: { topik1: {}, topik2: {} }, itemPool: {} };
