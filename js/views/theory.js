@@ -1,8 +1,8 @@
-import { store, normalizeBookId, getBookWords, getBookCurriculum, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261127-02";
-import { ico } from "../icons.js?v=20261127-02";
-import { analyzePronunciationRules, appendJamoToText } from "../korean-engine.js?v=20261127-02";
-import { HANGEUL_DATA, GRAMMAR_COMPARISONS, HANJA_ROOTS, FREQUENT_TOPIK_EXPRESSIONS } from "../curated-content.js?v=20261127-02";
-import { renderChapterExercises } from "../chapter-exercises.js?v=20261127-02";
+import { store, normalizeBookId, getBookWords, getBookCurriculum, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261127-03";
+import { ico } from "../icons.js?v=20261127-03";
+import { analyzePronunciationRules, appendJamoToText } from "../korean-engine.js?v=20261127-03";
+import { HANGEUL_DATA, GRAMMAR_COMPARISONS, HANJA_ROOTS, FREQUENT_TOPIK_EXPRESSIONS } from "../curated-content.js?v=20261127-03";
+import { renderChapterExercises } from "../chapter-exercises.js?v=20261127-03";
 
 function buildSubPartsForLesson(db, bookKey, lessonNum, lessonWords) {
   const bookCur = getBookCurriculum(db, bookKey);
@@ -191,7 +191,7 @@ export function renderTheoryView(root, db, navigate, params = {}) {
 
         <div class="theory-card" id="card-sc1-grammar">
           <div style="display:flex;align-items:center;gap:13px;min-width:0;">
-            <div class="icon-vocab-badge">${ico("pen", 20)}</div>
+            <div class="icon-vocab-badge">${ico("pen", 23)}</div>
             <div style="min-width:0;">
               <strong style="font-size:15.5px;display:block;">Kho Ngữ pháp &amp; Phân biệt dễ nhầm</strong>
               <span style="font-size:13px;color:var(--text-muted);">은/는 vs 이/가 · -아서 vs -(으)니까 · Quyển 1–6</span>
@@ -202,7 +202,7 @@ export function renderTheoryView(root, db, navigate, params = {}) {
 
         <div class="theory-card" id="card-frequent-topik">
           <div style="display:flex;align-items:center;gap:13px;min-width:0;">
-            <div class="icon-grammar-badge">${ico("star", 20)}</div>
+            <div class="icon-grammar-badge">${ico("star", 23)}</div>
             <div style="min-width:0;">
               <strong style="font-size:15.5px;display:block;">Biểu hiện &amp; Quán dụng ngữ TOPIK</strong>
               <span style="font-size:13px;color:var(--text-muted);">Câu tủ hội thoại, phó từ liên kết, đồng nghĩa</span>
@@ -213,7 +213,7 @@ export function renderTheoryView(root, db, navigate, params = {}) {
 
         <div class="theory-card" id="card-open-hanja">
           <div style="display:flex;align-items:center;gap:13px;min-width:0;">
-            <div class="icon-vocab-badge">${ico("sprout", 20)}</div>
+            <div class="icon-vocab-badge">${ico("sprout", 23)}</div>
             <div style="min-width:0;">
               <strong style="font-size:15.5px;display:block;">Sơ đồ Gốc từ Âm Hán – Hàn</strong>
               <span style="font-size:13px;color:var(--text-muted);">Học 1 gốc Hán Việt mở khóa 6 từ vựng TOPIK II</span>
@@ -422,9 +422,9 @@ function renderLessonDetail(root, db, navigate, rawBookKey, lessonNum, activeTab
                     ${w.pronunciation ? `<span style="font-size:12.5px;color:var(--text-muted);">/${w.pronunciation}/</span>` : ""}
                   </div>
                   <div style="display:flex;align-items:center;gap:6px;">
-                    <button class="btn-audio" data-audio="${w.wordAudio || ""}" data-tts="${w.korean}" title="Nghe phát âm">🔊</button>
-                    <button class="btn-audio" data-star="${w.id}" style="background:${starred ? "var(--primary)" : "#F1F5F9"};color:${starred ? "#FFF" : "#64748B"};" title="Đánh dấu sao">★</button>
-                    <button class="btn-audio" data-master="${w.id}" style="background:${mastered ? "var(--success)" : "#F1F5F9"};color:${mastered ? "#FFF" : "#64748B"};" title="Đánh dấu đã thuộc">✓</button>
+                    <button class="btn-audio" data-audio="${w.wordAudio || ""}" data-tts="${w.korean}" title="Nghe phát âm">${ico("speaker", 18)}</button>
+                    <button class="btn-audio" data-star="${w.id}" style="${starred ? "background:#FEF9C3;border-color:#FACC15;" : "opacity:0.55;"}" title="Đánh dấu sao">${ico("star", 18)}</button>
+                    <button class="btn-audio" data-master="${w.id}" style="${mastered ? "background:#DCFCE7;border-color:#4ADE80;" : "opacity:0.5;"}" title="Đánh dấu đã thuộc">${ico("check", 18)}</button>
                   </div>
                 </div>
 
@@ -438,11 +438,11 @@ function renderLessonDetail(root, db, navigate, rawBookKey, lessonNum, activeTab
                       <div class="ko" style="font-size:15px;font-weight:600;color:var(--text-main);">${w.exampleKo}</div>
                       ${!hideMeaning && w.exampleVi ? `<div style="font-size:13px;color:var(--text-muted);margin-top:2px;">${w.exampleVi}</div>` : ""}
                     </div>
-                    <button class="btn-audio" style="width:32px;height:32px;" data-audio="${w.exampleAudio || ""}" data-tts="${w.exampleKo}" title="Nghe câu ví dụ">▶</button>
+                    <button class="btn-audio" style="width:32px;height:32px;" data-audio="${w.exampleAudio || ""}" data-tts="${w.exampleKo}" title="Nghe câu ví dụ">${ico("play", 17)}</button>
                   </div>
                 ` : ""}
 
-                ${w.note ? `<div style="font-size:12.5px;color:var(--text-muted);">💡 ${w.note}</div>` : ""}
+                ${w.note ? `<div style="font-size:12.5px;color:var(--text-muted);display:flex;align-items:center;gap:5px;">${ico("bulb", 15)} <span>${w.note}</span></div>` : ""}
               </div>
             `;
           }).join("")}
@@ -454,7 +454,7 @@ function renderLessonDetail(root, db, navigate, rawBookKey, lessonNum, activeTab
               Đang xem <strong>${activePartObj.title}</strong> (${visibleWords.length} từ vừa sức 1 phiên học).
             </span>
             <div style="display:flex;gap:8px;flex-wrap:wrap;">
-              <button type="button" class="btn-primary" id="btn-bottom-fc">▶ Lật thẻ 3D ${visibleWords.length} từ này</button>
+              <button type="button" class="btn-primary" id="btn-bottom-fc">${ico("cards", 17)} Lật thẻ 3D ${visibleWords.length} từ này</button>
               ${Number(selectedPart) < subParts.length ? `
                 <button type="button" class="btn-outline-teal" id="btn-next-subpart">Qua Phần ${Number(selectedPart) + 1} →</button>
               ` : `
@@ -522,9 +522,9 @@ function renderLessonDetail(root, db, navigate, rawBookKey, lessonNum, activeTab
       body.innerHTML = `
         <!-- Textbook Part A: Core Grammar Structures -->
         <div class="section-head" style="margin-top:0;">
-          <h3 style="margin:0;font-size:18px;">📘 Ngữ pháp trọng tâm trong Sách Giáo Trình (${grammars.length} cấu trúc)</h3>
+          <h3 style="margin:0;font-size:18px;display:flex;align-items:center;gap:8px;">${ico("book", 20)} Ngữ pháp trọng tâm trong Sách Giáo Trình (${grammars.length} cấu trúc)</h3>
           <button type="button" class="btn-primary" id="btn-gram-to-wb" style="padding:7px 15px;font-size:13px;">
-            📙 Áp dụng làm Sách Bài Tập →
+            ${ico("workbook", 16)} Áp dụng làm Sách Bài Tập →
           </button>
         </div>
 
@@ -545,7 +545,7 @@ function renderLessonDetail(root, db, navigate, rawBookKey, lessonNum, activeTab
                       <div class="ko" style="font-weight:700;font-size:15.5px;">${g.example1Ko}</div>
                       <div style="font-size:13px;color:var(--text-muted);">${g.example1Vi || ""}</div>
                     </div>
-                    <button class="btn-audio" data-play="${g.example1Audio || ""}" data-tts="${g.example1Ko}">🔊</button>
+                    <button class="btn-audio" data-play="${g.example1Audio || ""}" data-tts="${g.example1Ko}">${ico("speaker", 18)}</button>
                   </div>
                 ` : ""}
                 ${g.example2Ko ? `
@@ -554,11 +554,11 @@ function renderLessonDetail(root, db, navigate, rawBookKey, lessonNum, activeTab
                       <div class="ko" style="font-weight:700;font-size:15.5px;">${g.example2Ko}</div>
                       <div style="font-size:13px;color:var(--text-muted);">${g.example2Vi || ""}</div>
                     </div>
-                    <button class="btn-audio" data-play="${g.example2Audio || ""}" data-tts="${g.example2Ko}">🔊</button>
+                    <button class="btn-audio" data-play="${g.example2Audio || ""}" data-tts="${g.example2Ko}">${ico("speaker", 18)}</button>
                   </div>
                 ` : ""}
               </div>
-              ${g.note ? `<div style="margin-top:8px;font-size:13px;color:var(--primary-1);">📌 Lưu ý: ${g.note}</div>` : ""}
+              ${g.note ? `<div style="margin-top:8px;font-size:13px;color:var(--primary-1);display:flex;align-items:center;gap:5px;">${ico("pin", 15)} <span>Lưu ý: ${g.note}</span></div>` : ""}
             </div>
           `).join("")}
         </div>
@@ -568,7 +568,7 @@ function renderLessonDetail(root, db, navigate, rawBookKey, lessonNum, activeTab
           <div class="grid-2">
             <div class="box-kind">
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
-                <h3 style="margin:0;font-size:17px;">💬 Hội thoại / Bài khóa Giáo trình</h3>
+                <h3 style="margin:0;font-size:17px;display:flex;align-items:center;gap:7px;">${ico("chat", 20)} Hội thoại / Bài khóa Giáo trình</h3>
                 <div style="display:flex;gap:6px;flex-wrap:wrap;">
                   <button class="btn-outline-teal" data-mute="none" style="padding:4px 10px;font-size:12px;${muteRole === "none" ? "background:var(--primary);color:#FFF;" : ""}">Hiện cả 2</button>
                   ${speakers.map((sp) => `
@@ -581,7 +581,7 @@ function renderLessonDetail(root, db, navigate, rawBookKey, lessonNum, activeTab
                   <div style="padding:11px 14px;border-radius:12px;background:${muteRole === line.speaker ? "var(--powder-soft)" : "var(--bg-body)"};border-left:4px solid ${muteRole === line.speaker ? "var(--yellow-2)" : "var(--primary)"};">
                     <div style="display:flex;justify-content:space-between;align-items:center;">
                       <strong class="ko" style="color:var(--primary-4);">${line.speaker}</strong>
-                      <button class="btn-audio" style="width:28px;height:28px;font-size:12px;" data-speak="${line.ko}">🔊</button>
+                      <button class="btn-audio" style="width:28px;height:28px;" data-speak="${line.ko}">${ico("speaker", 15)}</button>
                     </div>
                     <div class="ko" style="font-size:16px;font-weight:600;margin-top:4px;${muteRole === line.speaker ? "filter:blur(4px);cursor:pointer;" : ""}" onclick="this.style.filter='none'">${line.ko}</div>
                     <div style="font-size:13.5px;color:var(--text-muted);margin-top:2px;">${line.vi}</div>
@@ -591,7 +591,7 @@ function renderLessonDetail(root, db, navigate, rawBookKey, lessonNum, activeTab
             </div>
 
             <div class="achieve-card" style="justify-content:center;">
-              <span class="badge-orange" style="align-self:flex-start;">🇰🇷 Ghi chú Văn hóa &amp; Mẹo thi</span>
+              <span class="badge-orange" style="align-self:flex-start;">${ico("kr", 15)} Ghi chú Văn hóa &amp; Mẹo thi</span>
               <h3 style="margin:4px 0;font-size:19px;">Điểm cốt lõi Bài ${String(lessonNum).padStart(2, "0")}</h3>
               <p style="font-size:14.5px;line-height:1.68;margin:0;color:var(--text-main);">${culture}</p>
             </div>
@@ -734,17 +734,17 @@ function renderVocabReviewArena(root, db, navigate, params = {}) {
       const hasNextPart = activePart < subParts.length;
       stage.innerHTML = `
         <div class="box-kind card-pop" style="max-width:620px;margin:0 auto;text-align:center;padding:30px 24px;">
-          <span class="badge-orange" style="margin-bottom:8px;">🎉 Hoàn thành gọn 1 Phần nhỏ</span>
+          <span class="badge-orange" style="margin-bottom:8px;">${ico("trophy", 15)} Hoàn thành gọn 1 Phần nhỏ</span>
           <h2 style="margin:6px 0 8px;">Bạn vừa lật xong ${sortedDeck.length} thẻ của ${activePartObj.title}!</h2>
           <p style="color:var(--text-muted);font-size:14.5px;margin:0 0 20px;">
             Chia nhỏ từng phần 8–15 từ giúp não ghi nhớ sâu mà không bị quá tải. Bạn muốn làm gì tiếp theo?
           </p>
           <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;">
             ${hasNextPart ? `
-              <button type="button" class="btn-primary" id="btn-done-next-part">▶ Học tiếp Phần ${activePart + 1} →</button>
+              <button type="button" class="btn-primary" id="btn-done-next-part">${ico("play", 16)} Học tiếp Phần ${activePart + 1} →</button>
             ` : ""}
-            <button type="button" class="btn-orange" id="btn-done-go-wb">📙 Sang làm Sách Bài Tập Bài ${String(activeLesson).padStart(2, "0")} →</button>
-            <button type="button" class="btn-outline-teal" id="btn-done-replay">🔄 Lật lại Phần này</button>
+            <button type="button" class="btn-orange" id="btn-done-go-wb">${ico("workbook", 16)} Sang làm Sách Bài Tập Bài ${String(activeLesson).padStart(2, "0")} →</button>
+            <button type="button" class="btn-outline-teal" id="btn-done-replay">${ico("refresh", 16)} Lật lại Phần này</button>
           </div>
         </div>
       `;
@@ -903,7 +903,7 @@ function renderVocabReviewArena(root, db, navigate, params = {}) {
           <div class="box-kind" style="text-align:center;padding:26px 20px;">
             <div style="font-size:14px;color:var(--text-muted);margin-bottom:8px;">Điểm: <strong>${score}</strong> · Chọn nghĩa đúng (${(idx % sortedDeck.length) + 1}/${sortedDeck.length}):</div>
             <div class="ko" style="font-size:34px;font-weight:800;color:var(--primary-1);margin-bottom:10px;">${card.korean}</div>
-            <button class="btn-outline-teal" id="mcq-audio" style="margin-bottom:20px;">🔊 Nghe phát âm <kbd class="keycap">R</kbd></button>
+            <button class="btn-outline-teal" id="mcq-audio" style="margin-bottom:20px;">${ico("speaker", 17)} Nghe phát âm <kbd class="keycap">R</kbd></button>
             <div class="grid-2" style="text-align:left;">
               ${options.map((opt, i) => `
                 <button class="box-kind clickable" data-ans="${opt.id}" data-mcq-idx="${i}" style="font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px;">
@@ -931,11 +931,11 @@ function renderVocabReviewArena(root, db, navigate, params = {}) {
             score += 10;
             btn.style.borderColor = "var(--success)";
             btn.style.background = "rgba(34,197,94,0.12)";
-            fb.innerHTML = `<span style="color:var(--success)">✔ Chính xác! ${card.exampleKo ? `Ví dụ: ${card.exampleKo}` : ""}</span>`;
+            fb.innerHTML = `<span style="color:var(--success)">${ico("check", 16)} Chính xác! ${card.exampleKo ? `Ví dụ: ${card.exampleKo}` : ""}</span>`;
             setTimeout(() => { idx += 1; renderArena(); }, 800);
           } else {
             btn.style.borderColor = "var(--danger)";
-            fb.innerHTML = `<span style="color:var(--danger)">✘ Đáp án đúng là: "${card.vietnamese}".</span> <button class="btn-primary" id="mcq-next" style="margin-left:10px;padding:5px 14px;">Câu tiếp →</button>`;
+            fb.innerHTML = `<span style="color:var(--danger)">${ico("cross", 16)} Đáp án đúng là: "${card.vietnamese}".</span> <button class="btn-primary" id="mcq-next" style="margin-left:10px;padding:5px 14px;">Câu tiếp →</button>`;
             stage.querySelector("#mcq-next").addEventListener("click", () => { idx += 1; renderArena(); });
           }
         });
@@ -952,7 +952,7 @@ function renderVocabReviewArena(root, db, navigate, params = {}) {
             <div style="text-align:center;">
               <div style="font-size:14px;color:var(--text-muted);margin-bottom:6px;">Nghe âm thanh &amp; nghĩa tiếng Việt rồi gõ lại chữ Hangeul:</div>
               <div style="font-size:23px;font-weight:800;margin-bottom:10px;">${card.vietnamese}</div>
-              <button class="btn-primary" id="type-play-btn" style="margin-bottom:16px;">🔊 Phát âm thanh gợi ý</button>
+              <button class="btn-primary" id="type-play-btn" style="margin-bottom:16px;">${ico("speaker", 17)} Phát âm thanh gợi ý</button>
             </div>
 
             <div style="display:flex;gap:8px;flex-wrap:wrap;">
@@ -969,7 +969,7 @@ function renderVocabReviewArena(root, db, navigate, params = {}) {
               `).join("")}
               <div class="kr-key-row">
                 <button type="button" class="kr-key" data-special="space" style="min-width:140px;">Space</button>
-                <button type="button" class="kr-key" data-special="back" style="min-width:90px;">⌫ Xóa</button>
+                <button type="button" class="kr-key" data-special="back" style="min-width:90px;">Xóa</button>
               </div>
             </div>
           </div>
@@ -997,7 +997,7 @@ function renderVocabReviewArena(root, db, navigate, params = {}) {
         const fb = stage.querySelector("#type-feedback");
         if (cleanUser === cleanTargetWord) {
           store.rateCard(card.id, 3);
-          fb.innerHTML = `<span style="color:var(--success)">✔ Chính xác 100%: <span class="ko">${cleanTargetWord}</span></span>`;
+          fb.innerHTML = `<span style="color:var(--success)">${ico("check", 16)} Chính xác 100%: <span class="ko">${cleanTargetWord}</span></span>`;
           setTimeout(() => { idx += 1; renderArena(); }, 900);
         } else {
           store.rateCard(card.id, 0);
@@ -1028,7 +1028,7 @@ function renderVocabReviewArena(root, db, navigate, params = {}) {
         <div class="box-kind">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
             <strong>Chọn 1 từ tiếng Hàn ghép với nghĩa tiếng Việt tương ứng (${activePartObj.title}):</strong>
-            <button class="btn-outline-teal" id="match-reload" style="padding:5px 14px;">🔄 Đổi ván mới</button>
+            <button class="btn-outline-teal" id="match-reload" style="padding:5px 14px;">${ico("refresh", 16)} Đổi ván mới</button>
           </div>
           <div class="grid-3" id="match-grid">
             ${tiles.map((t) => `
@@ -1086,11 +1086,11 @@ function renderHangeulLab(root, navigate) {
   root.innerHTML = `
     <div class="container-web">
       <div class="breadcrumb-bar">
-        <button id="bc-theory">Lý thuyết</button><span>▶</span><span>Phòng Lab Hangeul &amp; 7 Quy tắc Biến âm</span>
+        <button id="bc-theory">Lý thuyết</button><span>/</span><span>Phòng Lab Hangeul &amp; 7 Quy tắc Biến âm</span>
       </div>
 
       <div class="outline-ai" style="margin-bottom:26px;">
-        <h3 style="margin:0 0 8px;">🔍 Máy soi 7 Quy tắc Biến âm Tiếng Hàn tự động</h3>
+        <h3 style="margin:0 0 8px;display:flex;align-items:center;gap:8px;">${ico("search", 21)} Máy soi 7 Quy tắc Biến âm Tiếng Hàn tự động</h3>
         <p style="margin:0 0 12px;font-size:14.5px;color:var(--text-muted);">
           Nhập hoặc bấm thử các từ bên dưới để xem cách chuyển từ mặt chữ Hangeul sang phát âm chuẩn bản xứ:
         </p>
@@ -1192,7 +1192,7 @@ function renderGrammarList(root, db, navigate, mode = "sc1") {
             <div class="ko" style="font-weight:600;">${g.example1Ko}</div>
             <div style="font-size:13px;color:var(--text-muted);">${g.example1Vi || ""}</div>
           </div>
-          <button class="btn-audio" data-play="${g.example1Audio || ""}" data-tts="${g.example1Ko}">🔊</button>
+          <button class="btn-audio" data-play="${g.example1Audio || ""}" data-tts="${g.example1Ko}">${ico("speaker", 18)}</button>
         </div>
       </div>
     `).join("");
@@ -1208,7 +1208,7 @@ function renderGrammarList(root, db, navigate, mode = "sc1") {
   root.innerHTML = `
     <div class="container-web">
       <div class="breadcrumb-bar">
-        <button id="bc-theory">Lý thuyết</button><span>▶</span><span>Kho Ngữ pháp Quyển 1–6 &amp; So sánh cấu trúc</span>
+        <button id="bc-theory">Lý thuyết</button><span>/</span><span>Kho Ngữ pháp Quyển 1–6 &amp; So sánh cấu trúc</span>
       </div>
 
       <div class="skill-pills-row">
@@ -1263,7 +1263,7 @@ function renderFrequentTopikView(root, navigate) {
     root.innerHTML = `
       <div class="container-web">
         <div class="breadcrumb-bar">
-          <button id="bc-theory">Lý thuyết</button><span>▶</span><span>Biểu hiện thường gặp TOPIK 1 &amp; 2</span>
+          <button id="bc-theory">Lý thuyết</button><span>/</span><span>Biểu hiện thường gặp TOPIK 1 &amp; 2</span>
         </div>
 
         <div class="section-head" style="margin-top:0;">
@@ -1285,15 +1285,15 @@ function renderFrequentTopikView(root, navigate) {
                 <strong class="ko" style="font-size:19px;color:var(--primary-1);">${item.ko}</strong>
                 <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
                   <span class="badge-orange">${item.level}</span>
-                  <button class="btn-audio" data-speak="${item.ko.split("＝")[0].split("/")[0].trim()}">🔊</button>
+                  <button class="btn-audio" data-speak="${item.ko.split("＝")[0].split("/")[0].trim()}">${ico("speaker", 18)}</button>
                 </div>
               </div>
               <div style="font-weight:700;margin-bottom:6px;">${item.vi}</div>
               <div class="ko" style="font-size:14px;color:var(--text-muted);background:var(--bg-body);padding:8px 12px;border-radius:8px;margin-bottom:8px;">
                 Ví dụ: ${item.usage}
               </div>
-              <div style="font-size:13px;color:var(--primary-4);background:var(--primary-3);padding:6px 10px;border-radius:8px;">
-                🎯 <strong>Mẹo phòng thi:</strong> ${item.tip}
+              <div style="font-size:13px;color:var(--primary-4);background:var(--primary-3);padding:6px 10px;border-radius:8px;display:flex;align-items:center;gap:6px;">
+                ${ico("target", 16)} <span><strong>Mẹo phòng thi:</strong> ${item.tip}</span>
               </div>
             </div>
           `).join("")}
@@ -1311,7 +1311,7 @@ function renderHanjaView(root, navigate) {
   root.innerHTML = `
     <div class="container-web">
       <div class="breadcrumb-bar">
-        <button id="bc-theory">Lý thuyết</button><span>▶</span><span>Sơ đồ Gốc từ Âm Hán – Hàn</span>
+        <button id="bc-theory">Lý thuyết</button><span>/</span><span>Sơ đồ Gốc từ Âm Hán – Hàn</span>
       </div>
       <div class="section-head" style="margin-top:0;">
         <h2>Sơ đồ Cầu nối Âm Hán – Hàn (Học 1 gốc chữ nhớ 6 từ TOPIK)</h2>
@@ -1333,7 +1333,7 @@ function renderHanjaView(root, navigate) {
                     <span style="font-size:13px;color:var(--primary);font-weight:700;margin:0 6px;">[${w.hv}]</span>
                     <span style="font-size:14px;color:var(--text-muted);">— ${w.vi}</span>
                   </div>
-                  <button class="btn-audio" style="width:28px;height:28px;font-size:12px;" data-speak="${w.ko}">🔊</button>
+                  <button class="btn-audio" style="width:28px;height:28px;" data-speak="${w.ko}">${ico("speaker", 15)}</button>
                 </div>
               `).join("")}
             </div>

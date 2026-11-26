@@ -1,6 +1,6 @@
-import { store, getBookWords, evaluateRoadmapScore } from "../store.js?v=20261127-02";
-import { ico, daisyLogoSVG } from "../icons.js?v=20261127-02";
-import { getGuidedStudyPlan, STAGE_LABELS } from "./roadmap.js?v=20261127-02";
+import { store, getBookWords, evaluateRoadmapScore } from "../store.js?v=20261127-03";
+import { ico, daisyLogoSVG } from "../icons.js?v=20261127-03";
+import { getGuidedStudyPlan, STAGE_LABELS } from "./roadmap.js?v=20261127-03";
 
 export function renderHomeView(root, db, navigate, startGuidedStep = null, openProfileSettings = null, modalRoot = null) {
   const s = store.state;
@@ -34,6 +34,8 @@ export function renderHomeView(root, db, navigate, startGuidedStep = null, openP
     };
   });
 
+  const qrImgSrc = "/media/vietqr_admin_v2.jpg?v=20261127-03";
+
   root.innerHTML = `
     <div class="container-web">
       <section class="today-plan-grid">
@@ -41,8 +43,8 @@ export function renderHomeView(root, db, navigate, startGuidedStep = null, openP
         <div class="box-kind">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:14px;">
             <div>
-              <div style="font-size:12.5px;font-weight:600;color:var(--text-muted);margin-bottom:2px;">
-                Lộ trình hôm nay · Ngày ${activeDay.day}/30
+              <div style="font-size:12.5px;font-weight:600;color:var(--text-muted);margin-bottom:2px;display:flex;align-items:center;gap:6px;">
+                ${ico("compass", 16)} <span>Lộ trình hôm nay · Ngày ${activeDay.day}/30</span>
               </div>
               <h1 style="margin:0;font-size:19px;font-weight:750;color:var(--text-main);">
                 ${activeDay.shortTopic}
@@ -66,11 +68,11 @@ export function renderHomeView(root, db, navigate, startGuidedStep = null, openP
 
             <div style="display:flex;gap:8px;flex-wrap:wrap;width:auto;">
               <button type="button" class="btn-primary" id="btn-start-next-step">
-                Bắt đầu học
+                ${ico("play", 17)} Bắt đầu học
               </button>
               ${dueCount > 0 ? `
                 <button type="button" class="btn-soft-jade" id="btn-home-due-srs">
-                  Ôn ${dueCount} từ đến hạn
+                  ${ico("cards", 17)} Ôn ${dueCount} từ đến hạn
                 </button>
               ` : ""}
             </div>
@@ -84,7 +86,7 @@ export function renderHomeView(root, db, navigate, startGuidedStep = null, openP
                 <div class="today-step-row ${t.done ? "is-done" : (isNext ? "is-next" : "")}">
                   <div style="display:flex;align-items:center;gap:11px;min-width:0;flex:1;">
                     <button type="button" class="step-check-btn ${t.done ? "checked" : ""}" data-home-chk="${activeDay.day}" data-sidx="${t.stepIdx}" data-stotal="${activeDay.totalSteps}" title="Đánh dấu hoàn thành">
-                      ${t.done ? "✓" : (t.stepIdx + 1)}
+                      ${t.done ? ico("check", 24) : (t.stepIdx + 1)}
                     </button>
                     <div style="min-width:0;flex:1;">
                       <div style="font-size:14px;font-weight:650;line-height:1.35;${t.done ? "text-decoration:line-through;color:var(--text-muted);" : "color:var(--text-main);"}">
@@ -109,7 +111,9 @@ export function renderHomeView(root, db, navigate, startGuidedStep = null, openP
         <div class="box-kind" style="display:flex;flex-direction:column;justify-content:space-between;gap:14px;">
           <div>
             <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px;">
-              <strong style="font-size:15.5px;color:var(--text-main);">Năng lực hiện tại</strong>
+              <strong style="font-size:15.5px;color:var(--text-main);display:inline-flex;align-items:center;gap:7px;">
+                ${ico("chart", 19)} Năng lực hiện tại
+              </strong>
               <button type="button" class="badge-orange" id="btn-home-edit-profile" style="cursor:pointer;border:none;font-family:inherit;" title="Đổi quyển đang học">
                 ${activeBookLabel} · Đổi
               </button>
@@ -156,19 +160,19 @@ export function renderHomeView(root, db, navigate, startGuidedStep = null, openP
           </div>
 
           <button type="button" class="btn-outline-teal" id="btn-open-roadmap" style="width:100%;">
-            ${ico("compass", 15)} Xem lộ trình 30 ngày chi tiết
+            ${ico("compass", 17)} Xem lộ trình 30 ngày chi tiết
           </button>
         </div>
       </section>
 
-      <!-- 4 Core Study Modules -->
+      <!-- 4 Core Study Modules (Distinct Popping Icon Colors!) -->
       <div class="section-head">
         <h2>Học nhanh theo kỹ năng</h2>
       </div>
       <div class="grid-2">
         <div class="theory-card" data-quick="vocab-review">
           <div style="display:flex;align-items:center;gap:13px;min-width:0;">
-            <div class="icon-vocab-badge">${ico("cards", 20)}</div>
+            <div class="icon-vocab-badge">${ico("cards", 25)}</div>
             <div style="min-width:0;">
               <strong style="font-size:15.5px;display:block;">Lật thẻ từ vựng 3D</strong>
               <span style="font-size:13px;color:var(--text-muted);">Chia theo phần nhỏ 8–15 từ, tự phát âm</span>
@@ -179,7 +183,7 @@ export function renderHomeView(root, db, navigate, startGuidedStep = null, openP
 
         <div class="theory-card" data-quick="chapter-translate">
           <div style="display:flex;align-items:center;gap:13px;min-width:0;">
-            <div class="icon-grammar-badge">${ico("pen", 20)}</div>
+            <div class="icon-grammar-badge">${ico("workbook", 25)}</div>
             <div style="min-width:0;">
               <strong style="font-size:15.5px;display:block;">Sách bài tập &amp; Dịch câu</strong>
               <span style="font-size:13px;color:var(--text-muted);">Thực hành ngữ pháp 익힘책 và ghép câu Hàn</span>
@@ -190,7 +194,7 @@ export function renderHomeView(root, db, navigate, startGuidedStep = null, openP
 
         <div class="theory-card" data-quick="shorts-shadowing">
           <div style="display:flex;align-items:center;gap:13px;min-width:0;">
-            <div class="icon-vocab-badge">${ico("video", 20)}</div>
+            <div class="icon-vocab-badge">${ico("video", 25)}</div>
             <div style="min-width:0;">
               <strong style="font-size:15.5px;display:block;">Shadowing YouTube Shorts</strong>
               <span style="font-size:13px;color:var(--text-muted);">Nhại giọng theo phụ đề chạy, chạm từ tra nghĩa</span>
@@ -201,7 +205,7 @@ export function renderHomeView(root, db, navigate, startGuidedStep = null, openP
 
         <div class="theory-card" data-quick="exams-20">
           <div style="display:flex;align-items:center;gap:13px;min-width:0;">
-            <div class="icon-grammar-badge">${ico("exam", 20)}</div>
+            <div class="icon-grammar-badge">${ico("exam", 25)}</div>
             <div style="min-width:0;">
               <strong style="font-size:15.5px;display:block;">Kho 30 Đề thi TOPIK</strong>
               <span style="font-size:13px;color:var(--text-muted);">Làm full đề 70/104 câu hoặc luyện từng dạng</span>
@@ -219,7 +223,9 @@ export function renderHomeView(root, db, navigate, startGuidedStep = null, openP
         ${levels.map((lv, idx) => `
           <article class="achieve-card clickable" data-lv-idx="${idx}">
             <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;">
-              <strong style="font-size:15.5px;color:var(--text-main);">Quyển ${lv.bookNum}</strong>
+              <strong style="font-size:15px;color:var(--text-main);display:inline-flex;align-items:center;gap:6px;">
+                ${ico("book", 18)} Quyển ${lv.bookNum}
+              </strong>
               <span class="badge-orange">${lv.shortLevel}</span>
             </div>
             <div style="font-size:12.5px;color:var(--text-muted);">
@@ -236,42 +242,46 @@ export function renderHomeView(root, db, navigate, startGuidedStep = null, openP
         `).join("")}
       </div>
 
-      <!-- Writing + Compact Support Card -->
+      <!-- Writing Studio + Admin VietQR Support Card -->
       <div class="grid-2" style="margin-top:24px;align-items:stretch;">
         <section class="outline-ai" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;">
           <div style="display:flex;align-items:center;gap:12px;">
-            <div class="icon-vocab-badge">${ico("sparkle", 20)}</div>
+            <div class="icon-vocab-badge">${ico("pen", 24)}</div>
             <div>
               <strong style="font-size:15.5px;display:block;">Phòng Viết 원고지 &amp; Sổ tay câu sai</strong>
               <span style="font-size:13px;color:var(--text-muted);">Luyện viết Câu 51–54 và ôn lại các câu làm nhầm</span>
             </div>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <button class="btn-soft-jade" id="btn-mia-writing">${ico("pen", 14)} Viết 원고지</button>
-            <button class="btn-outline-teal" id="btn-mia-check">Câu sai (${s.mistakes.length})</button>
+            <button class="btn-soft-jade" id="btn-mia-writing">${ico("pen", 16)} Viết 원고지</button>
+            <button class="btn-outline-teal" id="btn-mia-check">${ico("target", 16)} Câu sai (${s.mistakes.length})</button>
           </div>
         </section>
 
         <section class="donate-cute-card">
-          <div style="flex:1;min-width:190px;">
-            <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;">
-              ${daisyLogoSVG(24)}
-              <strong style="font-size:14.5px;color:var(--text-main);">Ủng hộ duy trì D ● TOPIK</strong>
+          <div style="flex:1;min-width:175px;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+              ${daisyLogoSVG(28)}
+              <strong style="font-size:16px;color:var(--text-main);">Ủng hộ admin nhée &gt;&lt;</strong>
             </div>
-            <div style="font-size:12.5px;color:var(--text-muted);margin-bottom:8px;">
-              Vietcombank · <strong style="color:var(--text-secondary);">0201000736282</strong> · NGUYEN CHI DUC
+
+            <div style="background:#F8FAFC;border-radius:12px;padding:9px 12px;margin-bottom:10px;line-height:1.5;font-size:13px;">
+              <div style="font-weight:750;color:var(--primary-1);letter-spacing:0.02em;">VIETCOMBANK</div>
+              <div style="font-size:15.5px;font-weight:800;color:var(--text-main);font-variant-numeric:tabular-nums;">0201000736282</div>
+              <div style="font-weight:700;color:var(--text-secondary);">NGUYEN CHI DUC</div>
             </div>
+
             <div style="display:flex;gap:6px;flex-wrap:wrap;">
               <button type="button" class="btn-outline-teal" id="btn-copy-stk" style="padding:6px 12px;font-size:12.5px;">
                 Sao chép STK
               </button>
               <button type="button" class="btn-soft-jade" id="btn-zoom-qr" style="padding:6px 12px;font-size:12.5px;">
-                Mở mã QR
+                Phóng to QR
               </button>
             </div>
           </div>
 
-          <img src="/media/vietqr_admin.jpg" alt="VietQR ủng hộ Admin NGUYEN CHI DUC" class="donate-qr-thumb" id="img-donate-qr" title="Bấm để phóng to mã QR" />
+          <img src="${qrImgSrc}" alt="VietQR VIETCOMBANK 0201000736282 NGUYEN CHI DUC" class="donate-qr-thumb" id="img-donate-qr" title="Bấm để phóng to mã QR" />
         </section>
       </div>
     </div>
@@ -282,21 +292,18 @@ export function renderHomeView(root, db, navigate, startGuidedStep = null, openP
     if (!targetModal) return;
     targetModal.innerHTML = `
       <div class="modal-backdrop" id="qr-modal-bg">
-        <div class="modal-panel" style="max-width:380px;text-align:center;padding:22px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-            <strong style="font-size:16px;color:var(--text-main);display:flex;align-items:center;gap:8px;">
-              ${daisyLogoSVG(26)} Ủng hộ D ● TOPIK
+        <div class="modal-panel" style="max-width:390px;text-align:center;padding:22px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <strong style="font-size:16.5px;color:var(--text-main);display:flex;align-items:center;gap:8px;">
+              ${daisyLogoSVG(28)} Ủng hộ admin nhée &gt;&lt;
             </strong>
             <button type="button" id="close-qr-modal" style="background:#F1F5F9;border:none;width:32px;height:32px;border-radius:50%;font-size:18px;cursor:pointer;color:var(--text-secondary);">×</button>
           </div>
-          <p style="margin:0 0 12px;font-size:13px;color:var(--text-muted);">
-            Cảm ơn bạn đã đồng hành cùng D ● TOPIK.
-          </p>
-          <img src="/media/vietqr_admin.jpg" alt="VietQR VIETCOMBANK 0201000736282 NGUYEN CHI DUC" style="width:100%;max-width:250px;border-radius:14px;border:1px solid var(--border-card);padding:6px;background:#FFF;margin-bottom:12px;" />
-          <div style="background:#F8FAFC;border-radius:12px;padding:10px 14px;font-size:13px;line-height:1.6;">
-            <div>Ngân hàng: <strong style="color:var(--primary-1);">VIETCOMBANK</strong></div>
-            <div>Số tài khoản: <strong style="font-size:15px;color:var(--text-main);">0201000736282</strong></div>
-            <div>Chủ TK: <strong>NGUYEN CHI DUC</strong></div>
+          <img src="${qrImgSrc}" alt="VietQR VIETCOMBANK 0201000736282 NGUYEN CHI DUC" style="width:100%;max-width:270px;border-radius:16px;border:1px solid var(--border-card);padding:6px;background:#FFF;margin-bottom:12px;" />
+          <div style="background:#F8FAFC;border-radius:12px;padding:11px 14px;font-size:13.5px;line-height:1.6;">
+            <div style="font-weight:800;color:var(--primary-1);">VIETCOMBANK</div>
+            <div style="font-size:17px;font-weight:800;color:var(--text-main);font-variant-numeric:tabular-nums;">0201000736282</div>
+            <div style="font-weight:750;color:var(--text-secondary);">NGUYEN CHI DUC</div>
           </div>
         </div>
       </div>
@@ -310,7 +317,7 @@ export function renderHomeView(root, db, navigate, startGuidedStep = null, openP
   root.querySelector("#btn-copy-stk").addEventListener("click", (e) => {
     const btn = e.currentTarget;
     navigator.clipboard?.writeText("0201000736282").catch(() => {});
-    btn.textContent = "Đã chép STK";
+    btn.innerHTML = `${ico("check", 14)} Đã chép STK`;
     setTimeout(() => { btn.textContent = "Sao chép STK"; }, 2200);
   });
   root.querySelector("#btn-zoom-qr").addEventListener("click", openQrModal);

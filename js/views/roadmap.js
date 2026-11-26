@@ -1,5 +1,5 @@
-import { store, DEFAULT_ROADMAP_PROFILE, normalizeBookId, getBookWords, getBookCurriculum, evaluateRoadmapScore } from "../store.js?v=20261127-02";
-import { ico, daisyLogoSVG } from "../icons.js?v=20261127-02";
+import { store, DEFAULT_ROADMAP_PROFILE, normalizeBookId, getBookWords, getBookCurriculum, evaluateRoadmapScore } from "../store.js?v=20261127-03";
+import { ico, daisyLogoSVG } from "../icons.js?v=20261127-03";
 
 const PLACEMENT_QUESTIONS = [
   { q: "1. Chọn câu chào lịch sự khi mới gặp lần đầu:", opts: ["안녕히 가세요.", "만나서 반갑습니다.", "잘 먹겠습니다.", "주말 잘 보내세요."], ans: 1 },
@@ -397,7 +397,7 @@ export function renderRoadmapView(root, db, navigate, openAccountCustomizer) {
                       <div class="today-step-row ${t.done ? "is-done" : (isNextHere ? "is-next" : "")}">
                         <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1;">
                           <button type="button" class="step-check-btn ${t.done ? "checked" : ""}" data-rm-chk="${d.day}" data-sidx="${t.stepIdx}" data-stotal="${d.totalSteps}" title="Đánh dấu hoàn thành">
-                            ${t.done ? "✓" : (t.stepIdx + 1)}
+                            ${t.done ? ico("check", 24) : (t.stepIdx + 1)}
                           </button>
                           <div style="min-width:0;flex:1;">
                             <div style="font-size:14px;font-weight:650;${t.done ? "text-decoration:line-through;color:var(--text-muted);" : "color:var(--text-main);"}">${t.label}</div>

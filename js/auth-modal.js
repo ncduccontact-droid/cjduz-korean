@@ -1,5 +1,5 @@
-import { store, isLocalPreviewHost, BOOK_SURVEY_OPTIONS, DEFAULT_ROADMAP_PROFILE } from "./store.js?v=20261127-02";
-import { ico, daisyLogoSVG } from "./icons.js?v=20261127-02";
+import { store, isLocalPreviewHost, BOOK_SURVEY_OPTIONS, DEFAULT_ROADMAP_PROFILE } from "./store.js?v=20261127-03";
+import { ico, daisyLogoSVG } from "./icons.js?v=20261127-03";
 
 let authConfigCache = null;
 
@@ -158,7 +158,7 @@ export function renderOnboardingSurvey(appRoot, onFinished) {
           </div>
 
           <button type="button" class="btn-primary" id="btn-finish-survey" style="width:100%;padding:13px;font-size:15.5px;">
-            ▶ Thiết lập lộ trình từ ${activeOpt.badge} &amp; Vào học ngay
+            ${ico("play", 17)} Thiết lập lộ trình từ ${activeOpt.badge} &amp; Vào học ngay
           </button>
         </div>
       </div>
@@ -391,7 +391,7 @@ export async function openAuthModal(modalRoot, initialView = "profile", onComple
             </div>
 
             <button type="button" class="btn-primary" id="btn-finish-survey-modal" style="width:100%;padding:12px;font-size:15px;">
-              ▶ Bắt đầu lộ trình từ ${activeOpt.badge} ngay
+              ${ico("play", 17)} Bắt đầu lộ trình từ ${activeOpt.badge} ngay
             </button>
           </div>
         </div>
@@ -640,7 +640,7 @@ export async function openAuthModal(modalRoot, initialView = "profile", onComple
       const nextRp = readRoadmapInputs(modalRoot, "prof");
       const resetDays = Boolean(modalRoot.querySelector("#prof-reset-day1")?.checked);
       store.updateRoadmapProfile(nextRp, resetDays);
-      msg = "✔ Đã cập nhật lộ trình học vào Hồ sơ học viên!";
+      msg = `${ico("check", 15)} Đã cập nhật lộ trình học vào Hồ sơ học viên!`;
       renderProfileModal();
     });
     const prevSurveyBtn = modalRoot.querySelector("#btn-preview-survey");

@@ -1,5 +1,6 @@
-import { store, playAudio, speakKoreanTTS } from "./store.js?v=20261127-02";
-import { analyzePronunciationRules } from "./korean-engine.js?v=20261127-02";
+import { store, playAudio, speakKoreanTTS } from "./store.js?v=20261127-03";
+import { analyzePronunciationRules } from "./korean-engine.js?v=20261127-03";
+import { ico } from "./icons.js?v=20261127-03";
 
 // Curated Real YouTube Shorts Shadowing Library (from 6F0uUJgeJQI, @Tienghanvoihailey & @hongtuoissem)
 export const YOUTUBE_SHORTS_CLIPS = [
@@ -206,7 +207,7 @@ export function renderShortsShadowingStudio(stage, db, onSwitchToTextbookShadowi
     }
     return {
       word: clean,
-      meaning: "Từ hội thoại mở rộng — bấm nút Loa 🔊 để nghe phát âm chậm rõ từng âm tiết.",
+      meaning: "Từ hội thoại mở rộng — bấm nút Loa để nghe phát âm chậm rõ từng âm tiết.",
       pron,
       matchCard: null
     };
@@ -294,8 +295,8 @@ export function renderShortsShadowingStudio(stage, db, onSwitchToTextbookShadowi
     if (!slot) return;
     if (!dictPopup) {
       slot.innerHTML = `
-        <div style="font-size:13px;color:#94A3B8;padding:8px 4px;">
-          💡 <strong>Bấm vào bất kỳ từ tiếng Hàn nào</strong> trong phụ đề bên dưới — video sẽ <strong>tự động tạm dừng</strong> và mở từ điển giải nghĩa ngay tại chỗ!
+        <div style="font-size:13px;color:#94A3B8;padding:8px 4px;display:flex;align-items:center;gap:6px;">
+          ${ico("bulb", 16)} <span><strong>Bấm vào bất kỳ từ tiếng Hàn nào</strong> trong phụ đề bên dưới — video sẽ <strong>tự động tạm dừng</strong> và mở từ điển giải nghĩa ngay tại chỗ!</span>
         </div>
       `;
       return;
@@ -312,9 +313,9 @@ export function renderShortsShadowingStudio(stage, db, onSwitchToTextbookShadowi
           <div style="font-size:14.5px;color:#FFFFFF;font-weight:600;margin-top:3px;">Nghĩa: ${dictPopup.meaning}</div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;">
-          <button type="button" class="btn-outline-teal" id="dict-speak-word" style="padding:5px 12px;font-size:13px;">🔊 Phát âm từ</button>
-          ${dictPopup.matchCard ? `<button type="button" class="btn-orange" id="dict-save-word" style="padding:5px 12px;font-size:13px;">★ Lưu từ</button>` : ""}
-          <button type="button" class="btn-primary" id="dict-resume-vid" style="padding:6px 14px;font-size:13px;">▶ Xem tiếp clip</button>
+          <button type="button" class="btn-outline-teal" id="dict-speak-word" style="padding:5px 12px;font-size:13px;">${ico("speaker", 16)} Phát âm từ</button>
+          ${dictPopup.matchCard ? `<button type="button" class="btn-orange" id="dict-save-word" style="padding:5px 12px;font-size:13px;">${ico("star", 15)} Lưu từ</button>` : ""}
+          <button type="button" class="btn-primary" id="dict-resume-vid" style="padding:6px 14px;font-size:13px;">${ico("play", 15)} Xem tiếp clip</button>
         </div>
       </div>
     `;
@@ -325,7 +326,7 @@ export function renderShortsShadowingStudio(stage, db, onSwitchToTextbookShadowi
     });
     slot.querySelector("#dict-save-word")?.addEventListener("click", (e) => {
       store.toggleStar(dictPopup.matchCard.id);
-      e.target.textContent = "✔ Đã lưu!";
+      e.currentTarget.innerHTML = `${ico("check", 14)} Đã lưu!`;
     });
     slot.querySelector("#dict-resume-vid").addEventListener("click", () => {
       dictPopup = null;
@@ -346,12 +347,12 @@ export function renderShortsShadowingStudio(stage, db, onSwitchToTextbookShadowi
               ${fmtSec(ln.start)}
             </span>
             <div style="display:flex;gap:6px;">
-              <button type="button" data-seek-line="${li}" style="background:rgba(255,255,255,0.1);color:#FFF;border:none;border-radius:6px;padding:3px 9px;font-size:12px;cursor:pointer;">
-                ▶ Nghe câu này
+              <button type="button" data-seek-line="${li}" style="background:rgba(255,255,255,0.1);color:#FFF;border:none;border-radius:6px;padding:3px 9px;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:4px;">
+                ${ico("play", 13)} Nghe câu này
               </button>
               ${studyMode === "shadowing" ? `
-                <button type="button" data-rec-line="${li}" style="background:var(--yellow-2);color:#FFF;border:none;border-radius:6px;padding:3px 9px;font-size:12px;font-weight:700;cursor:pointer;">
-                  🎙️ Nhại theo
+                <button type="button" data-rec-line="${li}" style="background:var(--yellow-2);color:#FFF;border:none;border-radius:6px;padding:3px 9px;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;">
+                  ${ico("mic", 13)} Nhại theo
                 </button>
               ` : ""}
             </div>
@@ -407,7 +408,7 @@ export function renderShortsShadowingStudio(stage, db, onSwitchToTextbookShadowi
           const rec = new SR();
           rec.lang = "ko-KR";
           isRec = true;
-          sttResult = "🎙️ Đang nghe bạn đọc nhại theo câu...";
+          sttResult = `${ico("mic", 15)} Đang nghe bạn đọc nhại theo câu...`;
           renderSpeechStatus();
           rec.onresult = (ev) => {
             const spoken = ev.results[0][0].transcript;
@@ -415,7 +416,7 @@ export function renderShortsShadowingStudio(stage, db, onSwitchToTextbookShadowi
             sttResult = `Bạn vừa đọc: "${spoken}" — Câu chuẩn: "${targetKo}"`;
             renderSpeechStatus();
           };
-          rec.onerror = () => { isRec = false; sttResult = "Không nghe rõ giọng đọc, hãy bấm 🎙️ thử lại nhé."; renderSpeechStatus(); };
+          rec.onerror = () => { isRec = false; sttResult = "Không nghe rõ giọng đọc, hãy bấm nút Nhại theo để thử lại nhé."; renderSpeechStatus(); };
           rec.start();
         });
       });
@@ -426,7 +427,7 @@ export function renderShortsShadowingStudio(stage, db, onSwitchToTextbookShadowi
           <div style="font-size:13px;color:#38BDF8;font-weight:700;margin-bottom:6px;">CHẾ ĐỘ CHÍNH TẢ · CÂU ${activeLineIdx + 1}/${clip.lines.length} (${fmtSec(ln.start)})</div>
           <div style="font-size:15px;color:#CBD5E1;margin-bottom:12px;">Nghĩa tiếng Việt: <strong>${ln.vi}</strong></div>
           <div style="display:flex;gap:8px;margin-bottom:12px;">
-            <button type="button" class="btn-primary" id="dict-replay-seg">🔁 Phát đoạn này trong Clip</button>
+            <button type="button" class="btn-primary" id="dict-replay-seg">${ico("refresh", 16)} Phát đoạn này trong Clip</button>
             <button type="button" class="btn-outline-teal" id="dict-next-seg" style="background:transparent;color:#FFF;">Câu tiếp →</button>
           </div>
           <input id="shorts-dict-inp" class="ko" placeholder="Gõ lại câu tiếng Hàn nhân vật vừa nói..." style="width:100%;padding:11px 14px;border-radius:10px;border:1.5px solid var(--primary);background:#0F172A;color:#FFF;font-size:17px;" />
@@ -494,14 +495,14 @@ export function renderShortsShadowingStudio(stage, db, onSwitchToTextbookShadowi
     stage.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-          <strong>🎬 Chọn Clip YouTube Shorts:</strong>
+          <strong style="display:inline-flex;align-items:center;gap:6px;">${ico("video", 19)} Chọn Clip YouTube Shorts:</strong>
           <select id="shorts-clip-select" class="box-select">
             ${clips.map((c, i) => `<option value="${i}" ${i === clipIdx ? "selected" : ""}>[${c.channel}] ${c.title}</option>`).join("")}
           </select>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button type="button" class="btn-outline-teal" id="btn-add-yt-clip" style="padding:6px 13px;font-size:13px;">➕ Thêm Clip YouTube</button>
-          <button type="button" class="btn-outline-teal" id="btn-switch-kyuri-shadow" style="padding:6px 13px;font-size:13px;">📚 Chuyển sang Shadowing Sơ cấp 1 (Kyuri)</button>
+          <button type="button" class="btn-outline-teal" id="btn-add-yt-clip" style="padding:6px 13px;font-size:13px;">${ico("plus", 15)} Thêm Clip YouTube</button>
+          <button type="button" class="btn-outline-teal" id="btn-switch-kyuri-shadow" style="padding:6px 13px;font-size:13px;">${ico("book", 15)} Chuyển sang Shadowing Sơ cấp 1 (Kyuri)</button>
         </div>
       </div>
 
@@ -530,14 +531,14 @@ export function renderShortsShadowingStudio(stage, db, onSwitchToTextbookShadowi
             ${clip.lines[0]?.ko || ""}
           </div>
           <div style="display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-top:10px;">
-            <button type="button" id="ctrl-play-pause" style="background:var(--primary);color:#FFF;border:none;border-radius:99px;padding:7px 15px;font-size:13px;font-weight:700;cursor:pointer;">
-              ⏯ Phát / Tạm dừng
+            <button type="button" id="ctrl-play-pause" style="background:var(--primary);color:#FFF;border:none;border-radius:99px;padding:7px 15px;font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:5px;">
+              ${ico("play", 15)} Phát / Tạm dừng
             </button>
-            <button type="button" id="ctrl-loop-line" style="background:${loopCurrentLine ? "var(--yellow-2)" : "rgba(255,255,255,0.14)"};color:#FFF;border:none;border-radius:99px;padding:7px 12px;font-size:12.5px;font-weight:600;cursor:pointer;">
-              🔁 ${loopCurrentLine ? "Đang lặp câu" : "Lặp câu"}
+            <button type="button" id="ctrl-loop-line" style="background:${loopCurrentLine ? "var(--yellow-2)" : "rgba(255,255,255,0.14)"};color:#FFF;border:none;border-radius:99px;padding:7px 12px;font-size:12.5px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:5px;">
+              ${ico("refresh", 15)} ${loopCurrentLine ? "Đang lặp câu" : "Lặp câu"}
             </button>
-            <button type="button" id="ctrl-speed" style="background:rgba(255,255,255,0.14);color:#FFF;border:none;border-radius:99px;padding:7px 12px;font-size:12.5px;font-weight:600;cursor:pointer;">
-              🐢 ${playbackSpeed}x
+            <button type="button" id="ctrl-speed" style="background:rgba(255,255,255,0.14);color:#FFF;border:none;border-radius:99px;padding:7px 12px;font-size:12.5px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:5px;">
+              ${ico("turtle", 16)} ${playbackSpeed}x
             </button>
           </div>
         </div>
@@ -549,7 +550,7 @@ export function renderShortsShadowingStudio(stage, db, onSwitchToTextbookShadowi
             <div style="display:flex;gap:6px;flex-wrap:wrap;">
               ${[
                 { k: "subtitle", label: "Phụ đề" },
-                { k: "shadowing", label: "🎙️ Shadowing" },
+                { k: "shadowing", label: `${ico("mic", 14)} Shadowing` },
                 { k: "dictation", label: "Chính tả" },
                 { k: "cloze", label: "Điền từ" }
               ].map((m) => `
@@ -641,14 +642,15 @@ export function renderShortsShadowingStudio(stage, db, onSwitchToTextbookShadowi
 
     stage.querySelector("#ctrl-loop-line").addEventListener("click", (e) => {
       loopCurrentLine = !loopCurrentLine;
-      e.target.style.background = loopCurrentLine ? "var(--yellow-2)" : "rgba(255,255,255,0.14)";
-      e.target.textContent = loopCurrentLine ? "🔁 Đang lặp câu" : "🔁 Lặp câu";
+      const btn = e.currentTarget;
+      btn.style.background = loopCurrentLine ? "var(--yellow-2)" : "rgba(255,255,255,0.14)";
+      btn.innerHTML = `${ico("refresh", 15)} ${loopCurrentLine ? "Đang lặp câu" : "Lặp câu"}`;
     });
 
     stage.querySelector("#ctrl-speed").addEventListener("click", (e) => {
       playbackSpeed = playbackSpeed === 1.0 ? 0.75 : 1.0;
       if (player?.setPlaybackRate) player.setPlaybackRate(playbackSpeed);
-      e.target.textContent = `🐢 ${playbackSpeed}x`;
+      e.currentTarget.innerHTML = `${ico("turtle", 16)} ${playbackSpeed}x`;
     });
 
     stage.querySelectorAll("[data-smode]").forEach((b) => {

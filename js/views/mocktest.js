@@ -1,5 +1,5 @@
-import { store, ROADMAP_SCORE_SCALES, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261127-02";
-import { ico } from "../icons.js?v=20261127-02";
+import { store, ROADMAP_SCORE_SCALES, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261127-03";
+import { ico } from "../icons.js?v=20261127-03";
 
 /**
  * Hydrates a 70-question TOPIK I or 104-question TOPIK II exam from normalized slots + itemPool.
@@ -172,7 +172,7 @@ export function renderMockTestView(root, db, navigate, params = {}, registerClea
     <div class="container-web">
       <div class="breadcrumb-bar">
         <button type="button" id="bc-home">Trang chủ</button>
-        <span>▶</span>
+        <span>/</span>
         <span>Đề thi ${levelKey === "topik1" ? "TOPIK I (70 câu)" : "TOPIK II (104 câu)"}</span>
       </div>
 
@@ -220,7 +220,7 @@ export function renderMockTestView(root, db, navigate, params = {}, registerClea
       ${viewMode === "exams" ? `
         <div class="exam-nav">
           <button class="${category === "all" ? "active" : ""}" data-cat="all">Tất cả (${rawExams.length})</button>
-          <button class="${category === "curated" ? "active" : ""}" data-cat="curated">★ Đề tuyển chọn (${curatedCount})</button>
+          <button class="${category === "curated" ? "active" : ""}" data-cat="curated">${ico("star", 14)} Đề tuyển chọn (${curatedCount})</button>
           <button class="${category === "niied" ? "active" : ""}" data-cat="niied">Đề NIIED (Kỳ 35–64)</button>
           <button class="${category === "sejong_ibt" ? "active" : ""}" data-cat="sejong_ibt">IBT &amp; Sejong</button>
           <button class="${category === "trend" ? "active" : ""}" data-cat="trend">Xu hướng 2024–2025</button>
@@ -234,7 +234,7 @@ export function renderMockTestView(root, db, navigate, params = {}, registerClea
                 <div>
                   <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px;">
                     <h3 style="margin:0;font-size:16.5px;line-height:1.35;">${ex.title}</h3>
-                    ${ex.curated ? `<span class="badge-orange" style="flex-shrink:0;">★ Tuyển chọn</span>` : ""}
+                    ${ex.curated ? `<span class="badge-orange" style="flex-shrink:0;">${ico("star", 13)} Tuyển chọn</span>` : ""}
                   </div>
 
                   <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;">
@@ -255,8 +255,8 @@ export function renderMockTestView(root, db, navigate, params = {}, registerClea
                   </div>
 
                   ${past ? `
-                    <div style="font-size:12.5px;color:var(--success);font-weight:700;margin-bottom:10px;">
-                      ✔ Gần nhất: ${past.score}/${past.maxScore}đ (${past.grade})
+                    <div style="font-size:12.5px;color:var(--success);font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:5px;">
+                      ${ico("check", 15)} <span>Gần nhất: ${past.score}/${past.maxScore}đ (${past.grade})</span>
                     </div>
                   ` : ""}
                 </div>
@@ -294,7 +294,7 @@ export function renderMockTestView(root, db, navigate, params = {}, registerClea
             const st = store.state.partStats[tp.id] || { correct: 0, total: 0 };
             const pct = st.total > 0 ? Math.round((st.correct / st.total) * 100) : 0;
             const masteredBadge = st.total >= 4 && pct >= 85
-              ? `<span style="background:rgba(58,202,116,0.16);color:#15803D;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:800;">✔ Đã nhuần nhuyễn (${pct}%)</span>`
+              ? `<span style="background:rgba(58,202,116,0.16);color:#15803D;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:800;display:inline-flex;align-items:center;gap:4px;">${ico("check", 14)} Đã nhuần nhuyễn (${pct}%)</span>`
               : `<span style="background:var(--primary-3);color:var(--primary-1);padding:3px 10px;border-radius:99px;font-size:12px;font-weight:700;">${poolItems.length} câu luyện · ${tp.ptsDesc}</span>`;
 
             return `
@@ -306,7 +306,7 @@ export function renderMockTestView(root, db, navigate, params = {}, registerClea
                   </div>
                   <strong style="font-size:16.5px;display:block;margin-bottom:4px;">${tp.title}</strong>
                   <div class="ko" style="font-size:13px;color:var(--primary-1);font-weight:600;margin-bottom:8px;">유형: ${tp.koTitle} (Mỗi đề thật: ${tp.countPerExam} câu)</div>
-                  <div style="font-size:13.5px;color:var(--text-muted);margin-bottom:12px;">💡 <strong>Mẹo ăn điểm:</strong> ${tp.tip}</div>
+                  <div style="font-size:13.5px;color:var(--text-muted);margin-bottom:12px;display:flex;align-items:flex-start;gap:6px;">${ico("bulb", 16)} <span><strong>Mẹo ăn điểm:</strong> ${tp.tip}</span></div>
                 </div>
 
                 <div>
@@ -360,9 +360,9 @@ function renderSingleExamOverview(root, sys, exam, navigate) {
     <div class="container-web">
       <div class="breadcrumb-bar">
         <button type="button" id="bc-home">Trang chủ</button>
-        <span>▶</span>
+        <span>/</span>
         <button type="button" id="bc-list">Kho đề ${exam.level === "topik1" ? "TOPIK I" : "TOPIK II"}</button>
-        <span>▶</span>
+        <span>/</span>
         <span>${exam.title}</span>
       </div>
 
@@ -371,10 +371,10 @@ function renderSingleExamOverview(root, sys, exam, navigate) {
           <span class="badge-orange" style="margin-bottom:8px;">${exam.ribbon || "ĐỀ CHUẨN"} · ĐỦ ${exam.totalQuestions} CÂU</span>
           <h2 style="margin:0 0 6px;color:var(--primary-1);">${exam.title}</h2>
           <div style="font-size:14px;color:var(--text-muted);margin-bottom:6px;">${exam.structureDesc}</div>
-          <div style="font-size:13px;color:#334155;">📌 <strong>Nguồn:</strong> ${exam.sourceOrg}</div>
+          <div style="font-size:13px;color:#334155;display:flex;align-items:center;gap:5px;">${ico("pin", 15)} <span><strong>Nguồn:</strong> ${exam.sourceOrg}</span></div>
         </div>
         <button type="button" class="btn-primary" id="btn-launch-full" style="font-size:16px;padding:13px 24px;">
-          ⚡ Vào Thi Full Đề (${exam.totalQuestions} câu · ${exam.minutes} phút)
+          ${ico("bolt", 18)} Vào Thi Full Đề (${exam.totalQuestions} câu · ${exam.minutes} phút)
         </button>
       </div>
 
@@ -384,7 +384,7 @@ function renderSingleExamOverview(root, sys, exam, navigate) {
       </div>
       <div class="${exam.level === "topik2" ? "grid-3" : "grid-2"}" style="margin-bottom:22px;">
         <div class="box-kind">
-          <strong style="font-size:17px;color:var(--primary-1);display:block;margin-bottom:6px;">🎧 Phần Nghe · 듣기</strong>
+          <strong style="font-size:17px;color:var(--primary-1);display:flex;align-items:center;gap:7px;margin-bottom:6px;">${ico("headphones", 20)} Phần Nghe · 듣기</strong>
           <p style="font-size:13.5px;color:var(--text-muted);margin:0 0 12px;">
             ${exam.level === "topik1" ? "Câu 1 → Câu 30 (30 câu · 100 điểm · 40 phút)" : "Câu 1 → Câu 50 (50 câu · 100 điểm · 60 phút)"} — Giọng đọc Hàn tự nhiên .mp3.
           </p>
@@ -393,7 +393,7 @@ function renderSingleExamOverview(root, sys, exam, navigate) {
 
         ${exam.level === "topik2" ? `
           <div class="box-kind">
-            <strong style="font-size:17px;color:var(--primary-1);display:block;margin-bottom:6px;">✍️ Phần Viết · 쓰기</strong>
+            <strong style="font-size:17px;color:var(--primary-1);display:flex;align-items:center;gap:7px;margin-bottom:6px;">${ico("pen", 20)} Phần Viết · 쓰기</strong>
             <p style="font-size:13.5px;color:var(--text-muted);margin:0 0 12px;">
               Câu 51 → Câu 54 (4 câu tự luận · 100 điểm · 50 phút) — Có ô điền ㉠㉡, giấy kẻ ô 원고지 &amp; bài mẫu.
             </p>
@@ -402,7 +402,7 @@ function renderSingleExamOverview(root, sys, exam, navigate) {
         ` : ""}
 
         <div class="box-kind">
-          <strong style="font-size:17px;color:var(--primary-1);display:block;margin-bottom:6px;">📖 Phần Đọc · 읽기</strong>
+          <strong style="font-size:17px;color:var(--primary-1);display:flex;align-items:center;gap:7px;margin-bottom:6px;">${ico("book", 20)} Phần Đọc · 읽기</strong>
           <p style="font-size:13.5px;color:var(--text-muted);margin:0 0 12px;">
             ${exam.level === "topik1" ? "Câu 31 → Câu 70 (40 câu · 100 điểm · 60 phút)" : "Đọc 1 → 50 / Toàn đề 55 → 104 (50 câu · 100 điểm · 70 phút)"}.
           </p>
@@ -416,9 +416,9 @@ function renderSingleExamOverview(root, sys, exam, navigate) {
       </div>
       <div class="grid-2">
         ${[
-          ...lvTax.listening.map((t) => ({ ...t, secIcon: "🎧 Nghe" })),
-          ...(lvTax.writing || []).map((t) => ({ ...t, secIcon: "✍️ Viết" })),
-          ...lvTax.reading.map((t) => ({ ...t, secIcon: "📖 Đọc" }))
+          ...lvTax.listening.map((t) => ({ ...t, secIcon: `${ico("headphones", 15)} Nghe` })),
+          ...(lvTax.writing || []).map((t) => ({ ...t, secIcon: `${ico("pen", 15)} Viết` })),
+          ...lvTax.reading.map((t) => ({ ...t, secIcon: `${ico("book", 15)} Đọc` }))
         ].map((tp) => `
           <div class="box-kind clickable" data-scope="${tp.id}" style="padding:16px 18px;display:flex;justify-content:space-between;align-items:center;gap:12px;">
             <div>
@@ -472,7 +472,7 @@ function renderTypeMasteryDrill(root, sys, levelKey, skill, typeId, navigate) {
       <div class="container-web">
         <div class="breadcrumb-bar">
           <button type="button" id="bc-seg-hub">← Danh sách các dạng ${skill === "listening" ? "Nghe" : (skill === "writing" ? "Viết" : "Đọc")}</button>
-          <span>▶</span>
+          <span>/</span>
           <span>${tpMeta.title}</span>
         </div>
 
@@ -480,7 +480,7 @@ function renderTypeMasteryDrill(root, sys, levelKey, skill, typeId, navigate) {
           <div>
             <span class="badge-orange" style="margin-bottom:6px;">${tpMeta.code} · ${tpMeta.range} (${tpMeta.ptsDesc}) ${retryRound > 0 ? `· Vòng ôn câu sai #${retryRound}` : ""}</span>
             <h2 style="margin:0 0 4px;font-size:19px;color:var(--primary-1);">${tpMeta.title}</h2>
-            <div style="font-size:14px;color:var(--text-muted);">💡 <strong>Chiến thuật làm nhanh:</strong> ${tpMeta.tip}</div>
+            <div style="font-size:14px;color:var(--text-muted);display:flex;align-items:center;gap:6px;">${ico("bulb", 16)} <span><strong>Chiến thuật làm nhanh:</strong> ${tpMeta.tip}</span></div>
           </div>
           <div style="text-align:right;">
             ${!tpMeta.id.includes("_w_") ? `
@@ -489,11 +489,11 @@ function renderTypeMasteryDrill(root, sys, levelKey, skill, typeId, navigate) {
               </div>
               ${wrongItems.length > 0 ? `
                 <button type="button" class="btn-orange" id="btn-retry-wrong">
-                  🔁 Luyện lại ${wrongItems.length} câu sai đến khi thuộc 100%
+                  ${ico("refresh", 16)} Luyện lại ${wrongItems.length} câu sai đến khi thuộc 100%
                 </button>
               ` : (answeredCount === activeQueue.length && activeQueue.length > 0 ? `
-                <span style="background:rgba(58,202,116,0.18);color:#15803D;padding:6px 14px;border-radius:99px;font-weight:800;display:inline-block;">
-                  🎉 Đã nhuần nhuyễn 100% dạng này!
+                <span style="background:rgba(58,202,116,0.18);color:#15803D;padding:6px 14px;border-radius:99px;font-weight:800;display:inline-flex;align-items:center;gap:6px;">
+                  ${ico("trophy", 17)} Đã nhuần nhuyễn 100% dạng này!
                 </span>
               ` : "")}
             ` : ""}
@@ -513,15 +513,15 @@ function renderTypeMasteryDrill(root, sys, levelKey, skill, typeId, navigate) {
                     <div class="grid-2" style="margin-bottom:12px;">
                       <div>
                         <label style="font-size:13px;font-weight:700;display:block;margin-bottom:4px;">Điền vào ( ㉠ ):</label>
-                        <input class="ko" data-wa="${q.id}" value="${dr.a}" placeholder="Nhập câu tiếng Hàn cho ( ㉠ )..." style="width:100%;padding:10px 12px;border-radius:8px;border:1.5px solid #CBD5E1;" />
+                        <input class="ko" data-wa="${q.id}" value="${dr.a}" placeholder="Nhập câu tiếng Hàn cho ( ㉠ )..." style="width:100%;padding:10px 12px;" />
                       </div>
                       <div>
                         <label style="font-size:13px;font-weight:700;display:block;margin-bottom:4px;">Điền vào ( ㉡ ):</label>
-                        <input class="ko" data-wb="${q.id}" value="${dr.b}" placeholder="Nhập câu tiếng Hàn cho ( ㉡ )..." style="width:100%;padding:10px 12px;border-radius:8px;border:1.5px solid #CBD5E1;" />
+                        <input class="ko" data-wb="${q.id}" value="${dr.b}" placeholder="Nhập câu tiếng Hàn cho ( ㉡ )..." style="width:100%;padding:10px 12px;" />
                       </div>
                     </div>
                   ` : `
-                    <textarea class="ko" data-wessay="${q.id}" rows="${q.subType === "q54" ? 8 : 5}" placeholder="Nhập bài viết tiếng Hàn (${q.subType === "q54" ? "600~700 chữ" : "200~300 chữ"})..." style="width:100%;padding:12px;border-radius:10px;border:1.5px solid #CBD5E1;font-size:15.5px;">${dr.essay}</textarea>
+                    <textarea class="ko" data-wessay="${q.id}" rows="${q.subType === "q54" ? 8 : 5}" placeholder="Nhập bài viết tiếng Hàn (${q.subType === "q54" ? "600~700 chữ" : "200~300 chữ"})..." style="width:100%;padding:12px;font-size:15.5px;">${dr.essay}</textarea>
                     <div style="font-size:12.5px;color:var(--text-muted);margin:4px 0 10px;">Số ký tự hiện tại: <strong>${(dr.essay || "").length}자</strong></div>
                     ${renderMiniWongokjiPreview(dr.essay, q.subType === "q54" ? 640 : 280)}
                   `}
@@ -530,7 +530,7 @@ function renderTypeMasteryDrill(root, sys, levelKey, skill, typeId, navigate) {
                   </div>
                   ${dr.checked ? `
                     <div style="margin-top:14px;background:var(--primary-3);padding:14px;border-radius:10px;font-size:14px;color:var(--primary-4);">
-                      <strong style="display:block;margin-bottom:6px;">🎯 Điểm ước tính: ${earned} / ${q.pts}점</strong>
+                      <strong style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">${ico("target", 17)} Điểm ước tính: ${earned} / ${q.pts}점</strong>
                       ${q.modelA ? `<div class="ko">• <strong>Đáp án mẫu (㉠):</strong> ${q.modelA}</div><div class="ko">• <strong>Đáp án mẫu (㉡):</strong> ${q.modelB}</div>` : `<div class="ko" style="white-space:pre-wrap;margin-bottom:6px;"><strong>Bài viết mẫu:</strong>\n${q.modelAnswer}</div>`}
                       <div style="margin-top:6px;"><strong>Hướng dẫn:</strong> ${q.explain}</div>
                     </div>
@@ -546,7 +546,7 @@ function renderTypeMasteryDrill(root, sys, levelKey, skill, typeId, navigate) {
                   <strong class="ko" style="font-size:16.5px;color:var(--primary-1);">Câu ${qi + 1}/${activeQueue.length}. ${q.question}</strong>
                   ${q.audioSrc ? `
                     <button type="button" class="btn-primary" data-play-mp3="${q.audioSrc}" style="padding:7px 15px;font-size:13.5px;">
-                      🔊 Phát Audio giọng Hàn chuẩn
+                      ${ico("speaker", 16)} Phát Audio giọng Hàn chuẩn
                     </button>
                   ` : ""}
                 </div>
@@ -568,7 +568,7 @@ function renderTypeMasteryDrill(root, sys, levelKey, skill, typeId, navigate) {
                 </div>
                 ${picked !== undefined ? `
                   <div style="margin-top:12px;background:var(--primary-3);padding:11px 14px;border-radius:10px;font-size:14px;color:var(--primary-4);">
-                    <strong>${picked === q.answer ? "✔ Chính xác!" : "✘ Chưa đúng — Hãy đọc kỹ lời thoại/giải thích để nhớ sâu:"}</strong>
+                    <strong>${picked === q.answer ? `${ico("check", 15)} Chính xác!` : `${ico("cross", 15)} Chưa đúng — Hãy đọc kỹ lời thoại/giải thích để nhớ sâu:`}</strong>
                     ${q.audioText ? `<div class="ko" style="margin-top:4px;"><strong>Lời thoại (대본):</strong> ${q.audioText}</div>` : ""}
                     <div style="margin-top:4px;"><strong>Giải thích:</strong> ${q.explain}</div>
                   </div>
@@ -682,7 +682,7 @@ function renderExamRoom(root, sys, exam, scope, navigate, registerCleanup) {
         if (el) {
           const m = String(Math.floor(secRemaining / 60)).padStart(2, "0");
           const s = String(secRemaining % 60).padStart(2, "0");
-          el.textContent = `⏱️ ${m}:${s}`;
+          el.innerHTML = `${ico("clock", 16)} ${m}:${s}`;
         }
       }
     }, 1000);
@@ -822,15 +822,15 @@ function renderExamRoom(root, sys, exam, scope, navigate, registerCleanup) {
           </button>
           <div style="text-align:center;">
             <strong style="font-size:16.5px;display:block;">${exam.title}</strong>
-            <span style="font-size:12px;color:var(--text-muted);">📌 Nguồn: ${exam.sourceOrg}</span>
+            <span style="font-size:12px;color:var(--text-muted);display:inline-flex;align-items:center;gap:4px;">${ico("pin", 13)} Nguồn: ${exam.sourceOrg}</span>
           </div>
           <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-            <span id="exam-clock" style="background:var(--primary-3);padding:7px 14px;border-radius:10px;font-weight:750;color:var(--primary-1);font-variant-numeric:tabular-nums;">
-              ${m}:${s}
+            <span id="exam-clock" style="background:var(--primary-3);padding:7px 14px;border-radius:10px;font-weight:750;color:var(--primary-1);font-variant-numeric:tabular-nums;display:inline-flex;align-items:center;gap:5px;">
+              ${ico("clock", 16)} ${m}:${s}
             </span>
             ${!submitted
               ? `<button type="button" class="btn-primary" id="btn-submit-exam">Nộp bài</button>`
-              : `<button type="button" class="btn-outline-teal" data-retake-exam="1">Làm lại đề này</button>`}
+              : `<button type="button" class="btn-outline-teal" data-retake-exam="1">${ico("refresh", 15)} Làm lại đề này</button>`}
           </div>
         </div>
 
@@ -840,7 +840,7 @@ function renderExamRoom(root, sys, exam, scope, navigate, registerCleanup) {
           return `
             <div id="submit-confirm-box" class="outline-ai" style="margin-bottom:14px;border-color:var(--yellow-2);background:#FFFBEB;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
               <div style="font-size:14.5px;color:#92400E;">
-                <strong>⚠️ Xác nhận nộp bài:</strong> Bạn mới làm <strong>${answeredNow}/${questions.length}</strong> câu (còn <strong>${remainingNow}</strong> câu bỏ trống). Bạn có chắc chắn muốn nộp ngay không?
+                <strong>${ico("warn", 17)} Xác nhận nộp bài:</strong> Bạn mới làm <strong>${answeredNow}/${questions.length}</strong> câu (còn <strong>${remainingNow}</strong> câu bỏ trống). Bạn có chắc chắn muốn nộp ngay không?
               </div>
               <div style="display:flex;gap:8px;flex-wrap:wrap;">
                 <button type="button" class="btn-orange" id="btn-confirm-submit-yes">Nộp bài ngay</button>
@@ -854,17 +854,17 @@ function renderExamRoom(root, sys, exam, scope, navigate, registerCleanup) {
         <div class="skill-pills-row" style="margin-bottom:14px;">
           ${listenList.length ? `
             <button type="button" class="btn-skill ${q.section === "listening" ? "active" : ""}" id="jump-sec-listen">
-              🎧 1교시 · 듣기 (${listenList.length} câu)
+              ${ico("headphones", 16)} 1교시 · 듣기 (${listenList.length} câu)
             </button>
           ` : ""}
           ${writeList.length ? `
             <button type="button" class="btn-skill ${q.section === "writing" ? "active" : ""}" id="jump-sec-write">
-              ✍️ 1교시 · 쓰기 (${writeList.length} câu · 51~54)
+              ${ico("pen", 16)} 1교시 · 쓰기 (${writeList.length} câu · 51~54)
             </button>
           ` : ""}
           ${readList.length ? `
             <button type="button" class="btn-skill ${q.section === "reading" ? "active" : ""}" id="jump-sec-read">
-              📖 ${exam.level === "topik2" ? "2교시" : "1교시"} · 읽기 (${readList.length} câu)
+              ${ico("book", 16)} ${exam.level === "topik2" ? "2교시" : "1교시"} · 읽기 (${readList.length} câu)
             </button>
           ` : ""}
         </div>
@@ -878,30 +878,30 @@ function renderExamRoom(root, sys, exam, scope, navigate, registerCleanup) {
           let compareLine = "";
           if (!isFullExam) {
             const pct = Math.round((resultSummary.score / Math.max(1, totalMaxPts)) * 100);
-            compareLine = `<div style="font-size:13px;font-weight:700;color:${pct >= 60 ? "var(--success)" : "var(--primary-4)"};">📊 Kết quả phân khúc: Đạt <strong>${pct}%</strong> điểm tối đa phần này (${resultSummary.score}/${totalMaxPts}đ).</div>`;
+            compareLine = `<div style="font-size:13px;font-weight:700;color:${pct >= 60 ? "var(--success)" : "var(--primary-4)"};">${ico("chart", 15)} Kết quả phân khúc: Đạt <strong>${pct}%</strong> điểm tối đa phần này (${resultSummary.score}/${totalMaxPts}đ).</div>`;
           } else if (rScale.examLevel === exam.level) {
             const scaledToRoadmap = Math.round((resultSummary.score / Math.max(1, totalMaxPts)) * rScale.maxScore);
             const passCheck = scaledToRoadmap >= rScale.passScore;
-            compareLine = `<div style="font-size:13px;font-weight:700;color:${passCheck ? "var(--success)" : "var(--primary-4)"};">📊 So với lộ trình đang học (${rScale.label} · Chuẩn ≥ ${rScale.passScore}/${rScale.maxScore}đ): <strong>${scaledToRoadmap}/${rScale.maxScore}đ</strong> — ${passCheck ? "✔ ĐẠT CHUẨN LỘ TRÌNH!" : `Cần thêm +${rScale.passScore - scaledToRoadmap}đ để đạt chuẩn.`}</div>`;
+            compareLine = `<div style="font-size:13px;font-weight:700;color:${passCheck ? "var(--success)" : "var(--primary-4)"};">${ico("chart", 15)} So với lộ trình đang học (${rScale.label} · Chuẩn ≥ ${rScale.passScore}/${rScale.maxScore}đ): <strong>${scaledToRoadmap}/${rScale.maxScore}đ</strong> — ${passCheck ? `${ico("check", 14)} ĐẠT CHUẨN LỘ TRÌNH!` : `Cần thêm +${rScale.passScore - scaledToRoadmap}đ để đạt chuẩn.`}</div>`;
           } else {
             const officialPass = exam.level === "topik2" ? 120 : 80;
             const passCheck = resultSummary.score >= officialPass;
-            compareLine = `<div style="font-size:13px;font-weight:700;color:${passCheck ? "var(--success)" : "var(--primary-4)"};">📊 Thang chuẩn kỳ thi ${exam.level === "topik2" ? "TOPIK II" : "TOPIK I"} (Đạt ≥ ${officialPass}/${totalMaxPts}đ · Lộ trình bạn đang theo: ${rScale.label}): <strong>${resultSummary.score}/${totalMaxPts}đ</strong> — ${passCheck ? "✔ ĐẠT CHUẨN ĐỀ NÀY!" : `Cần thêm +${officialPass - resultSummary.score}đ để đạt mốc chuẩn.`}</div>`;
+            compareLine = `<div style="font-size:13px;font-weight:700;color:${passCheck ? "var(--success)" : "var(--primary-4)"};">${ico("chart", 15)} Thang chuẩn kỳ thi ${exam.level === "topik2" ? "TOPIK II" : "TOPIK I"} (Đạt ≥ ${officialPass}/${totalMaxPts}đ · Lộ trình bạn đang theo: ${rScale.label}): <strong>${resultSummary.score}/${totalMaxPts}đ</strong> — ${passCheck ? `${ico("check", 14)} ĐẠT CHUẨN ĐỀ NÀY!` : `Cần thêm +${officialPass - resultSummary.score}đ để đạt mốc chuẩn.`}</div>`;
           }
           return `
           <div class="prediction-banner" style="margin-bottom:18px;">
             <div>
-              <h2 style="margin:0 0 6px;color:var(--primary-1);">
-                🎉 Tổng điểm: ${resultSummary.score} / ${totalMaxPts} điểm — ${resultSummary.grade}
+              <h2 style="margin:0 0 6px;color:var(--primary-1);display:flex;align-items:center;gap:8px;">
+                ${ico("trophy", 22)} Tổng điểm: ${resultSummary.score} / ${totalMaxPts} điểm — ${resultSummary.grade}
               </h2>
               <div style="font-size:14px;margin-bottom:6px;">
                 ${countSummaryText}
-                ${isFullExam ? ` · Chi tiết: 🎧 Nghe <strong>${resultSummary.listenScore}/100đ</strong> ${exam.level === "topik2" ? `· ✍️ Viết <strong>${resultSummary.writeScore}/100đ</strong>` : ""} · 📖 Đọc <strong>${resultSummary.readScore}/100đ</strong>` : ""}
+                ${isFullExam ? ` · Chi tiết: ${ico("headphones", 15)} Nghe <strong>${resultSummary.listenScore}/100đ</strong> ${exam.level === "topik2" ? `· ${ico("pen", 15)} Viết <strong>${resultSummary.writeScore}/100đ</strong>` : ""} · ${ico("book", 15)} Đọc <strong>${resultSummary.readScore}/100đ</strong>` : ""}
               </div>
               ${compareLine}
             </div>
             <div style="display:flex;gap:10px;flex-wrap:wrap;">
-              <button type="button" class="btn-outline-teal" id="btn-retake-exam" data-retake-exam="1">🔄 Làm lại đề này</button>
+              <button type="button" class="btn-outline-teal" id="btn-retake-exam" data-retake-exam="1">${ico("refresh", 16)} Làm lại đề này</button>
               <button type="button" class="btn-primary" id="btn-go-mistakes">Mở Sổ tay câu sai →</button>
             </div>
           </div>
@@ -927,26 +927,26 @@ function renderExamRoom(root, sys, exam, scope, navigate, registerCleanup) {
                   <div class="grid-2">
                     <div>
                       <label style="font-weight:700;font-size:13.5px;display:block;margin-bottom:5px;">Đáp án ô ( ㉠ ):</label>
-                      <input id="room-wa" class="ko" value="${dr.a || ""}" placeholder="Nhập biểu hiện tiếng Hàn..." style="width:100%;padding:10px 14px;border-radius:8px;border:1.5px solid var(--primary);" />
+                      <input id="room-wa" class="ko" value="${dr.a || ""}" placeholder="Nhập biểu hiện tiếng Hàn..." style="width:100%;padding:10px 14px;" />
                     </div>
                     <div>
                       <label style="font-weight:700;font-size:13.5px;display:block;margin-bottom:5px;">Đáp án ô ( ㉡ ):</label>
-                      <input id="room-wb" class="ko" value="${dr.b || ""}" placeholder="Nhập biểu hiện tiếng Hàn..." style="width:100%;padding:10px 14px;border-radius:8px;border:1.5px solid var(--primary);" />
+                      <input id="room-wb" class="ko" value="${dr.b || ""}" placeholder="Nhập biểu hiện tiếng Hàn..." style="width:100%;padding:10px 14px;" />
                     </div>
                   </div>
                 ` : `
                   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:8px;">
                     <span style="font-size:13px;color:var(--text-muted);">Độ dài hiện tại: <strong id="w-char-cnt">${(dr.essay || "").length}</strong> chữ (Yêu cầu: ${q.subType === "q54" ? "600~700" : "200~300"} chữ)</span>
                     <button type="button" class="btn-outline-teal" id="toggle-wongokji" style="padding:4px 12px;font-size:12.5px;">
-                      ${showWongokjiGrid ? "Ẩn giấy kẻ ô 원고지" : "👁️ Xem trên giấy kẻ ô 원고지"}
+                      ${ico("eye", 15)} ${showWongokjiGrid ? "Ẩn giấy kẻ ô 원고지" : "Xem trên giấy kẻ ô 원고지"}
                     </button>
                   </div>
-                  <textarea id="room-wessay" class="ko" rows="${q.subType === "q54" ? 9 : 6}" placeholder="Nhập bài làm tiếng Hàn (văn phong -다/는다)..." style="width:100%;padding:12px;border-radius:10px;border:1.5px solid var(--primary);font-size:15.5px;line-height:1.7;">${dr.essay || ""}</textarea>
+                  <textarea id="room-wessay" class="ko" rows="${q.subType === "q54" ? 9 : 6}" placeholder="Nhập bài làm tiếng Hàn (văn phong -다/는다)..." style="width:100%;padding:12px;font-size:15.5px;line-height:1.7;">${dr.essay || ""}</textarea>
                   ${showWongokjiGrid ? renderMiniWongokjiPreview(dr.essay || "", q.subType === "q54" ? 660 : 280) : ""}
                 `}
                 ${showAnswerFeedback ? `
                   <div style="margin-top:16px;background:var(--primary-3);padding:14px;border-radius:10px;font-size:14px;color:var(--primary-4);">
-                    <strong>🎯 Điểm câu này: ${scoreWritingResponse(q, dr)} / ${q.pts}점</strong>
+                    <strong>${ico("target", 16)} Điểm câu này: ${scoreWritingResponse(q, dr)} / ${q.pts}점</strong>
                     ${q.modelA ? `<div class="ko" style="margin-top:4px;">• (㉠): <strong>${q.modelA}</strong></div><div class="ko">• (㉡): <strong>${q.modelB}</strong></div>` : `<div class="ko" style="white-space:pre-wrap;margin-top:6px;"><strong>Bài viết mẫu chuẩn NIIED:</strong>\n${q.modelAnswer}</div>`}
                     <div style="margin-top:6px;"><strong>Giải thích:</strong> ${q.explain}</div>
                   </div>
@@ -958,11 +958,11 @@ function renderExamRoom(root, sys, exam, scope, navigate, registerCleanup) {
                 <div style="display:flex;gap:8px;flex-wrap:wrap;">
                   ${q.audioSrc ? `
                     <button type="button" class="btn-primary" id="btn-q-play" style="padding:7px 16px;font-size:13.5px;">
-                      🔊 Phát Audio giọng Hàn chuẩn
+                      ${ico("speaker", 16)} Phát Audio giọng Hàn chuẩn
                     </button>
                   ` : ""}
                   <button type="button" class="btn-outline-teal" id="btn-q-flag" style="padding:6px 12px;font-size:13px;${flagged.has(q.id) ? "background:var(--primary-3);border-color:var(--primary);color:var(--primary-1);" : ""}">
-                    🚩 ${flagged.has(q.id) ? "Đã gắn cờ" : "Gắn cờ"}
+                    ${ico("flag", 15)} ${flagged.has(q.id) ? "Đã gắn cờ" : "Gắn cờ"}
                   </button>
                 </div>
               </div>
@@ -990,7 +990,7 @@ function renderExamRoom(root, sys, exam, scope, navigate, registerCleanup) {
               ${isSegmentPractice && !submitted && answers[q.id] !== undefined && !instantChecked[q.id] ? `
                 <div style="margin-top:12px;">
                   <button type="button" class="btn-outline-teal" id="btn-instant-check" style="padding:6px 14px;font-size:13px;">
-                    ✔ Kiểm tra đáp án &amp; giải thích câu này ngay
+                    ${ico("check", 15)} Kiểm tra đáp án &amp; giải thích câu này ngay
                   </button>
                 </div>
               ` : ""}
@@ -1013,21 +1013,21 @@ function renderExamRoom(root, sys, exam, scope, navigate, registerCleanup) {
           <!-- RIGHT: COMPACT SCROLLABLE OMR ANSWER SHEET PALETTE (70 / 104 QUESTIONS) -->
           <div class="box-kind" style="max-height:76vh;overflow-y:auto;padding:16px;">
             ${listenList.length ? `
-              <strong style="display:block;margin-bottom:6px;font-size:13.5px;color:var(--primary-1);">🎧 Phiếu OMR · 듣기 (${listenList.length} câu)</strong>
+              <strong style="display:flex;align-items:center;gap:6px;margin-bottom:6px;font-size:13.5px;color:var(--primary-1);">${ico("headphones", 16)} Phiếu OMR · 듣기 (${listenList.length} câu)</strong>
               <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:5px;margin-bottom:14px;">
                 ${listenList.map(({ item, i }) => renderOmrCell(item, i)).join("")}
               </div>
             ` : ""}
 
             ${writeList.length ? `
-              <strong style="display:block;margin-bottom:6px;font-size:13.5px;color:var(--primary-1);">✍️ Tự luận · 쓰기 (51~54)</strong>
+              <strong style="display:flex;align-items:center;gap:6px;margin-bottom:6px;font-size:13.5px;color:var(--primary-1);">${ico("pen", 16)} Tự luận · 쓰기 (51~54)</strong>
               <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:14px;">
                 ${writeList.map(({ item, i }) => renderOmrCell(item, i)).join("")}
               </div>
             ` : ""}
 
             ${readList.length ? `
-              <strong style="display:block;margin-bottom:6px;font-size:13.5px;color:var(--primary-1);">📖 Phiếu OMR · 읽기 (${readList.length} câu)</strong>
+              <strong style="display:flex;align-items:center;gap:6px;margin-bottom:6px;font-size:13.5px;color:var(--primary-1);">${ico("book", 16)} Phiếu OMR · 읽기 (${readList.length} câu)</strong>
               <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:5px;">
                 ${readList.map(({ item, i }) => renderOmrCell(item, i)).join("")}
               </div>

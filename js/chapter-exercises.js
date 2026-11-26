@@ -1,7 +1,7 @@
-import { store, normalizeBookId, getBookWords, getBookCurriculum, playAudio, preloadAudioUrls, speakKoreanTTS } from "./store.js?v=20261127-02";
-import { appendJamoToText } from "./korean-engine.js?v=20261127-02";
-import { HANGEUL_DATA } from "./curated-content.js?v=20261127-02";
-import { ico } from "./icons.js?v=20261127-02";
+import { store, normalizeBookId, getBookWords, getBookCurriculum, playAudio, preloadAudioUrls, speakKoreanTTS } from "./store.js?v=20261127-03";
+import { appendJamoToText } from "./korean-engine.js?v=20261127-03";
+import { HANGEUL_DATA } from "./curated-content.js?v=20261127-03";
+import { ico } from "./icons.js?v=20261127-03";
 
 /**
  * Interactive Workbook (익힘책 · Sách Bài Tập) for ALL 6 BOOKS (Quyển 1 -> Quyển 6):
@@ -188,10 +188,10 @@ export function renderChapterExercises(container, db, bookKey, lessonNum, initia
     stage.innerHTML = `
       <div style="display:flex;flex-direction:column;gap:14px;">
         <div class="box-kind" style="background:var(--primary-3);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;padding:12px 18px;">
-          <strong style="color:var(--primary-4);font-size:14.5px;">
-            ${isWorkbook ? "📙 Kết quả Sách bài tập (익힘책):" : "🎯 Kết quả câu hỏi chuẩn TOPIK:"} Đúng ${correctCnt} / ${doneCnt} câu đã làm (Tổng ${list.length} câu)
+          <strong style="color:var(--primary-4);font-size:14.5px;display:inline-flex;align-items:center;gap:7px;">
+            ${isWorkbook ? `${ico("workbook", 18)} Kết quả Sách bài tập (익힘책):` : `${ico("target", 18)} Kết quả câu hỏi chuẩn TOPIK:`} Đúng ${correctCnt} / ${doneCnt} câu đã làm (Tổng ${list.length} câu)
           </strong>
-          <span class="badge-orange">${doneCnt === list.length ? "🎉 Đã hoàn thành!" : "Chọn đáp án để chấm điểm ngay"}</span>
+          <span class="badge-orange">${doneCnt === list.length ? `${ico("trophy", 14)} Đã hoàn thành!` : "Chọn đáp án để chấm điểm ngay"}</span>
         </div>
 
         ${list.map((q, qi) => {
@@ -223,7 +223,7 @@ export function renderChapterExercises(container, db, bookKey, lessonNum, initia
 
               ${answered ? `
                 <div style="margin-top:10px;background:var(--primary-3);border-radius:10px;padding:10px 14px;font-size:13.5px;color:var(--primary-4);">
-                  <strong>${userPick === q.answer ? "✔ Chính xác!" : "✘ Giải thích:"}</strong> ${q.explain}
+                  <strong>${userPick === q.answer ? `${ico("check", 15)} Chính xác!` : `${ico("cross", 15)} Giải thích:`}</strong> ${q.explain}
                 </div>
               ` : ""}
             </div>
@@ -264,7 +264,7 @@ export function renderChapterExercises(container, db, bookKey, lessonNum, initia
     container.innerHTML = `
       <div class="prediction-banner" style="padding:16px 20px;margin-bottom:18px;">
         <div>
-          <strong style="color:var(--primary-1);font-size:16.5px;">📙 Sách Bài Tập (익힘책) · Bài ${String(lessonNum).padStart(2, "0")}: ${chapObj?.title || ""}</strong>
+          <strong style="color:var(--primary-1);font-size:16.5px;display:inline-flex;align-items:center;gap:7px;">${ico("workbook", 20)} Sách Bài Tập (익힘책) · Bài ${String(lessonNum).padStart(2, "0")}: ${chapObj?.title || ""}</strong>
           <div style="font-size:13.5px;color:var(--text-muted);margin-top:2px;">
             Làm bài tập Từ vựng &amp; Ngữ pháp → Luyện dịch câu Việt–Hàn → Chốt câu hỏi chuẩn TOPIK.
           </div>
@@ -321,10 +321,10 @@ export function renderChapterExercises(container, db, bookKey, lessonNum, initia
           </span>
           <div style="display:flex;gap:6px;">
             <button type="button" class="btn-outline-teal" data-tmode="blocks" style="padding:5px 12px;font-size:13px;${transMode === "blocks" ? "background:var(--primary);color:#FFF;border-color:var(--primary-1);" : ""}">
-              🧩 Ghép cụm từ
+              ${ico("puzzle", 16)} Ghép cụm từ
             </button>
             <button type="button" class="btn-outline-teal" data-tmode="typing" style="padding:5px 12px;font-size:13px;${transMode === "typing" ? "background:var(--primary);color:#FFF;border-color:var(--primary-1);" : ""}">
-              ⌨️ Tự gõ câu Hàn
+              ${ico("keyboard", 16)} Tự gõ câu Hàn
             </button>
           </div>
         </div>
@@ -373,7 +373,7 @@ export function renderChapterExercises(container, db, bookKey, lessonNum, initia
                 `).join("")}
                 <div class="kr-key-row">
                   <button type="button" class="kr-key" data-special="space" style="min-width:130px;">Space</button>
-                  <button type="button" class="kr-key" data-special="back" style="min-width:90px;">⌫ Xóa</button>
+                  <button type="button" class="kr-key" data-special="back" style="min-width:90px;">Xóa</button>
                 </div>
               </div>
             </div>
@@ -393,12 +393,12 @@ export function renderChapterExercises(container, db, bookKey, lessonNum, initia
 
         ${trChecked ? `
           <div style="margin-top:16px;padding:14px 16px;border-radius:12px;background:${trChecked.ok ? "rgba(34,197,94,0.12)" : "rgba(244,63,94,0.10)"};border:1.5px solid ${trChecked.ok ? "var(--success)" : "var(--danger)"};">
-            <strong style="color:${trChecked.ok ? "var(--success)" : "var(--danger)"};font-size:15.5px;">
-              ${trChecked.ok ? "🎉 Chính xác! Trật tự câu & tiểu từ chuẩn ngữ pháp Hàn." : "💡 Chưa khớp hoàn toàn — đối chiếu đáp án chuẩn bên dưới:"}
+            <strong style="color:${trChecked.ok ? "var(--success)" : "var(--danger)"};font-size:15.5px;display:inline-flex;align-items:center;gap:6px;">
+              ${trChecked.ok ? `${ico("check", 17)} Chính xác! Trật tự câu & tiểu từ chuẩn ngữ pháp Hàn.` : `${ico("bulb", 17)} Chưa khớp hoàn toàn — đối chiếu đáp án chuẩn bên dưới:`}
             </strong>
             <div style="margin-top:6px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
               <span class="ko" style="font-size:18.5px;font-weight:800;color:var(--primary-4);">${item.ko}</span>
-              <button type="button" class="btn-outline-teal" id="btn-tr-audio" style="padding:5px 12px;font-size:13px;">🔊 Nghe câu chuẩn</button>
+              <button type="button" class="btn-outline-teal" id="btn-tr-audio" style="padding:5px 12px;font-size:13px;">${ico("speaker", 16)} Nghe câu chuẩn</button>
             </div>
           </div>
         ` : ""}
@@ -452,7 +452,7 @@ export function renderChapterExercises(container, db, bookKey, lessonNum, initia
       vkBtn.addEventListener("click", () => {
         showKeyboard = !showKeyboard;
         vkPanel.style.display = showKeyboard ? "block" : "none";
-        vkBtn.innerHTML = `⌨️ ${showKeyboard ? "Ẩn bàn phím Hàn ảo" : "Mở bàn phím Hàn ảo"}`;
+        vkBtn.innerHTML = `${ico("keyboard", 15)} ${showKeyboard ? "Ẩn bàn phím Hàn ảo" : "Mở bàn phím Hàn ảo"}`;
         typeInp?.focus();
       });
     }

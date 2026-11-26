@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
-  <link rel="stylesheet" href="/css/migii.css?v=20261127-02" />
+  <link rel="stylesheet" href="/css/migii.css?v=20261127-03" />
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
@@ -26,12 +26,12 @@
       </div>
 
       <nav class="nav-links" aria-label="Điều hướng chính">
-        <button class="nav-pill active" data-route="home">Trang chủ</button>
-        <button class="nav-pill" data-route="theory">Lý thuyết</button>
-        <button class="nav-pill" data-route="roadmap">Lộ trình</button>
+        <button class="nav-pill active" data-route="home"><span data-dico="home"></span><span>Trang chủ</span></button>
+        <button class="nav-pill" data-route="theory"><span data-dico="book"></span><span>Lý thuyết</span></button>
+        <button class="nav-pill" data-route="roadmap"><span data-dico="compass"></span><span>Lộ trình</span></button>
 
         <div class="nav-item-wrap">
-          <button class="nav-pill" data-route="practice">Luyện tập ▾</button>
+          <button class="nav-pill" data-route="practice"><span data-dico="video"></span><span>Luyện tập ▾</span></button>
           <div class="nav-dropdown">
             <button class="dropdown-link" data-route="practice" data-sub="skills">Kỹ năng &amp; Shorts</button>
             <button class="dropdown-link" data-route="practice" data-sub="topik1">TOPIK I</button>
@@ -40,7 +40,7 @@
         </div>
 
         <div class="nav-item-wrap">
-          <button class="nav-pill" data-route="mock-test">Đề thi ▾</button>
+          <button class="nav-pill" data-route="mock-test"><span data-dico="exam"></span><span>Đề thi ▾</span></button>
           <div class="nav-dropdown">
             <button class="dropdown-link" data-route="mock-test" data-sub="topik1" data-vmode="exams" data-cat="curated">Đề tuyển chọn</button>
             <button class="dropdown-link" data-route="mock-test" data-sub="topik1" data-vmode="exams" data-cat="all">TOPIK I (70 câu)</button>
@@ -49,7 +49,7 @@
           </div>
         </div>
 
-        <button class="nav-pill" data-route="check-tools">Công cụ</button>
+        <button class="nav-pill" data-route="check-tools"><span data-dico="sparkle"></span><span>Công cụ</span></button>
       </nav>
 
       <div class="nav-actions">
@@ -121,6 +121,6 @@
     </div>
   </footer>
 
-  <script type="module" src="/js/app.js?v=20261127-02"></script>
+  <script type="module" src="/js/app.js?v=20261127-03"></script>
 </body>
 </html>

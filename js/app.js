@@ -1,16 +1,16 @@
-import { store, UI_THEMES, isLocalPreviewHost, playAudio, preloadAudioUrls, speakKoreanTTS } from "./store.js?v=20261127-02";
-import { ico, daisyLogoSVG } from "./icons.js?v=20261127-02";
-import { conjugateKoreanPredicate } from "./korean-engine.js?v=20261127-02";
-import { openAuthModal, renderMandatoryAuthGate, renderOnboardingSurvey } from "./auth-modal.js?v=20261127-02";
-import { playSakuraPageIntro } from "./sakura-intro.js?v=20261127-02";
-import { buildUrl, parseUrl, getAncestorChain } from "./router.js?v=20261127-02";
-import { renderHomeView } from "./views/home.js?v=20261127-02";
-import { renderTheoryView } from "./views/theory.js?v=20261127-02";
-import { renderRoadmapView, getGuidedStudyPlan } from "./views/roadmap.js?v=20261127-02";
-import { renderSkillsPracticeView } from "./views/skills-practice.js?v=20261127-02";
-import { renderTopikPracticeView } from "./views/topik-practice.js?v=20261127-02";
-import { renderMockTestView } from "./views/mocktest.js?v=20261127-02";
-import { renderCheckAndToolsView } from "./views/check-tools.js?v=20261127-02";
+import { store, UI_THEMES, isLocalPreviewHost, playAudio, preloadAudioUrls, speakKoreanTTS } from "./store.js?v=20261127-03";
+import { ico, daisyLogoSVG } from "./icons.js?v=20261127-03";
+import { conjugateKoreanPredicate } from "./korean-engine.js?v=20261127-03";
+import { openAuthModal, renderMandatoryAuthGate, renderOnboardingSurvey } from "./auth-modal.js?v=20261127-03";
+import { playSakuraPageIntro } from "./sakura-intro.js?v=20261127-03";
+import { buildUrl, parseUrl, getAncestorChain } from "./router.js?v=20261127-03";
+import { renderHomeView } from "./views/home.js?v=20261127-03";
+import { renderTheoryView } from "./views/theory.js?v=20261127-03";
+import { renderRoadmapView, getGuidedStudyPlan } from "./views/roadmap.js?v=20261127-03";
+import { renderSkillsPracticeView } from "./views/skills-practice.js?v=20261127-03";
+import { renderTopikPracticeView } from "./views/topik-practice.js?v=20261127-03";
+import { renderMockTestView } from "./views/mocktest.js?v=20261127-03";
+import { renderCheckAndToolsView } from "./views/check-tools.js?v=20261127-03";
 
 const appRoot = document.getElementById("app-root");
 const modalRoot = document.getElementById("modal-root");
@@ -143,16 +143,20 @@ function runViewCleanups() {
 
 function hydrateStaticChromeIcons() {
   const sIco = document.getElementById("streak-ico");
-  if (sIco) sIco.innerHTML = ico("sprout", 16);
+  if (sIco) sIco.innerHTML = ico("sprout", 18);
   const tIco = document.getElementById("theme-ico");
-  if (tIco) tIco.innerHTML = ico("palette", 16);
+  if (tIco) tIco.innerHTML = ico("palette", 18);
   const qIco = document.getElementById("search-ico");
-  if (qIco) qIco.innerHTML = ico("search", 15);
+  if (qIco) qIco.innerHTML = ico("search", 17);
   const fMascot = document.getElementById("footer-mascot");
   if (fMascot) fMascot.innerHTML = daisyLogoSVG(28);
 
+  document.querySelectorAll("[data-dico]").forEach((el) => {
+    el.innerHTML = ico(el.dataset.dico, 17);
+  });
+
   document.querySelectorAll("[data-mico]").forEach((el) => {
-    el.innerHTML = ico(el.dataset.mico, 19);
+    el.innerHTML = ico(el.dataset.mico, 21);
   });
 }
 

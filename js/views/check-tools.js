@@ -1,7 +1,7 @@
-import { store, evaluateRoadmapScore, speakKoreanTTS } from "../store.js?v=20261127-02";
-import { ico } from "../icons.js?v=20261127-02";
-import { analyzePronunciationRules, conjugateKoreanPredicate } from "../korean-engine.js?v=20261127-02";
-import { renderRoadmapScoreCardHTML } from "./roadmap.js?v=20261127-02";
+import { store, evaluateRoadmapScore, speakKoreanTTS } from "../store.js?v=20261127-03";
+import { ico } from "../icons.js?v=20261127-03";
+import { analyzePronunciationRules, conjugateKoreanPredicate } from "../korean-engine.js?v=20261127-03";
+import { renderRoadmapScoreCardHTML } from "./roadmap.js?v=20261127-03";
 
 const PARTICLE_NOTES = [
   { suffix: "에서는", role: "Tiểu từ Nơi diễn ra hành động + Nhấn mạnh chủ đề" },
@@ -97,15 +97,15 @@ export function renderCheckAndToolsView(root, db, navigate, params = {}) {
       <div class="container-web">
         <div class="breadcrumb-bar">
           <span>Công cụ</span>
-          <span>▶</span>
+          <span>/</span>
           <span>Thống kê &amp; Trợ thủ học tập</span>
         </div>
 
         <div class="skill-pills-row">
-          <button class="btn-skill ${tab === "analytics" ? "active" : ""}" data-tb="analytics">${ico("chart", 16)} Điểm yếu &amp; Lịch sử thi</button>
-          <button class="btn-skill ${tab === "mistakes" ? "active" : ""}" data-tb="mistakes">${ico("book", 16)} Sổ tay câu sai (${mistakes.length})</button>
-          <button class="btn-skill ${tab === "xray" ? "active" : ""}" data-tb="xray">${ico("sparkle", 16)} Giải phẫu câu &amp; Chia ĐT</button>
-          <button class="btn-skill ${tab === "import" ? "active" : ""}" data-tb="import">${ico("upload", 16)} Nhập gói Anki (.apkg)</button>
+          <button class="btn-skill ${tab === "analytics" ? "active" : ""}" data-tb="analytics">${ico("chart", 17)} Điểm yếu &amp; Lịch sử thi</button>
+          <button class="btn-skill ${tab === "mistakes" ? "active" : ""}" data-tb="mistakes">${ico("target", 17)} Sổ tay câu sai (${mistakes.length})</button>
+          <button class="btn-skill ${tab === "xray" ? "active" : ""}" data-tb="xray">${ico("xray", 17)} Giải phẫu câu &amp; Chia ĐT</button>
+          <button class="btn-skill ${tab === "import" ? "active" : ""}" data-tb="import">${ico("upload", 17)} Nhập gói Anki (.apkg)</button>
         </div>
 
         <div id="check-tools-body"></div>
@@ -143,7 +143,7 @@ export function renderCheckAndToolsView(root, db, navigate, params = {}) {
         <div class="grid-2" style="align-items:start;">
           <!-- Accuracy by Question Structure -->
           <div class="box-kind">
-            <h3 style="margin:0 0 14px;font-size:18px;">🎯 Check Tỷ lệ đúng theo từng dạng câu TOPIK</h3>
+            <h3 style="margin:0 0 14px;font-size:18px;display:flex;align-items:center;gap:8px;">${ico("target", 20)} Tỷ lệ đúng theo từng dạng câu TOPIK</h3>
             ${partEntries.length === 0 ? `
               <p style="color:var(--text-muted);font-size:14.5px;">Chưa có dữ liệu làm bài. Hãy làm thử vài câu tại mục <strong>Luyện tập</strong> hoặc <strong>Đề thi</strong> để hệ thống tự động bắt bệnh điểm yếu cho bạn!</p>
               <button class="btn-primary" id="btn-go-prac-now">Đi tới Ôn cấu trúc đề TOPIK →</button>
@@ -170,7 +170,7 @@ export function renderCheckAndToolsView(root, db, navigate, params = {}) {
 
           <!-- Exam History & Backup -->
           <div class="box-kind">
-            <h3 style="margin:0 0 14px;font-size:18px;">🏆 Lịch sử chấm điểm Đề thi &amp; Sao lưu</h3>
+            <h3 style="margin:0 0 14px;font-size:18px;display:flex;align-items:center;gap:8px;">${ico("trophy", 20)} Lịch sử chấm điểm Đề thi &amp; Sao lưu</h3>
             ${store.state.examHistory.length === 0 ? `
               <p style="color:var(--text-muted);font-size:14.5px;">Bạn chưa nộp đề thi thử nào.</p>
             ` : `
@@ -191,9 +191,9 @@ export function renderCheckAndToolsView(root, db, navigate, params = {}) {
             `}
 
             <div style="border-top:1px solid #EEE;padding-top:14px;display:flex;gap:10px;flex-wrap:wrap;">
-              <button class="btn-outline-teal" id="btn-export-backup">💾 Xuất file sao lưu tiến độ (.json)</button>
+              <button class="btn-outline-teal" id="btn-export-backup">${ico("save", 16)} Xuất file sao lưu tiến độ (.json)</button>
               <label class="btn-outline-teal" style="cursor:pointer;">
-                📂 Khôi phục sao lưu
+                ${ico("folder", 16)} Khôi phục sao lưu
                 <input type="file" id="inp-import-backup" accept=".json" style="display:none;" />
               </label>
             </div>
@@ -215,7 +215,7 @@ export function renderCheckAndToolsView(root, db, navigate, params = {}) {
       body.innerHTML = mistakes.length === 0 ? `
         <div class="prediction-banner">
           <div>
-            <h3 style="margin:0 0 6px;color:var(--primary-1);">🎉 Tuyệt vời! Sổ tay câu sai hiện đang trống (0 lỗi tồn đọng)</h3>
+            <h3 style="margin:0 0 6px;color:var(--primary-1);display:flex;align-items:center;gap:8px;">${ico("trophy", 22)} Sổ tay câu sai hiện đang trống (0 lỗi tồn đọng)</h3>
             <p style="margin:0;color:var(--text-muted);">Mọi câu bạn làm sai trong phần Đọc hiểu, Ôn cấu trúc TOPIK hoặc Đề thi thử sẽ tự động được gom về đây kèm lời giải tiếng Việt để bạn làm lại.</p>
           </div>
         </div>
@@ -236,7 +236,7 @@ export function renderCheckAndToolsView(root, db, navigate, params = {}) {
                   </button>
                 `).join("")}
               </div>
-              <div style="margin-top:10px;font-size:13.5px;color:var(--text-muted);">💡 Gợi ý giải thích: ${m.explain}</div>
+              <div style="margin-top:10px;font-size:13.5px;color:var(--text-muted);display:flex;align-items:center;gap:6px;">${ico("bulb", 16)} <span>Gợi ý giải thích: ${m.explain}</span></div>
             </div>
           `).join("")}
         </div>
@@ -258,20 +258,20 @@ export function renderCheckAndToolsView(root, db, navigate, params = {}) {
     } else if (tab === "xray") {
       body.innerHTML = `
         <div class="outline-ai" style="margin-bottom:22px;">
-          <h3 style="margin:0 0 8px;">🔬 Giải phẫu câu tiếng Hàn X-Ray (D ● TOPIK Studio)</h3>
+          <h3 style="margin:0 0 8px;display:flex;align-items:center;gap:8px;">${ico("xray", 21)} Giải phẫu câu tiếng Hàn X-Ray (D ● TOPIK Studio)</h3>
           <p style="margin:0 0 10px;font-size:14px;color:var(--text-muted);">
             Dán bất kỳ câu tiếng Hàn nào để tách từng thành phần tiểu từ, đuôi câu kính ngữ, tra từ vựng và soi biến âm:
           </p>
           <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
-            <input id="xray-inp" class="ko" value="${sentenceInput.replace(/"/g, "&quot;")}" style="flex:1;min-width:200px;padding:11px 16px;border-radius:99px;border:1.5px solid var(--primary);font-size:17px;font-weight:700;" />
-            <button type="button" class="btn-primary" id="xray-speak">🔊 Đọc câu</button>
+            <input id="xray-inp" class="ko" value="${sentenceInput.replace(/"/g, "&quot;")}" style="flex:1;min-width:200px;padding:11px 16px;font-size:17px;font-weight:700;" />
+            <button type="button" class="btn-primary" id="xray-speak">${ico("speaker", 17)} Đọc câu</button>
           </div>
           <div id="xray-live-results"></div>
         </div>
 
         <div class="box-kind">
-          <h3 style="margin:0 0 10px;">⚙️ Máy chia Động/Tính từ Bất quy tắc nhanh</h3>
-          <input id="tool-verb-inp" class="ko" value="${verbQuery.replace(/"/g, "&quot;")}" placeholder="Nhập động/tính từ nguyên thể (VD: 춥다, 듣다, 모르다, 쓰다, 짓다)..." style="max-width:420px;width:100%;padding:9px 16px;border-radius:99px;border:1.5px solid var(--primary);font-size:17px;font-weight:700;margin-bottom:12px;" />
+          <h3 style="margin:0 0 10px;display:flex;align-items:center;gap:8px;">${ico("gear", 20)} Máy chia Động/Tính từ Bất quy tắc nhanh</h3>
+          <input id="tool-verb-inp" class="ko" value="${verbQuery.replace(/"/g, "&quot;")}" placeholder="Nhập động/tính từ nguyên thể (VD: 춥다, 듣다, 모르다, 쓰다, 짓다)..." style="max-width:420px;width:100%;padding:9px 16px;font-size:17px;font-weight:700;margin-bottom:12px;" />
           <div id="verb-live-results"></div>
         </div>
       `;
@@ -283,7 +283,7 @@ export function renderCheckAndToolsView(root, db, navigate, params = {}) {
         const tokens = xrayKoreanSentence(sentenceInput, allVocab);
         const pron = analyzePronunciationRules(sentenceInput);
         xrayOut.innerHTML = `
-          ${pron.hasChange ? `<div class="ko" style="margin-bottom:12px;font-size:15px;color:var(--primary-1);font-weight:700;">🔊 Phát âm nối/biến âm toàn câu: [${pron.pronounced}]</div>` : ""}
+          ${pron.hasChange ? `<div class="ko" style="margin-bottom:12px;font-size:15px;color:var(--primary-1);font-weight:700;display:flex;align-items:center;gap:6px;">${ico("speaker", 17)} <span>Phát âm nối/biến âm toàn câu: [${pron.pronounced}]</span></div>` : ""}
           <div class="grid-3">
             ${tokens.map((t) => `
               <div style="background:var(--bg-body);border-radius:10px;padding:12px;border-top:3px solid var(--primary);">
@@ -300,7 +300,7 @@ export function renderCheckAndToolsView(root, db, navigate, params = {}) {
       const updateVerbDOM = () => {
         const conj = conjugateKoreanPredicate(verbQuery);
         verbOut.innerHTML = conj ? `
-          <div style="font-size:13.5px;color:var(--primary-1);font-weight:700;margin-bottom:10px;">⚡ ${conj.irregularNote}</div>
+          <div style="font-size:13.5px;color:var(--primary-1);font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px;">${ico("bolt", 16)} <span>${conj.irregularNote}</span></div>
           <div class="grid-3">
             ${conj.forms.map((f) => `
               <div style="background:var(--bg-body);padding:10px 12px;border-radius:10px;">
@@ -326,14 +326,14 @@ export function renderCheckAndToolsView(root, db, navigate, params = {}) {
       });
     } else if (tab === "import") {
       body.innerHTML = `
-        <div class="box-kind" style="text-align:center;padding:36px 24px;border:2px dashed var(--primary);">
-          <div style="font-size:44px;margin-bottom:8px;">📦</div>
+        <div class="box-kind" style="text-align:center;padding:36px 24px;border:1.5px dashed rgba(13,148,136,0.4);">
+          <div style="margin-bottom:10px;">${ico("box", 46)}</div>
           <h3 style="margin:0 0 8px;">Kéo-thả hoặc chọn gói thẻ Anki (.apkg) để nạp thẳng vào Web</h3>
           <p style="margin:0 auto 18px;max-width:580px;color:var(--text-muted);font-size:14.5px;">
-            Máy chủ Python tích hợp sẽ tự động giải nén cơ sở dữ liệu thẻ + toàn bộ file âm thanh <code>.mp3</code> bên trong gói <code>.apkg</code> của bạn (Sơ cấp 2, Trung cấp 3–4, TOPIK II...) và đưa ngay lên kệ <strong>Lý thuyết &amp; Từ vựng</strong>!
+            Hệ thống sẽ tự động giải nén cơ sở dữ liệu thẻ + toàn bộ file âm thanh <code>.mp3</code> bên trong gói <code>.apkg</code> của bạn (Sơ cấp 2, Trung cấp 3–4, TOPIK II...) và đưa ngay lên kệ <strong>Lý thuyết &amp; Từ vựng</strong>!
           </p>
           <label class="btn-primary" style="cursor:pointer;">
-            📂 Chọn file .apkg từ máy Mac
+            ${ico("folder", 17)} Chọn file .apkg từ máy
             <input type="file" id="apkg-file-input" accept=".apkg" style="display:none;" />
           </label>
           <div id="apkg-status" style="margin-top:14px;font-weight:600;"></div>
@@ -359,7 +359,7 @@ export function renderCheckAndToolsView(root, db, navigate, params = {}) {
         const file = e.target.files?.[0];
         if (!file) return;
         const st = body.querySelector("#apkg-status");
-        st.innerHTML = `<span style="color:var(--primary-1);">⏳ Đang giải nén thẻ &amp; âm thanh từ "${file.name}"...</span>`;
+        st.innerHTML = `<span style="color:var(--primary-1);">${ico("clock", 16)} Đang giải nén thẻ &amp; âm thanh từ "${file.name}"...</span>`;
         try {
           const buf = await file.arrayBuffer();
           const res = await fetch("/api/import-apkg", {
@@ -371,7 +371,7 @@ export function renderCheckAndToolsView(root, db, navigate, params = {}) {
           if (data.ok) {
             db.customDecks.push(data.deck);
             db.customVocab.push(...data.deck.items);
-            st.innerHTML = `<span style="color:var(--success);">✔ Đã nạp thành công "${data.deck.title}" (${data.deck.count} thẻ, ${data.deck.audioCount} audio)!</span>`;
+            st.innerHTML = `<span style="color:var(--success);">${ico("check", 16)} Đã nạp thành công "${data.deck.title}" (${data.deck.count} thẻ, ${data.deck.audioCount} audio)!</span>`;
             setTimeout(() => render(), 900);
           } else {
             st.innerHTML = `<span style="color:var(--danger);">Lỗi: ${data.error}</span>`;

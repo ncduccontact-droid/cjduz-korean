@@ -1,8 +1,8 @@
-import { store, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261127-02";
-import { ico } from "../icons.js?v=20261127-02";
-import { analyzePronunciationRules, conjugateKoreanPredicate } from "../korean-engine.js?v=20261127-02";
-import { renderChapterExercises } from "../chapter-exercises.js?v=20261127-02";
-import { renderShortsShadowingStudio } from "../shorts-shadowing.js?v=20261127-02";
+import { store, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261127-03";
+import { ico } from "../icons.js?v=20261127-03";
+import { analyzePronunciationRules, conjugateKoreanPredicate } from "../korean-engine.js?v=20261127-03";
+import { renderChapterExercises } from "../chapter-exercises.js?v=20261127-03";
+import { renderShortsShadowingStudio } from "../shorts-shadowing.js?v=20261127-03";
 
 const READING_PASSAGES = [
   {
@@ -99,7 +99,7 @@ export function renderSkillsPracticeView(root, db, navigate, params = {}) {
       <div class="container-web">
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
           <div class="breadcrumb-bar" style="margin-bottom:0;">
-            <span>Luyện tập</span><span>▶</span><span>Kỹ năng &amp; Shorts</span>
+            <span>Luyện tập</span><span>/</span><span>Kỹ năng &amp; Shorts</span>
           </div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;">
             <button type="button" class="btn-outline-teal" id="sw-to-topik1" style="padding:5px 12px;font-size:13px;">Luyện dạng TOPIK I</button>
@@ -237,9 +237,9 @@ function renderListeningModule(stage, db) {
 
         <div style="background:var(--primary-3);border-radius:14px;padding:22px;text-align:center;margin-bottom:18px;">
           <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
-            <button class="btn-primary" id="btn-listen-play">▶ Phát câu nghe (${speed}x)</button>
-            <button class="btn-outline-teal" id="btn-listen-loop">${loopActive ? "⏹ Dừng lặp A–B" : "🔁 Lặp liên tục câu này"}</button>
-            <button class="btn-outline-teal" id="btn-toggle-sub">${showScript ? "🙈 Ẩn phụ đề" : "👁️ Xem lời thoại Hàn–Việt"}</button>
+            <button class="btn-primary" id="btn-listen-play">${ico("play", 17)} Phát câu nghe (${speed}x)</button>
+            <button class="btn-outline-teal" id="btn-listen-loop">${loopActive ? `${ico("stop", 16)} Dừng lặp A–B` : `${ico("refresh", 16)} Lặp liên tục câu này`}</button>
+            <button class="btn-outline-teal" id="btn-toggle-sub">${ico("eye", 16)} ${showScript ? "Ẩn phụ đề" : "Xem lời thoại Hàn–Việt"}</button>
           </div>
 
           <div class="ko" style="font-size:21px;font-weight:700;color:var(--text-main);">
@@ -255,8 +255,8 @@ function renderListeningModule(stage, db) {
             Điền từ còn thiếu <span style="color:var(--text-muted);font-weight:400;">(hoặc chép lại cả câu)</span>:
           </label>
           <div style="display:flex;gap:10px;flex-wrap:wrap;">
-            <input id="dict-input" class="ko" placeholder="Nhập từ tiếng Hàn nghe được..." style="flex:1 1 200px;min-width:0;width:100%;padding:11px 16px;border-radius:99px;border:1.5px solid var(--primary);font-size:17px;font-weight:600;" />
-            <button class="btn-orange" id="btn-dict-check" style="white-space:nowrap;flex-shrink:0;">Check đáp án</button>
+            <input id="dict-input" class="ko" placeholder="Nhập từ tiếng Hàn nghe được..." style="flex:1 1 200px;min-width:0;width:100%;padding:11px 16px;font-size:17px;font-weight:600;" />
+            <button class="btn-orange" id="btn-dict-check" style="white-space:nowrap;flex-shrink:0;">Kiểm tra</button>
             <button class="btn-outline-teal" id="btn-listen-next" style="white-space:nowrap;flex-shrink:0;">Câu tiếp →</button>
           </div>
           <div id="dict-feedback" style="margin-top:12px;font-weight:600;"></div>
@@ -305,9 +305,9 @@ function renderListeningModule(stage, db) {
       const fb = stage.querySelector("#dict-feedback");
       const ok = val === cur.targetWord || val === cur.ko.replace(/[.?!]/g, "");
       if (ok) {
-        fb.innerHTML = `<span style="color:var(--success)">✔ Chính xác! Câu đầy đủ: <span class="ko">${cur.ko}</span></span>`;
+        fb.innerHTML = `<span style="color:var(--success)">${ico("check", 16)} Chính xác! Câu đầy đủ: <span class="ko">${cur.ko}</span></span>`;
       } else {
-        fb.innerHTML = `<span style="color:var(--danger)">✘ Từ khóa đúng là: <strong class="ko">${cur.targetWord}</strong> — Câu đầy đủ: <span class="ko">${cur.ko}</span></span>`;
+        fb.innerHTML = `<span style="color:var(--danger)">${ico("cross", 16)} Từ khóa đúng là: <strong class="ko">${cur.targetWord}</strong> — Câu đầy đủ: <span class="ko">${cur.ko}</span></span>`;
       }
     };
 
@@ -377,10 +377,10 @@ function renderReadingModule(stage, db) {
         <div class="box-kind">
           <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px;">
             <h3 class="ko" style="margin:0;font-size:19px;color:var(--primary-1);">${p.title}</h3>
-            <button class="btn-audio" id="btn-read-aloud" title="Đọc mẫu cả bài">🔊</button>
+            <button class="btn-audio" id="btn-read-aloud" title="Đọc mẫu cả bài">${ico("speaker", 18)}</button>
           </div>
-          <div style="font-size:12.5px;color:var(--primary-1);font-weight:700;margin-bottom:10px;">
-            💡 Mẹo đọc nhanh D ● TOPIK: Bấm vào bất kỳ chữ tiếng Hàn nào bên dưới để tra nghĩa tức thì!
+          <div style="font-size:12.5px;color:var(--primary-1);font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px;">
+            ${ico("bulb", 16)} <span>Mẹo đọc nhanh D ● TOPIK: Bấm vào bất kỳ chữ tiếng Hàn nào bên dưới để tra nghĩa tức thì!</span>
           </div>
 
           <div class="ko" style="font-size:18px;line-height:1.9;background:#F8FAFB;padding:16px;border-radius:12px;">
@@ -398,8 +398,8 @@ function renderReadingModule(stage, db) {
                 <div style="font-size:14.5px;font-weight:600;margin-top:2px;">Nghĩa: ${selectedWordInfo.meaning}</div>
               </div>
               <div style="display:flex;gap:6px;">
-                <button class="btn-audio" id="btn-tok-speak">🔊</button>
-                ${selectedWordInfo.matchCard ? `<button class="btn-orange" id="btn-tok-star" style="padding:6px 12px;font-size:12.5px;">★ Lưu ôn từ</button>` : ""}
+                <button class="btn-audio" id="btn-tok-speak">${ico("speaker", 18)}</button>
+                ${selectedWordInfo.matchCard ? `<button class="btn-orange" id="btn-tok-star" style="padding:6px 12px;font-size:12.5px;">${ico("star", 15)} Lưu ôn từ</button>` : ""}
               </div>
             </div>
           ` : ""}
@@ -436,7 +436,7 @@ function renderReadingModule(stage, db) {
                   </div>
                   ${picked !== undefined ? `
                     <div style="margin-top:10px;font-size:13.5px;color:var(--primary-4);background:var(--primary-3);padding:8px 12px;border-radius:8px;">
-                      ${picked === q.answer ? "✔ Chính xác!" : "✘ Đã lưu vào Sổ tay câu sai!"} — ${q.explain}
+                      ${picked === q.answer ? `${ico("check", 15)} Chính xác!` : `${ico("cross", 15)} Đã lưu vào Sổ tay câu sai!`} — ${q.explain}
                     </div>
                   ` : ""}
                 </div>
@@ -468,7 +468,7 @@ function renderReadingModule(stage, db) {
     if (tokStar && selectedWordInfo?.matchCard) {
       tokStar.addEventListener("click", () => {
         store.toggleStar(selectedWordInfo.matchCard.id);
-        tokStar.textContent = "✔ Đã lưu!";
+        tokStar.innerHTML = `${ico("check", 14)} Đã lưu!`;
       });
     }
 
@@ -558,18 +558,18 @@ function renderShadowingModule(stage, db, initialLesson = 1) {
           <div style="font-size:15px;color:var(--text-muted);margin-bottom:16px;">${cur.vi}</div>
 
           <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;">
-            <button class="btn-primary" id="btn-shadow-sample">🔊 1. Nghe mẫu (1.0x)</button>
-            <button class="btn-outline-teal" id="btn-shadow-slow">🐢 Nghe chậm (0.75x)</button>
+            <button class="btn-primary" id="btn-shadow-sample">${ico("speaker", 17)} 1. Nghe mẫu (1.0x)</button>
+            <button class="btn-outline-teal" id="btn-shadow-slow">${ico("turtle", 18)} Nghe chậm (0.75x)</button>
             <button class="btn-orange" id="btn-shadow-rec" style="${isRecording ? "background:var(--danger);" : ""}">
-              ${isRecording ? "⏹ Dừng & Chấm phát âm" : "🎙️ 2. Bấm Micro đọc nhại theo"}
+              ${isRecording ? `${ico("stop", 16)} Dừng & Chấm phát âm` : `${ico("mic", 17)} 2. Bấm Micro đọc nhại theo`}
             </button>
-            ${recordedUrl ? `<button class="btn-outline-teal" id="btn-shadow-myvoice">🎧 3. Nghe lại giọng của bạn</button>` : ""}
+            ${recordedUrl ? `<button class="btn-outline-teal" id="btn-shadow-myvoice">${ico("headphones", 17)} 3. Nghe lại giọng của bạn</button>` : ""}
           </div>
         </div>
 
         ${pronRules.rules.length ? `
           <div style="background:#FFF9EB;border:1px solid #FDE68A;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:13.5px;">
-            <strong>💡 Điểm biến âm cần lưu ý khi nói câu này:</strong>
+            <strong>${ico("bulb", 16)} Điểm biến âm cần lưu ý khi nói câu này:</strong>
             ${pronRules.rules.map((r) => `<span class="ko" style="margin-left:8px;">• ${r.detail}</span>`).join("")}
           </div>
         ` : ""}
@@ -707,7 +707,7 @@ function renderRoleplayAndPoliteness(stage) {
         <!-- Situational Roleplay -->
         <div class="outline-ai">
           <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px;">
-            <strong>💬 Nhập vai Giao tiếp thực tế</strong>
+            <strong style="display:inline-flex;align-items:center;gap:7px;">${ico("chat", 19)} Nhập vai Giao tiếp thực tế</strong>
             <select id="rp-sel" class="box-select">
               ${ROLEPLAY_SCENARIOS.map((s, i) => `<option value="${i}" ${i === scIdx ? "selected" : ""}>${s.title}</option>`).join("")}
             </select>
@@ -723,7 +723,7 @@ function renderRoleplayAndPoliteness(stage) {
           </div>
 
           ${currentTurn ? `
-            <div style="font-size:13px;color:var(--text-muted);margin-bottom:6px;">💡 Gợi ý câu đáp tự nhiên (Bấm để nói &amp; gửi):</div>
+            <div style="font-size:13px;color:var(--text-muted);margin-bottom:6px;display:flex;align-items:center;gap:6px;">${ico("bulb", 16)} <span>Gợi ý câu đáp tự nhiên (Bấm để nói &amp; gửi):</span></div>
             <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;">
               ${currentTurn.hints.map((h) => `
                 <button type="button" class="btn-outline-teal ko" data-hint="${h}" style="justify-content:flex-start;text-align:left;border-radius:10px;">
@@ -732,14 +732,14 @@ function renderRoleplayAndPoliteness(stage) {
               `).join("")}
             </div>
           ` : `
-            <div style="color:var(--success);font-weight:700;margin-bottom:10px;">🎉 Bạn đã hoàn thành xuất sắc tình huống giao tiếp này!</div>
+            <div style="color:var(--success);font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px;">${ico("trophy", 18)} <span>Bạn đã hoàn thành xuất sắc tình huống giao tiếp này!</span></div>
             <button class="btn-primary" id="rp-restart">Thực hành lại</button>
           `}
         </div>
 
         <!-- 3 Speech Levels Switcher -->
         <div class="box-kind">
-          <h3 style="margin:0 0 8px;font-size:18px;">🔄 Phản xạ 3 Cấp độ Kính ngữ (하십시오체 · 해요체 · 반말)</h3>
+          <h3 style="margin:0 0 8px;font-size:18px;display:flex;align-items:center;gap:8px;">${ico("refresh", 20)} Phản xạ 3 Cấp độ Kính ngữ (하십시오체 · 해요체 · 반말)</h3>
           <p style="margin:0 0 12px;font-size:13.5px;color:var(--text-muted);">
             Nhập động từ/tính từ bất kỳ (kể cả bất quy tắc 춥다, 듣다, 모르다, 쓰다) để tập nói đúng vai giao tiếp:
           </p>
@@ -748,7 +748,7 @@ function renderRoleplayAndPoliteness(stage) {
               <button type="button" class="btn-outline-teal ko" data-v="${v}" style="padding:4px 12px;font-size:13.5px;">${v}</button>
             `).join("")}
           </div>
-          <input id="polite-verb-inp" class="ko" value="${verbInput.replace(/"/g, "&quot;")}" style="width:100%;padding:9px 14px;border-radius:99px;border:1.5px solid var(--primary);font-weight:700;margin-bottom:12px;" />
+          <input id="polite-verb-inp" class="ko" value="${verbInput.replace(/"/g, "&quot;")}" style="width:100%;padding:9px 14px;font-weight:700;margin-bottom:12px;" />
           <div id="polite-verb-results"></div>
         </div>
       </div>
@@ -758,7 +758,7 @@ function renderRoleplayAndPoliteness(stage) {
     const renderPoliteResults = () => {
       const cObj = conjugateKoreanPredicate(verbInput);
       politeResultsSlot.innerHTML = cObj ? `
-        <div style="font-size:13px;color:var(--primary-1);font-weight:700;margin-bottom:8px;">⚡ ${cObj.irregularNote}</div>
+        <div style="font-size:13px;color:var(--primary-1);font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:6px;">${ico("bolt", 16)} <span>${cObj.irregularNote}</span></div>
         <div style="display:flex;flex-direction:column;gap:8px;">
           ${cObj.forms.map((f) => `
             <div style="display:flex;justify-content:space-between;align-items:center;background:var(--bg-body);padding:9px 12px;border-radius:8px;">
@@ -766,7 +766,7 @@ function renderRoleplayAndPoliteness(stage) {
                 <div style="font-size:12.5px;color:var(--text-muted);">${f.label}</div>
                 <strong class="ko" style="font-size:16.5px;color:var(--primary-1);">${f.ko}</strong>
               </div>
-              <button type="button" class="btn-audio" style="width:30px;height:30px;" data-speak="${f.ko.split("/")[0].trim()}">🔊</button>
+              <button type="button" class="btn-audio" style="width:30px;height:30px;" data-speak="${f.ko.split("/")[0].trim()}">${ico("speaker", 16)}</button>
             </div>
           `).join("")}
         </div>

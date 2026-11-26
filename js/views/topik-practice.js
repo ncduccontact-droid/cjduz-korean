@@ -1,5 +1,6 @@
-import { store, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261127-02";
-import { WONGOKJI_PROMPTS, TOPIK_SPEAKING_TASKS } from "../topik-bank.js?v=20261127-02";
+import { store, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261127-03";
+import { WONGOKJI_PROMPTS, TOPIK_SPEAKING_TASKS } from "../topik-bank.js?v=20261127-03";
+import { ico } from "../icons.js?v=20261127-03";
 
 export function renderTopikPracticeView(root, db, navigate, params = {}, registerCleanup = () => {}) {
   const sys = db.topikFullSystem || { taxonomy: { topik1: {}, topik2: {} }, itemPool: {} };
@@ -34,21 +35,21 @@ export function renderTopikPracticeView(root, db, navigate, params = {}, registe
     <div class="container-web">
       <div class="breadcrumb-bar">
         <button type="button" id="bc-prac-home">Luyện tập</button>
-        <span>▶</span>
+        <span>/</span>
         <span>${levelKey === "topik1" ? "Luyện nhuần nhuyễn từng dạng TOPIK I (Dạng 1 → Dạng 8)" : "Luyện nhuần nhuyễn từng dạng TOPIK II & Speaking (Dạng 1 → Dạng 10)"}</span>
       </div>
 
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:10px;">
         <div class="skill-pills-row" style="margin-bottom:0;">
-          <button class="btn-skill ${skill === "listening" ? "active" : ""}" data-sk="listening">🎧 Nghe · 듣기 (${(lvTax.listening || []).length} Dạng)</button>
-          <button class="btn-skill ${skill === "reading" ? "active" : ""}" data-sk="reading">📖 Đọc · 읽기 (${(lvTax.reading || []).length} Dạng)</button>
+          <button class="btn-skill ${skill === "listening" ? "active" : ""}" data-sk="listening">${ico("headphones", 17)} Nghe · 듣기 (${(lvTax.listening || []).length} Dạng)</button>
+          <button class="btn-skill ${skill === "reading" ? "active" : ""}" data-sk="reading">${ico("book", 17)} Đọc · 읽기 (${(lvTax.reading || []).length} Dạng)</button>
           ${levelKey === "topik2" ? `
             <button class="btn-skill ${skill === "writing" ? "active" : ""}" data-sk="writing">
-              ✍️ Viết 원고지 (쓰기)
+              ${ico("pen", 17)} Viết 원고지 (쓰기)
               <span class="badge-mia">51~54</span>
             </button>
             <button class="btn-skill ${skill === "speaking" ? "active" : ""}" data-sk="speaking">
-              🎙️ Nói 6 Câu (말하기)
+              ${ico("mic", 17)} Nói 6 Câu (말하기)
               <span class="badge-mia">MIC</span>
             </button>
           ` : ""}
@@ -60,7 +61,7 @@ export function renderTopikPracticeView(root, db, navigate, params = {}, registe
             <option value="topik2" ${levelKey === "topik2" ? "selected" : ""}>Cấu trúc TOPIK II (Dạng 1–10)</option>
           </select>
           <button type="button" class="btn-outline-teal" id="btn-jump-full-exams" style="padding:7px 14px;font-size:13px;">
-            📝 Vào làm Full Đề ${levelKey === "topik1" ? "70 câu" : "104 câu"} →
+            ${ico("exam", 16)} Vào làm Full Đề ${levelKey === "topik1" ? "70 câu" : "104 câu"} →
           </button>
         </div>
       </div>
@@ -102,7 +103,7 @@ export function renderTopikPracticeView(root, db, navigate, params = {}, registe
             </div>
             <strong style="font-size:16.5px;color:var(--text-main);display:block;margin-bottom:4px;">${part.title}</strong>
             <div class="ko" style="font-size:13px;color:var(--primary-1);font-weight:600;margin-bottom:8px;">유형: ${part.koTitle}</div>
-            <div style="font-size:13.5px;color:var(--text-muted);margin-bottom:12px;">💡 ${part.tip}</div>
+            <div style="font-size:13.5px;color:var(--text-muted);margin-bottom:12px;display:flex;align-items:flex-start;gap:6px;">${ico("bulb", 16)} <span>${part.tip}</span></div>
             <div style="display:flex;justify-content:space-between;font-size:13.5px;margin-bottom:6px;">
               <span>Trả lời đúng: <strong>${st.correct}/${st.total}</strong></span>
               <span>Độ nhuần nhuyễn: <strong style="color:var(--primary-1);">${pct}%</strong></span>
@@ -137,7 +138,7 @@ export function renderTopikPracticeView(root, db, navigate, params = {}, registe
         <div class="container-web">
           <div class="breadcrumb-bar">
             <button type="button" id="bc-back-parts">← Quay lại danh sách ${skill === "listening" ? "Dạng Nghe" : "Dạng Đọc"}</button>
-            <span>▶</span>
+            <span>/</span>
             <span>${part.title}</span>
           </div>
 
@@ -145,16 +146,16 @@ export function renderTopikPracticeView(root, db, navigate, params = {}, registe
             <div>
               <span class="badge-orange" style="margin-bottom:6px;">${part.code} · ${part.range} ${loopRound > 0 ? `· Vòng ôn câu sai #${loopRound}` : ""}</span>
               <div style="margin-top:4px;">
-                <strong style="color:var(--primary-1);">🎯 Mẹo giải nhanh dạng này:</strong>
+                <strong style="color:var(--primary-1);">${ico("target", 17)} Mẹo giải nhanh dạng này:</strong>
                 <span style="font-size:14.5px;margin-left:6px;">${part.tip}</span>
               </div>
             </div>
             <div>
               <div style="font-weight:800;color:var(--primary-1);margin-bottom:6px;text-align:right;">Đúng ${correctCnt}/${queue.length} câu</div>
               ${wrongList.length > 0 ? `
-                <button type="button" class="btn-orange" id="btn-loop-wrong">🔁 Luyện lại ${wrongList.length} câu sai đến khi thuộc</button>
+                <button type="button" class="btn-orange" id="btn-loop-wrong">${ico("refresh", 16)} Luyện lại ${wrongList.length} câu sai đến khi thuộc</button>
               ` : (doneCnt === queue.length && queue.length > 0 ? `
-                <span style="background:rgba(58,202,116,0.18);color:#15803D;padding:6px 14px;border-radius:99px;font-weight:800;">🎉 Đã nhuần nhuyễn 100%!</span>
+                <span style="background:rgba(58,202,116,0.18);color:#15803D;padding:6px 14px;border-radius:99px;font-weight:800;display:inline-flex;align-items:center;gap:6px;">${ico("trophy", 17)} Đã nhuần nhuyễn 100%!</span>
               ` : "")}
             </div>
           </div>
@@ -168,7 +169,7 @@ export function renderTopikPracticeView(root, db, navigate, params = {}, registe
                     <strong class="ko" style="color:var(--primary-1);">Câu ${qi + 1}/${queue.length}: ${q.question}</strong>
                     ${(q.audioSrc || q.audioText) ? `
                       <button type="button" class="btn-primary" data-q-audio="${q.audioSrc || ""}" data-q-tts="${q.audioText || ""}" style="padding:6px 14px;font-size:13.5px;">
-                        🔊 Phát Audio giọng Hàn chuẩn
+                        ${ico("speaker", 16)} Phát Audio giọng Hàn chuẩn
                       </button>
                     ` : ""}
                   </div>
@@ -195,7 +196,7 @@ export function renderTopikPracticeView(root, db, navigate, params = {}, registe
 
                   ${picked !== undefined ? `
                     <div style="margin-top:12px;background:var(--primary-3);padding:10px 14px;border-radius:10px;font-size:14px;color:var(--primary-4);">
-                      <strong>${picked === q.answer ? "✔ Chính xác!" : "✘ Sai (Đã lưu vào Sổ tay câu sai)!"}</strong>
+                      <strong>${picked === q.answer ? `${ico("check", 15)} Chính xác!` : `${ico("cross", 15)} Sai (Đã lưu vào Sổ tay câu sai)!`}</strong>
                       ${q.audioText ? `<div class="ko" style="margin-top:4px;"><strong>Transcript:</strong> ${q.audioText}</div>` : ""}
                       <div style="margin-top:4px;"><strong>Giải thích:</strong> ${q.explain}</div>
                     </div>
@@ -289,8 +290,8 @@ export function renderTopikPracticeView(root, db, navigate, params = {}, registe
           <textarea id="wongokji-textarea" class="ko" rows="5" placeholder="Gõ bài viết tiếng Hàn vào đây (tự động thụt 1 ô đầu đoạn văn và dàn vào giấy kẻ ô vuông 원고지 bên dưới)..." style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--primary);font-size:16px;line-height:1.6;">${draft}</textarea>
 
           <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;">
-            <button class="btn-primary" id="btn-check-writing">✨ Check lỗi quy tắc 원고지 &amp; Chấm điểm</button>
-            <button class="btn-outline-teal" id="btn-fill-sample">📋 Điền bài mẫu điểm cao vào giấy ô vuông</button>
+            <button class="btn-primary" id="btn-check-writing">${ico("sparkle", 16)} Kiểm tra quy tắc 원고지 &amp; Chấm điểm</button>
+            <button class="btn-outline-teal" id="btn-fill-sample">${ico("workbook", 16)} Điền bài mẫu điểm cao vào giấy ô vuông</button>
             <button class="btn-outline-teal" id="btn-toggle-model">${showModel ? "Ẩn bài mẫu" : "Xem bài mẫu chuẩn NIIED"}</button>
           </div>
 
@@ -299,7 +300,7 @@ export function renderTopikPracticeView(root, db, navigate, params = {}, registe
         </div>
 
         <div class="box-kind">
-          <strong style="font-size:15px;color:#C85A53;">📄 Bản xem trước Giấy kẻ ô vuông 원고지 (20 ô / hàng chuẩn thi thật TOPIK II)</strong>
+          <strong style="font-size:15px;color:#C85A53;display:inline-flex;align-items:center;gap:7px;">${ico("exam", 18)} Bản xem trước Giấy kẻ ô vuông 원고지 (20 ô / hàng chuẩn thi thật TOPIK II)</strong>
           <div class="wongokji-scroll-wrap">
             <div class="wongokji-grid">
               ${cells.map((ch) => `<div class="wongokji-cell">${ch === " " ? "&nbsp;" : ch}</div>`).join("")}
@@ -326,19 +327,19 @@ export function renderTopikPracticeView(root, db, navigate, params = {}, registe
       container.querySelector("#btn-toggle-model").addEventListener("click", () => { showModel = !showModel; drawStudio(); });
       container.querySelector("#btn-check-writing").addEventListener("click", () => {
         const issues = [];
-        if (usedCells < pr.minChars) issues.push(`⚠️ Chưa đủ độ dài tối thiểu (${usedCells}/${pr.minChars} ô).`);
-        if (usedCells > pr.maxChars) issues.push(`⚠️ Vượt quá giới hạn ô cho phép (${usedCells}/${pr.maxChars} ô).`);
+        if (usedCells < pr.minChars) issues.push(`${ico("warn", 15)} Chưa đủ độ dài tối thiểu (${usedCells}/${pr.minChars} ô).`);
+        if (usedCells > pr.maxChars) issues.push(`${ico("warn", 15)} Vượt quá giới hạn ô cho phép (${usedCells}/${pr.maxChars} ô).`);
         if (/(아요|어요|습니다|ㅂ니다)[.?!]/.test(draft)) {
-          issues.push("❌ Phát hiện đuôi hội thoại (-아/어요 hoặc -습니다)! Câu 53–54 bắt buộc dùng văn phong viết (-다/는다).");
+          issues.push(`${ico("cross", 15)} Phát hiện đuôi hội thoại (-아/어요 hoặc -습니다)! Câu 53–54 bắt buộc dùng văn phong viết (-다/는다).`);
         } else if (draft.trim().length > 20) {
-          issues.push("✔ Văn phong viết (-다/는다) chuẩn quy định NIIED.");
+          issues.push(`${ico("check", 15)} Văn phong viết (-다/는다) chuẩn quy định NIIED.`);
         }
         if (/(따라서|그러나|반면에|한편|또한)/.test(draft)) {
-          issues.push("✔ Có sử dụng từ nối học thuật mạch lạc.");
+          issues.push(`${ico("check", 15)} Có sử dụng từ nối học thuật mạch lạc.`);
         } else {
-          issues.push("💡 Gợi ý: Bổ sung các phó từ liên kết như '한편', '반면에', '따라서'.");
+          issues.push(`${ico("bulb", 15)} Gợi ý: Bổ sung các phó từ liên kết như '한편', '반면에', '따라서'.`);
         }
-        feedbackHtml = `<strong>Kết quả Check quy chuẩn bài viết:</strong><ul style="margin:6px 0 0;padding-left:18px;">${issues.map((i) => `<li>${i}</li>`).join("")}</ul>`;
+        feedbackHtml = `<strong>Kết quả Check quy chuẩn bài viết:</strong><ul style="margin:6px 0 0;padding-left:18px;list-style:none;">${issues.map((i) => `<li style="margin-bottom:4px;">${i}</li>`).join("")}</ul>`;
         drawStudio();
       });
     }
@@ -386,13 +387,13 @@ export function renderTopikPracticeView(root, db, navigate, params = {}, registe
 
           <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
             <button class="btn-primary" id="btn-spk-start">
-              ${phase === "idle" ? "⏱️ Bắt đầu bấm giờ chuẩn thi thật" : "⏹ Dừng đồng hồ"}
+              ${phase === "idle" ? `${ico("clock", 17)} Bắt đầu bấm giờ chuẩn thi thật` : `${ico("stop", 16)} Dừng đồng hồ`}
             </button>
-            <button class="btn-outline-teal" id="btn-spk-listen-q">🔊 Nghe đọc câu hỏi</button>
-            <button class="btn-outline-teal" id="btn-spk-sample">${showSample ? "Ẩn câu trả lời mẫu" : "💡 Xem câu trả lời mẫu điểm cao"}</button>
+            <button class="btn-outline-teal" id="btn-spk-listen-q">${ico("speaker", 16)} Nghe đọc câu hỏi</button>
+            <button class="btn-outline-teal" id="btn-spk-sample">${showSample ? "Ẩn câu trả lời mẫu" : `${ico("bulb", 16)} Xem câu trả lời mẫu điểm cao`}</button>
             ${phase !== "idle" ? `
               <span id="spk-timer-badge" style="font-size:18px;font-weight:800;color:${phase === "prep" ? "var(--yellow-2)" : "var(--danger)"};">
-                ${phase === "prep" ? "⏳ Thời gian chuẩn bị" : "🎙️ ĐANG TRẢ LỜI"}: ${secLeft}s
+                ${phase === "prep" ? `${ico("clock", 18)} Thời gian chuẩn bị` : `${ico("mic", 18)} ĐANG TRẢ LỜI`}: ${secLeft}s
               </span>
             ` : ""}
           </div>
@@ -401,7 +402,7 @@ export function renderTopikPracticeView(root, db, navigate, params = {}, registe
             <div style="background:#F8FAFB;padding:14px;border-radius:10px;border-left:4px solid var(--primary);">
               <div style="display:flex;justify-content:space-between;align-items:center;">
                 <strong>Bài nói mẫu tham khảo:</strong>
-                <button class="btn-audio" id="btn-spk-play-sample">🔊</button>
+                <button class="btn-audio" id="btn-spk-play-sample">${ico("speaker", 18)}</button>
               </div>
               <p class="ko" style="margin:8px 0 0;font-size:16px;line-height:1.7;">${task.sample}</p>
             </div>
@@ -430,7 +431,7 @@ export function renderTopikPracticeView(root, db, navigate, params = {}, registe
             drawSpeaking();
           } else {
             const badge = container.querySelector("#spk-timer-badge");
-            if (badge) badge.textContent = `${phase === "prep" ? "⏳ Thời gian chuẩn bị" : "🎙️ ĐANG TRẢ LỜI"}: ${secLeft}s`;
+            if (badge) badge.innerHTML = `${phase === "prep" ? `${ico("clock", 18)} Thời gian chuẩn bị` : `${ico("mic", 18)} ĐANG TRẢ LỜI`}: ${secLeft}s`;
           }
         }, 1000);
       });
