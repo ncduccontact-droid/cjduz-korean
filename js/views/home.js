@@ -1,6 +1,84 @@
-import { store, getBookWords, evaluateRoadmapScore } from "../store.js?v=20261127-04";
-import { ico, daisyLogoSVG } from "../icons.js?v=20261127-04";
-import { getGuidedStudyPlan, STAGE_LABELS } from "./roadmap.js?v=20261127-04";
+import { store, getBookWords, evaluateRoadmapScore } from "../store.js?v=20261127-05";
+import { ico, daisyLogoSVG } from "../icons.js?v=20261127-05";
+import { getGuidedStudyPlan, STAGE_LABELS } from "./roadmap.js?v=20261127-05";
+
+export const ADMIN_QR_IMG_SRC = "/media/vietqr_admin_v2.jpg?v=20261127-05";
+
+export function renderAdminSupportCardHTML(extraStyle = "") {
+  return `
+    <section class="donate-cute-card" ${extraStyle ? `style="${extraStyle}"` : ""}>
+      <div class="donate-top-left">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          ${daisyLogoSVG(28)}
+          <strong style="font-size:16px;color:var(--text-main);">Ủng hộ admin nhée &gt;&lt;</strong>
+        </div>
+
+        <div class="donate-bank-box">
+          <span style="font-weight:800;color:var(--primary-1);letter-spacing:0.02em;">VIETCOMBANK</span>
+          <span class="donate-sep">·</span>
+          <span style="font-size:15px;font-weight:800;color:var(--text-main);font-variant-numeric:tabular-nums;">0201000736282</span>
+          <span class="donate-sep">·</span>
+          <span style="font-weight:700;color:var(--text-secondary);">NGUYEN CHI DUC</span>
+        </div>
+
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">
+          <button type="button" class="btn-outline-teal" data-copy-stk="1" style="padding:5px 11px;font-size:12px;border-radius:9px;">
+            Sao chép STK
+          </button>
+          <button type="button" class="btn-soft-jade" data-zoom-qr="1" style="padding:5px 11px;font-size:12px;border-radius:9px;">
+            Phóng to QR
+          </button>
+        </div>
+      </div>
+
+      <img src="${ADMIN_QR_IMG_SRC}" alt="VietQR VIETCOMBANK 0201000736282 NGUYEN CHI DUC" class="donate-qr-thumb" data-zoom-qr="1" title="Bấm để phóng to mã QR" />
+    </section>
+  `;
+}
+
+export function bindAdminSupportCardEvents(scopeEl, modalRoot = null) {
+  if (!scopeEl) return;
+
+  const openQrModal = () => {
+    const targetModal = modalRoot || document.getElementById("modal-root");
+    if (!targetModal) return;
+    targetModal.innerHTML = `
+      <div class="modal-backdrop" id="qr-modal-bg">
+        <div class="modal-panel" style="max-width:390px;text-align:center;padding:22px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <strong style="font-size:16.5px;color:var(--text-main);display:flex;align-items:center;gap:8px;">
+              ${daisyLogoSVG(28)} Ủng hộ admin nhée &gt;&lt;
+            </strong>
+            <button type="button" id="close-qr-modal" style="background:#F1F5F9;border:none;width:32px;height:32px;border-radius:50%;font-size:18px;cursor:pointer;color:var(--text-secondary);">×</button>
+          </div>
+          <img src="${ADMIN_QR_IMG_SRC}" alt="VietQR VIETCOMBANK 0201000736282 NGUYEN CHI DUC" style="width:100%;max-width:270px;border-radius:16px;border:1px solid var(--border-card);padding:6px;background:#FFF;margin-bottom:12px;" />
+          <div style="background:#F8FAFC;border-radius:12px;padding:11px 14px;font-size:13.5px;line-height:1.6;">
+            <div style="font-weight:800;color:var(--primary-1);">VIETCOMBANK</div>
+            <div style="font-size:17px;font-weight:800;color:var(--text-main);font-variant-numeric:tabular-nums;">0201000736282</div>
+            <div style="font-weight:750;color:var(--text-secondary);">NGUYEN CHI DUC</div>
+          </div>
+        </div>
+      </div>
+    `;
+    targetModal.querySelector("#close-qr-modal")?.addEventListener("click", () => { targetModal.innerHTML = ""; });
+    targetModal.querySelector("#qr-modal-bg")?.addEventListener("click", (e) => {
+      if (e.target.id === "qr-modal-bg") targetModal.innerHTML = "";
+    });
+  };
+
+  scopeEl.querySelectorAll("[data-copy-stk]").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      const b = e.currentTarget;
+      navigator.clipboard?.writeText("0201000736282").catch(() => {});
+      b.innerHTML = `${ico("check", 14)} Đã chép STK`;
+      setTimeout(() => { b.textContent = "Sao chép STK"; }, 2200);
+    });
+  });
+
+  scopeEl.querySelectorAll("[data-zoom-qr]").forEach((el) => {
+    el.addEventListener("click", openQrModal);
+  });
+}
 
 export function renderHomeView(root, db, navigate, startGuidedStep = null, openProfileSettings = null, modalRoot = null) {
   const s = store.state;
@@ -34,38 +112,9 @@ export function renderHomeView(root, db, navigate, startGuidedStep = null, openP
     };
   });
 
-  const qrImgSrc = "/media/vietqr_admin_v2.jpg?v=20261127-04";
-
   root.innerHTML = `
     <div class="container-web">
-      <!-- TOP VIETQR SUPPORT CARD -->
-      <section class="donate-cute-card donate-top-banner" style="margin-bottom:16px;">
-        <div class="donate-top-left">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-            ${daisyLogoSVG(28)}
-            <strong style="font-size:16px;color:var(--text-main);">Ủng hộ admin nhée &gt;&lt;</strong>
-          </div>
-
-          <div class="donate-bank-box">
-            <span style="font-weight:800;color:var(--primary-1);letter-spacing:0.02em;">VIETCOMBANK</span>
-            <span class="donate-sep">·</span>
-            <span style="font-size:15px;font-weight:800;color:var(--text-main);font-variant-numeric:tabular-nums;">0201000736282</span>
-            <span class="donate-sep">·</span>
-            <span style="font-weight:700;color:var(--text-secondary);">NGUYEN CHI DUC</span>
-          </div>
-
-          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">
-            <button type="button" class="btn-outline-teal" id="btn-copy-stk" style="padding:5px 11px;font-size:12px;border-radius:9px;">
-              Sao chép STK
-            </button>
-            <button type="button" class="btn-soft-jade" id="btn-zoom-qr" style="padding:5px 11px;font-size:12px;border-radius:9px;">
-              Phóng to QR
-            </button>
-          </div>
-        </div>
-
-        <img src="${qrImgSrc}" alt="VietQR VIETCOMBANK 0201000736282 NGUYEN CHI DUC" class="donate-qr-thumb" id="img-donate-qr" title="Bấm để phóng to mã QR" />
-      </section>
+      ${renderAdminSupportCardHTML("margin-bottom:16px;")}
 
       <section class="today-plan-grid">
         <!-- LEFT: TODAY'S FOCUSED STUDY PLAN -->
@@ -288,41 +337,7 @@ export function renderHomeView(root, db, navigate, startGuidedStep = null, openP
     </div>
   `;
 
-  function openQrModal() {
-    const targetModal = modalRoot || document.getElementById("modal-root");
-    if (!targetModal) return;
-    targetModal.innerHTML = `
-      <div class="modal-backdrop" id="qr-modal-bg">
-        <div class="modal-panel" style="max-width:390px;text-align:center;padding:22px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-            <strong style="font-size:16.5px;color:var(--text-main);display:flex;align-items:center;gap:8px;">
-              ${daisyLogoSVG(28)} Ủng hộ admin nhée &gt;&lt;
-            </strong>
-            <button type="button" id="close-qr-modal" style="background:#F1F5F9;border:none;width:32px;height:32px;border-radius:50%;font-size:18px;cursor:pointer;color:var(--text-secondary);">×</button>
-          </div>
-          <img src="${qrImgSrc}" alt="VietQR VIETCOMBANK 0201000736282 NGUYEN CHI DUC" style="width:100%;max-width:270px;border-radius:16px;border:1px solid var(--border-card);padding:6px;background:#FFF;margin-bottom:12px;" />
-          <div style="background:#F8FAFC;border-radius:12px;padding:11px 14px;font-size:13.5px;line-height:1.6;">
-            <div style="font-weight:800;color:var(--primary-1);">VIETCOMBANK</div>
-            <div style="font-size:17px;font-weight:800;color:var(--text-main);font-variant-numeric:tabular-nums;">0201000736282</div>
-            <div style="font-weight:750;color:var(--text-secondary);">NGUYEN CHI DUC</div>
-          </div>
-        </div>
-      </div>
-    `;
-    targetModal.querySelector("#close-qr-modal").addEventListener("click", () => { targetModal.innerHTML = ""; });
-    targetModal.querySelector("#qr-modal-bg").addEventListener("click", (e) => {
-      if (e.target.id === "qr-modal-bg") targetModal.innerHTML = "";
-    });
-  }
-
-  root.querySelector("#btn-copy-stk").addEventListener("click", (e) => {
-    const btn = e.currentTarget;
-    navigator.clipboard?.writeText("0201000736282").catch(() => {});
-    btn.innerHTML = `${ico("check", 14)} Đã chép STK`;
-    setTimeout(() => { btn.textContent = "Sao chép STK"; }, 2200);
-  });
-  root.querySelector("#btn-zoom-qr").addEventListener("click", openQrModal);
-  root.querySelector("#img-donate-qr").addEventListener("click", openQrModal);
+  bindAdminSupportCardEvents(root, modalRoot);
 
   root.querySelector("#btn-start-next-step").addEventListener("click", () => nextTask.go());
   const dueBtn = root.querySelector("#btn-home-due-srs");

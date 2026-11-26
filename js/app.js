@@ -1,20 +1,21 @@
-import { store, UI_THEMES, isLocalPreviewHost, playAudio, preloadAudioUrls, speakKoreanTTS } from "./store.js?v=20261127-04";
-import { ico, daisyLogoSVG } from "./icons.js?v=20261127-04";
-import { conjugateKoreanPredicate } from "./korean-engine.js?v=20261127-04";
-import { openAuthModal, renderMandatoryAuthGate, renderOnboardingSurvey } from "./auth-modal.js?v=20261127-04";
-import { playSakuraPageIntro } from "./sakura-intro.js?v=20261127-04";
-import { buildUrl, parseUrl, getAncestorChain } from "./router.js?v=20261127-04";
-import { renderHomeView } from "./views/home.js?v=20261127-04";
-import { renderTheoryView } from "./views/theory.js?v=20261127-04";
-import { renderRoadmapView, getGuidedStudyPlan } from "./views/roadmap.js?v=20261127-04";
-import { renderSkillsPracticeView } from "./views/skills-practice.js?v=20261127-04";
-import { renderTopikPracticeView } from "./views/topik-practice.js?v=20261127-04";
-import { renderMockTestView } from "./views/mocktest.js?v=20261127-04";
-import { renderCheckAndToolsView } from "./views/check-tools.js?v=20261127-04";
+import { store, UI_THEMES, isLocalPreviewHost, playAudio, preloadAudioUrls, speakKoreanTTS } from "./store.js?v=20261127-05";
+import { ico, daisyLogoSVG } from "./icons.js?v=20261127-05";
+import { conjugateKoreanPredicate } from "./korean-engine.js?v=20261127-05";
+import { openAuthModal, renderMandatoryAuthGate, renderOnboardingSurvey } from "./auth-modal.js?v=20261127-05";
+import { playSakuraPageIntro } from "./sakura-intro.js?v=20261127-05";
+import { buildUrl, parseUrl, getAncestorChain } from "./router.js?v=20261127-05";
+import { renderHomeView, renderAdminSupportCardHTML, bindAdminSupportCardEvents } from "./views/home.js?v=20261127-05";
+import { renderTheoryView } from "./views/theory.js?v=20261127-05";
+import { renderRoadmapView, getGuidedStudyPlan } from "./views/roadmap.js?v=20261127-05";
+import { renderSkillsPracticeView } from "./views/skills-practice.js?v=20261127-05";
+import { renderTopikPracticeView } from "./views/topik-practice.js?v=20261127-05";
+import { renderMockTestView } from "./views/mocktest.js?v=20261127-05";
+import { renderCheckAndToolsView } from "./views/check-tools.js?v=20261127-05";
 
 const appRoot = document.getElementById("app-root");
 const modalRoot = document.getElementById("modal-root");
 const trialSlot = document.getElementById("trial-banner-slot");
+const bottomSupportSlot = document.getElementById("bottom-support-slot");
 
 const db = {
   sc1Vocab: [],
@@ -190,9 +191,22 @@ function renderThemePopover() {
   });
 }
 
+function renderBottomSupportSlot() {
+  if (!bottomSupportSlot) return;
+  const nonHomeRoutes = ["theory", "practice", "mock-test", "roadmap", "check-tools"];
+  if (!nonHomeRoutes.includes(currentRoute)) {
+    bottomSupportSlot.innerHTML = "";
+    return;
+  }
+  const wrapCls = currentRoute === "roadmap" ? "bottom-support-wrap narrow" : "bottom-support-wrap";
+  bottomSupportSlot.innerHTML = `<div class="${wrapCls}">${renderAdminSupportCardHTML()}</div>`;
+  bindAdminSupportCardEvents(bottomSupportSlot, modalRoot);
+}
+
 function updateNavUI() {
   const authed = store.isAuthenticated();
   renderGuidedRibbon();
+  renderBottomSupportSlot();
 
   document.querySelectorAll(".nav-pill").forEach((pill) => {
     pill.classList.toggle("active", pill.dataset.route === currentRoute);

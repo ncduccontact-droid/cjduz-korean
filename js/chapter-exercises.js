@@ -1,7 +1,7 @@
-import { store, normalizeBookId, getBookWords, getBookCurriculum, playAudio, preloadAudioUrls, speakKoreanTTS } from "./store.js?v=20261127-04";
-import { appendJamoToText } from "./korean-engine.js?v=20261127-04";
-import { HANGEUL_DATA } from "./curated-content.js?v=20261127-04";
-import { ico } from "./icons.js?v=20261127-04";
+import { store, normalizeBookId, getBookWords, getBookCurriculum, playAudio, preloadAudioUrls, speakKoreanTTS } from "./store.js?v=20261127-05";
+import { appendJamoToText } from "./korean-engine.js?v=20261127-05";
+import { HANGEUL_DATA } from "./curated-content.js?v=20261127-05";
+import { ico } from "./icons.js?v=20261127-05";
 
 /**
  * Interactive Workbook (익힘책 · Sách Bài Tập) for ALL 6 BOOKS (Quyển 1 -> Quyển 6):

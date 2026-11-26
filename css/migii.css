@@ -1537,6 +1537,16 @@ html[data-theme="jade_aurora"] .user-auth-pill {
 }
 
 /* Compact Support Card */
+.bottom-support-wrap {
+  max-width: 1140px;
+  margin: -28px auto 0;
+  padding: 0 20px 36px;
+}
+
+.bottom-support-wrap.narrow {
+  max-width: 940px;
+}
+
 .donate-cute-card {
   background: linear-gradient(135deg, #FFFFFF 0%, #F4FBF9 100%);
   border: 1px solid rgba(13, 148, 136, 0.20);
@@ -1731,6 +1741,7 @@ html[data-theme="jade_aurora"] .user-auth-pill {
 
   .container-web,
   .container-narrow { padding: 14px 14px 40px; }
+  .bottom-support-wrap { margin: -16px auto 0; padding: 0 14px 28px; }
   .box-kind { padding: 16px; border-radius: 16px; }
   .section-head { margin: 22px 0 10px; }
   .section-head h2 { font-size: 17px; }
