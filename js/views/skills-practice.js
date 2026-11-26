@@ -1,8 +1,8 @@
-import { store, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261126-8";
-import { ico } from "../icons.js?v=20261126-8";
-import { analyzePronunciationRules, conjugateKoreanPredicate } from "../korean-engine.js?v=20261126-8";
-import { renderChapterExercises } from "../chapter-exercises.js?v=20261126-8";
-import { renderShortsShadowingStudio } from "../shorts-shadowing.js?v=20261126-8";
+import { store, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261126-10";
+import { ico } from "../icons.js?v=20261126-10";
+import { analyzePronunciationRules, conjugateKoreanPredicate } from "../korean-engine.js?v=20261126-10";
+import { renderChapterExercises } from "../chapter-exercises.js?v=20261126-10";
+import { renderShortsShadowingStudio } from "../shorts-shadowing.js?v=20261126-10";
 
 const READING_PASSAGES = [
   {
@@ -376,8 +376,8 @@ function renderReadingModule(stage, db) {
             <h3 class="ko" style="margin:0;font-size:19px;color:var(--primary-1);">${p.title}</h3>
             <button class="btn-audio" id="btn-read-aloud" title="Đọc mẫu cả bài">🔊</button>
           </div>
-          <div style="font-size:12.5px;color:var(--yellow-2);font-weight:600;margin-bottom:10px;">
-            🌼 Mẹo đọc nhanh CJDUZ: Bấm vào bất kỳ chữ tiếng Hàn nào bên dưới để tra nghĩa tức thì!
+          <div style="font-size:12.5px;color:var(--primary-1);font-weight:700;margin-bottom:10px;">
+            💡 Mẹo đọc nhanh D ● TOPIK: Bấm vào bất kỳ chữ tiếng Hàn nào bên dưới để tra nghĩa tức thì!
           </div>
 
           <div class="ko" style="font-size:18px;line-height:1.9;background:#F8FAFB;padding:16px;border-radius:12px;">

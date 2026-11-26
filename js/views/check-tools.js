@@ -1,6 +1,7 @@
-import { store, speakKoreanTTS } from "../store.js?v=20261126-8";
-import { ico } from "../icons.js?v=20261126-8";
-import { analyzePronunciationRules, conjugateKoreanPredicate } from "../korean-engine.js?v=20261126-8";
+import { store, evaluateRoadmapScore, speakKoreanTTS } from "../store.js?v=20261126-10";
+import { ico } from "../icons.js?v=20261126-10";
+import { analyzePronunciationRules, conjugateKoreanPredicate } from "../korean-engine.js?v=20261126-10";
+import { renderRoadmapScoreCardHTML } from "./roadmap.js?v=20261126-10";
 
 const PARTICLE_NOTES = [
   { suffix: "에서는", role: "Tiểu từ Nơi diễn ra hành động + Nhấn mạnh chủ đề" },
@@ -119,7 +120,11 @@ export function renderCheckAndToolsView(root, db, navigate, params = {}) {
 
     if (tab === "analytics") {
       const masteredCount = allVocab.filter((c) => store.isMastered(c.id)).length;
+      const evalObj = evaluateRoadmapScore(db);
       body.innerHTML = `
+        <div style="margin-bottom:20px;">
+          ${renderRoadmapScoreCardHTML(evalObj)}
+        </div>
         <div class="grid-3" style="margin-bottom:22px;">
           <div class="box-kind">
             <div style="font-size:13.5px;color:var(--text-muted);">Tổng từ vựng đã thuộc (SRS >= 2)</div>
@@ -257,7 +262,7 @@ export function renderCheckAndToolsView(root, db, navigate, params = {}) {
 
       body.innerHTML = `
         <div class="outline-ai" style="margin-bottom:22px;">
-          <h3 style="margin:0 0 8px;">🔬 Giải phẫu câu tiếng Hàn X-Ray (CJDUZ Studio)</h3>
+          <h3 style="margin:0 0 8px;">🔬 Giải phẫu câu tiếng Hàn X-Ray (D ● TOPIK Studio)</h3>
           <p style="margin:0 0 10px;font-size:14px;color:var(--text-muted);">
             Dán bất kỳ câu tiếng Hàn nào để tách từng thành phần tiểu từ, đuôi câu kính ngữ, tra từ vựng và soi biến âm:
           </p>

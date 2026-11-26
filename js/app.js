@@ -1,16 +1,16 @@
-import { store, UI_THEMES, playAudio, preloadAudioUrls, speakKoreanTTS } from "./store.js?v=20261126-8";
-import { ico, daisyLogoSVG } from "./icons.js?v=20261126-8";
-import { conjugateKoreanPredicate } from "./korean-engine.js?v=20261126-8";
-import { openAuthModal, renderMandatoryAuthGate, renderOnboardingSurvey } from "./auth-modal.js?v=20261126-8";
-import { playSakuraPageIntro } from "./sakura-intro.js?v=20261126-8";
-import { buildUrl, parseUrl, getAncestorChain } from "./router.js?v=20261126-8";
-import { renderHomeView } from "./views/home.js?v=20261126-8";
-import { renderTheoryView } from "./views/theory.js?v=20261126-8";
-import { renderRoadmapView, getGuidedStudyPlan } from "./views/roadmap.js?v=20261126-8";
-import { renderSkillsPracticeView } from "./views/skills-practice.js?v=20261126-8";
-import { renderTopikPracticeView } from "./views/topik-practice.js?v=20261126-8";
-import { renderMockTestView } from "./views/mocktest.js?v=20261126-8";
-import { renderCheckAndToolsView } from "./views/check-tools.js?v=20261126-8";
+import { store, UI_THEMES, isLocalPreviewHost, playAudio, preloadAudioUrls, speakKoreanTTS } from "./store.js?v=20261126-10";
+import { ico, daisyLogoSVG } from "./icons.js?v=20261126-10";
+import { conjugateKoreanPredicate } from "./korean-engine.js?v=20261126-10";
+import { openAuthModal, renderMandatoryAuthGate, renderOnboardingSurvey } from "./auth-modal.js?v=20261126-10";
+import { playSakuraPageIntro } from "./sakura-intro.js?v=20261126-10";
+import { buildUrl, parseUrl, getAncestorChain } from "./router.js?v=20261126-10";
+import { renderHomeView } from "./views/home.js?v=20261126-10";
+import { renderTheoryView } from "./views/theory.js?v=20261126-10";
+import { renderRoadmapView, getGuidedStudyPlan } from "./views/roadmap.js?v=20261126-10";
+import { renderSkillsPracticeView } from "./views/skills-practice.js?v=20261126-10";
+import { renderTopikPracticeView } from "./views/topik-practice.js?v=20261126-10";
+import { renderMockTestView } from "./views/mocktest.js?v=20261126-10";
+import { renderCheckAndToolsView } from "./views/check-tools.js?v=20261126-10";
 
 const appRoot = document.getElementById("app-root");
 const modalRoot = document.getElementById("modal-root");
@@ -21,6 +21,7 @@ const db = {
   sc1Grammar: [],
   sejongVocab: [],
   topik1Bank: [],
+  books6: [],
   topikFullSystem: { taxonomy: { topik1: {}, topik2: {} }, itemPool: {}, exams: { topik1: [], topik2: [] } },
   customDecks: [],
   customVocab: []
@@ -37,7 +38,8 @@ function startGuidedStep(meta) {
 
 function renderGuidedRibbon() {
   if (!trialSlot) return;
-  if (!store.isAuthenticated() || !store.state.onboardingCompleted || currentRoute === "home" || currentRoute === "roadmap") {
+  const ready = store.isAuthenticated() && (isLocalPreviewHost() || store.state.onboardingCompleted);
+  if (!ready || currentRoute === "home" || currentRoute === "roadmap") {
     trialSlot.innerHTML = "";
     return;
   }
@@ -124,7 +126,7 @@ function hydrateStaticChromeIcons() {
 function renderThemePopover() {
   const pop = document.getElementById("theme-popover");
   if (!pop) return;
-  const activeId = store.state.uiTheme || "mint";
+  const activeId = store.state.uiTheme || "sky";
   pop.innerHTML = `
     <div style="font-size:12.5px;font-weight:800;color:var(--text-muted);padding:2px 4px 4px;">
       Chọn phối màu giao diện (Xem trước)
@@ -175,9 +177,13 @@ function updateNavUI() {
 
   const footerBadge = document.getElementById("footer-sync-badge");
   if (footerBadge) {
-    footerBadge.innerHTML = store.syncStatus === "syncing"
-      ? `${ico("cloud", 15)} Đang đồng bộ lên tài khoản...`
-      : `${ico("cloud", 15)} Tiến độ lưu theo tài khoản (${authed ? store.session.user.email : "Cloud"})`;
+    if (isLocalPreviewHost() && !store.hasCloudAccount()) {
+      footerBadge.innerHTML = `${ico("cloud", 15)} Chế độ Review Local · Đã bỏ qua đăng nhập`;
+    } else {
+      footerBadge.innerHTML = store.syncStatus === "syncing"
+        ? `${ico("cloud", 15)} Đang đồng bộ lên tài khoản...`
+        : `${ico("cloud", 15)} Tiến độ lưu theo tài khoản (${authed ? store.session.user.email : "Cloud"})`;
+    }
   }
 
   const userLabel = document.getElementById("nav-user-label");
@@ -204,7 +210,7 @@ export function navigate(route, params = {}, opts = {}) {
   updateNavUI();
   window.scrollTo({ top: 0, behavior: "smooth" });
 
-  if (!store.isAuthenticated()) {
+  if (!isLocalPreviewHost() && !store.isAuthenticated()) {
     return renderMandatoryAuthGate(appRoot, () => {
       updateNavUI();
       preloadAudioUrls(db.sc1Vocab.slice(0, 16).map((w) => w.wordAudio));
@@ -212,9 +218,10 @@ export function navigate(route, params = {}, opts = {}) {
     });
   }
 
-  // Mandatory First-Time Book Survey right after creating an account (or if startBook not surveyed yet)
-  if (!store.state.onboardingCompleted) {
+  // Mandatory First-Time Book Survey on Production (skipped automatically on localhost review unless user clicks Preview Survey)
+  if ((!isLocalPreviewHost() && !store.state.onboardingCompleted) || window._forcePreviewSurvey) {
     return renderOnboardingSurvey(appRoot, () => {
+      window._forcePreviewSurvey = false;
       updateNavUI();
       navigate("home", {}, { replace: true });
     });
@@ -271,7 +278,8 @@ function openQuickLookupModal() {
     navigate("home");
     return;
   }
-  const allItems = [...db.sc1Vocab, ...db.sejongVocab, ...db.topik1Bank, ...db.customVocab];
+  const extraBookWords = (db.books6 || []).filter((b) => b.bookId !== "q1").flatMap((b) => b.vocab || []);
+  const allItems = [...db.sc1Vocab, ...extraBookWords, ...db.sejongVocab, ...db.topik1Bank, ...db.customVocab];
   let q = "";
 
   function drawModal() {
@@ -352,11 +360,12 @@ async function initApp() {
   hydrateStaticChromeIcons();
   appRoot.innerHTML = `<div class="container-web"><div class="box-kind" style="text-align:center;padding:36px;">Đang tải dữ liệu học tập từ tài khoản...</div></div>`;
 
-  const [sc1V, sc1G, sjV, tp1, fullSys, custom] = await Promise.all([
+  const [sc1V, sc1G, sjV, tp1, books6Res, fullSys, custom] = await Promise.all([
     fetch("/data/sc1_vocab.json").then((r) => r.json()),
     fetch("/data/sc1_grammar.json").then((r) => r.json()),
     fetch("/data/sejong_vocab.json").then((r) => r.json()),
     fetch("/data/topik1_bank.json").then((r) => r.json()),
+    fetch("/data/books_1_to_6_curriculum.json").then((r) => r.json()).catch(() => ({ books: [] })),
     fetch("/data/topik_full_system.json").then((r) => r.json()).catch(() => ({ taxonomy: { topik1: {}, topik2: {} }, itemPool: {}, exams: { topik1: [], topik2: [] } })),
     fetch("/api/custom-decks").then((r) => r.json()).catch(() => [])
   ]);
@@ -365,6 +374,7 @@ async function initApp() {
   db.sc1Grammar = sc1G;
   db.sejongVocab = sjV;
   db.topik1Bank = tp1;
+  db.books6 = books6Res.books || [];
   db.topikFullSystem = fullSys;
   db.customDecks = custom;
   db.customVocab = custom.flatMap((d) => d.items || []);

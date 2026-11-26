@@ -1,75 +1,37 @@
-import { store } from "../store.js?v=20261126-8";
-import { ico, daisyLogoSVG } from "../icons.js?v=20261126-8";
-import { getGuidedStudyPlan, STAGE_LABELS } from "./roadmap.js?v=20261126-8";
+import { store, getBookWords, evaluateRoadmapScore } from "../store.js?v=20261126-10";
+import { ico, daisyLogoSVG } from "../icons.js?v=20261126-10";
+import { getGuidedStudyPlan, STAGE_LABELS } from "./roadmap.js?v=20261126-10";
 
 export function renderHomeView(root, db, navigate, startGuidedStep = null, openProfileSettings = null, modalRoot = null) {
   const s = store.state;
-  const allVocab = [...db.sc1Vocab, ...db.sejongVocab, ...db.topik1Bank];
-  const masteredCount = allVocab.filter((c) => store.isMastered(c.id)).length;
+  const extraWords = (db.books6 || []).filter((b) => b.bookId !== "q1").flatMap((b) => b.vocab || []);
+  const allVocab = [...db.sc1Vocab, ...extraWords, ...db.sejongVocab, ...db.topik1Bank];
   const dueCount = store.getDueCardIds(allVocab).length;
   const daysLeft = Math.max(0, Math.ceil((new Date(s.examDate).getTime() - Date.now()) / 86400000));
 
   const plan = getGuidedStudyPlan(db, navigate, startGuidedStep);
-  const { profile, days, activeDay, nextTask, completedDaysCount } = plan;
+  const evalObj = evaluateRoadmapScore(db);
+  const { profile, bookId, days, activeDay, nextTask, completedDaysCount } = plan;
   const roadmapPct = Math.round((completedDaysCount / days.length) * 100);
-  const activeBookLabel = STAGE_LABELS[profile.startBook] || STAGE_LABELS[profile.startStage] || STAGE_LABELS.q1;
+  const activeBookLabel = STAGE_LABELS[profile.startBook] || STAGE_LABELS[bookId] || STAGE_LABELS.q1;
+  const scorePctBar = Math.min(100, Math.round((evalObj.estimatedScore / evalObj.maxScore) * 100));
+  const passLinePct = Math.round((evalObj.passScore / evalObj.maxScore) * 100);
 
-  const levels = [
-    {
-      badge: "TOPIK 1", sub: "Quyển 1 · Sơ cấp 1",
+  const levels = (db.books6 || []).map((bk) => {
+    const bw = getBookWords(db, bk.bookId);
+    const bm = bw.filter((w) => store.isMastered(w.id)).length;
+    const partCnt = bk.chapters.reduce((a, c) => a + (c.parts?.length || 1), 0);
+    return {
+      badge: `QUYỂN ${bk.bookNum}`,
+      sub: bk.levelBadge,
       items: [
-        `Thuộc ${db.sc1Vocab.filter(c => store.isMastered(c.id)).length}/${db.sc1Vocab.length} từ Kyuri`,
-        `${db.sc1Grammar.length} ngữ pháp nền tảng`,
-        "Hangeul & 7 quy tắc biến âm"
+        `${bk.chapters.length} chương · ${partCnt} phần nhỏ (${bm}/${bw.length} từ)`,
+        `Đủ Sách giáo trình & Sách bài tập 익힘책`,
+        `Chuẩn ${bk.scale.gradeName}: ≥ ${bk.scale.passScore}/${bk.scale.maxScore}đ`
       ],
-      action: () => navigate("theory", { sub: "vocab-book", book: "sc1" })
-    },
-    {
-      badge: "TOPIK 2", sub: "Quyển 2 · Sơ cấp 2",
-      items: [
-        `${db.topik1Bank.length} câu điền khuyết TOPIK I`,
-        `${db.sejongVocab.length} từ giao tiếp Sejong`,
-        "Mục tiêu ≥ 140/200đ TOPIK I"
-      ],
-      action: () => navigate("theory", { sub: "vocab-book", book: "topik1" })
-    },
-    {
-      badge: "TOPIK 3", sub: "Quyển 3 · Trung cấp 1",
-      items: [
-        "Gốc từ Âm Hán – Hàn",
-        "Tường thuật gián tiếp & liên từ",
-        "Làm chủ Câu 1–20 TOPIK II"
-      ],
-      action: () => navigate("theory", { sub: "hanja" })
-    },
-    {
-      badge: "TOPIK 4", sub: "Quyển 4 · Trung cấp 2",
-      items: [
-        "Từ đồng nghĩa & quán dụng ngữ",
-        "Viết 원고지 Câu 51, 52 & 53",
-        "Mục tiêu ≥ 150/300đ TOPIK II"
-      ],
-      action: () => navigate("practice", { sub: "topik2", skill: "writing" })
-    },
-    {
-      badge: "TOPIK 5", sub: "Quyển 5 · Cao cấp 1",
-      items: [
-        "Đọc báo chí, kinh tế & xã hội",
-        "Chuyên sâu Câu 32–50 TOPIK II",
-        "Nghị luận 600–700 chữ (Câu 54)"
-      ],
-      action: () => navigate("mock-test", { sub: "topik2", viewMode: "exams", category: "curated" })
-    },
-    {
-      badge: "TOPIK 6", sub: "Quyển 6 · Cao cấp 2",
-      items: [
-        "Hán–Hàn học thuật & thành ngữ",
-        "Thi Full 104 câu bấm giờ thật",
-        "Chinh phục mốc 230+/300 điểm"
-      ],
-      action: () => navigate("check-tools")
-    }
-  ];
+      action: () => navigate("theory", { sub: "index", book: bk.bookId })
+    };
+  });
 
   root.innerHTML = `
     <div class="container-web">
@@ -118,7 +80,7 @@ export function renderHomeView(root, db, navigate, startGuidedStep = null, openP
                     <button type="button" class="step-check-btn ${t.done ? "checked" : ""}" data-home-chk="${activeDay.day}" data-sidx="${t.stepIdx}" data-stotal="${activeDay.totalSteps}" title="Đánh dấu xong bước này">✓</button>
                     <div style="min-width:0;">
                       <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-                        <span style="font-size:11.5px;font-weight:800;color:${t.done ? "#15803D" : (isNext ? "#B45309" : "var(--primary-1)")};">
+                        <span style="font-size:11.5px;font-weight:800;color:${t.done ? "#15803D" : (isNext ? "var(--primary)" : "var(--primary-1)")};">
                           ${t.tag}
                         </span>
                         <span style="font-size:12px;color:var(--text-muted);">· ${t.hint}</span>
@@ -138,40 +100,57 @@ export function renderHomeView(root, db, navigate, startGuidedStep = null, openP
           </div>
         </div>
 
-        <!-- RIGHT: OVERALL ROADMAP SUMMARY & PROFILE RESET -->
+        <!-- RIGHT: ROADMAP SCORE SCALE EVALUATION & PROFILE RESET -->
         <div class="box-kind" style="display:flex;flex-direction:column;justify-content:space-between;padding:20px;">
           <div>
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-              <strong style="font-size:16px;color:var(--primary-1);">${ico("compass", 18)} Lộ trình của bạn</strong>
-              <span class="meta-chip" style="color:var(--primary-1);">${ico("cloud", 13)} Tự lưu Cloud</span>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+              <strong style="font-size:15.5px;color:var(--primary-1);">${ico("chart", 17)} Đánh giá theo lộ trình</strong>
+              <span class="badge-orange">${activeBookLabel}</span>
             </div>
 
-            <div style="background:var(--bg-body);border:1px solid var(--border-card);border-radius:14px;padding:12px 14px;margin-bottom:12px;">
-              <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;">
-                <span>Đang theo: <strong>${activeBookLabel}</strong></span>
-                <strong style="color:var(--primary-1);">${completedDaysCount}/30 ngày (${roadmapPct}%)</strong>
+            <!-- Calibrated Score Box -->
+            <div style="background:var(--primary-3);border:1.5px solid var(--border-card);border-radius:14px;padding:12px 14px;margin-bottom:10px;">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;">
+                <span style="font-size:12px;font-weight:700;color:var(--text-muted);">Thang ${evalObj.gradeName}</span>
+                <span style="font-size:11.5px;font-weight:800;color:var(--primary-1);">Mốc đạt: ${evalObj.passScore}/${evalObj.maxScore}đ</span>
               </div>
-              <div class="progress-track">
-                <div class="progress-fill" style="width:${roadmapPct}%"></div>
+              <div style="font-size:24px;font-weight:800;color:var(--primary);line-height:1.2;margin-bottom:6px;">
+                ${evalObj.estimatedScore} <span style="font-size:14px;color:var(--text-muted);font-weight:700;">/ ${evalObj.maxScore} điểm</span>
               </div>
-              <div style="display:flex;justify-content:space-between;font-size:12.5px;color:var(--text-muted);margin-top:8px;">
-                <span>Đã thuộc: <strong style="color:var(--text-main);">${masteredCount} từ</strong></span>
-                <span>Còn <strong style="color:var(--text-main);">${daysLeft} ngày</strong> thi</span>
+              <div style="position:relative;margin-bottom:6px;">
+                <div class="progress-track" style="height:8px;background:#FFFFFF;">
+                  <div class="progress-fill" style="width:${scorePctBar}%;background:${evalObj.passed ? "var(--success)" : "var(--primary)"};"></div>
+                </div>
+                <div style="position:absolute;left:${passLinePct}%;top:-2px;bottom:-2px;width:2px;background:var(--primary-4);"></div>
+              </div>
+              <div style="font-size:12px;font-weight:600;color:${evalObj.passed ? "var(--success)" : "var(--primary-4)"};">
+                ${evalObj.statusLabel}
               </div>
             </div>
 
-            <label style="font-size:12px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:4px;">Mục tiêu &amp; Ngày thi dự kiến</label>
-            <select id="home-target-select" class="box-select" style="width:100%;margin-bottom:8px;">
-              ${["TOPIK I - Cấp 1", "TOPIK I - Cấp 2", "TOPIK II - Cấp 3", "TOPIK II - Cấp 4", "TOPIK II - Cấp 5", "TOPIK II - Cấp 6"]
-                .map((lv) => `<option value="${lv}" ${s.targetLevel === lv ? "selected" : ""}>${lv}</option>`)
-                .join("")}
-            </select>
-            <input type="date" id="home-exam-date" value="${s.examDate}" style="width:100%;padding:7px 12px;border-radius:99px;border:1.5px solid var(--border-card);font-size:13.5px;font-weight:600;" />
+            <!-- Mini 4-Pillar Grid -->
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:10px;">
+              ${evalObj.pillars.map((p) => `
+                <div style="background:var(--bg-body);border:1px solid var(--border-card);border-radius:10px;padding:6px 9px;font-size:12px;">
+                  <div style="display:flex;justify-content:space-between;">
+                    <span style="color:var(--text-muted);font-weight:600;">${p.label}</span>
+                    <strong style="color:var(--primary-1);">${p.pct}%</strong>
+                  </div>
+                  <div style="font-size:11px;color:var(--text-main);font-weight:600;">${p.detail}</div>
+                </div>
+              `).join("")}
+            </div>
+
+            <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin-bottom:4px;">
+              <span>Tiến độ 30 ngày: <strong style="color:var(--primary-1);">${completedDaysCount}/30 (${roadmapPct}%)</strong></span>
+              <span>Còn <strong>${daysLeft} ngày</strong> thi</span>
+            </div>
+            <input type="date" id="home-exam-date" value="${s.examDate}" style="width:100%;padding:6px 12px;border-radius:99px;border:1.5px solid var(--border-card);font-size:13px;font-weight:600;" />
           </div>
 
           <div style="display:flex;flex-direction:column;gap:7px;margin-top:12px;">
             <button type="button" class="btn-outline-teal" id="btn-open-roadmap" style="width:100%;justify-content:center;padding:7px 12px;font-size:13px;">
-              ${ico("compass", 15)} Xem chi tiết 30 ngày
+              ${ico("compass", 15)} Lộ trình 30 ngày &amp; Thang điểm
             </button>
             <button type="button" class="btn-outline-teal" id="btn-home-edit-profile" style="width:100%;justify-content:center;padding:7px 12px;font-size:13px;">
               ${ico("user", 15)} Đổi Quyển học (Hồ sơ học viên)
@@ -204,7 +183,7 @@ export function renderHomeView(root, db, navigate, startGuidedStep = null, openP
               <span style="font-size:13.5px;color:var(--text-muted);">Dịch Việt → Hàn &amp; câu chuẩn TOPIK</span>
             </div>
           </div>
-          <span class="meta-chip" style="color:#B45309;">15 chương</span>
+          <span class="meta-chip" style="color:var(--primary-1);">15 chương</span>
         </div>
 
         <div class="theory-card" data-quick="shorts-shadowing">
@@ -270,23 +249,23 @@ export function renderHomeView(root, db, navigate, startGuidedStep = null, openP
         <!-- CUTE COMPACT VIETQR DONATE ADMIN CARD -->
         <section class="donate-cute-card">
           <div style="flex:1;min-width:200px;">
-            <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
-              ${daisyLogoSVG(22)}
-              <strong style="font-size:15px;color:#BE4B64;">Tiếp sức Admin duy trì CJDUZ</strong>
+            <div style="display:flex;align-items:center;gap:7px;margin-bottom:4px;">
+              ${daisyLogoSVG(26)}
+              <strong style="font-size:15px;color:var(--primary-4);">Tiếp sức Admin duy trì D ● TOPIK</strong>
             </div>
             <div style="font-size:12.5px;color:var(--text-muted);margin-bottom:8px;">
-              Mời Admin một ly trà nhỏ nếu web giúp bạn học vui hơn nha 🌸
+              Mời Admin một ly trà nhỏ nếu web giúp bạn học vui hơn nha 💙
             </div>
             <div style="display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin-bottom:8px;">
-              <span class="meta-chip" style="background:#FFFFFF;color:#0F766E;font-weight:800;">VIETCOMBANK</span>
+              <span class="meta-chip" style="background:#FFFFFF;color:var(--primary-1);font-weight:800;">VIETCOMBANK</span>
               <span class="meta-chip" style="background:#FFFFFF;color:var(--text-main);font-weight:800;">0201000736282</span>
               <span class="meta-chip" style="background:#FFFFFF;">NGUYEN CHI DUC</span>
             </div>
             <div style="display:flex;gap:6px;flex-wrap:wrap;">
-              <button type="button" class="btn-outline-teal" id="btn-copy-stk" style="padding:5px 12px;font-size:12.5px;border-color:#F5CAD6;color:#BE4B64;">
+              <button type="button" class="btn-outline-teal" id="btn-copy-stk" style="padding:5px 12px;font-size:12.5px;">
                 Sao chép STK
               </button>
-              <button type="button" class="btn-outline-teal" id="btn-zoom-qr" style="padding:5px 12px;font-size:12.5px;">
+              <button type="button" class="btn-primary" id="btn-zoom-qr" style="padding:5px 13px;font-size:12.5px;">
                 Mở QR quét nhanh
               </button>
             </div>
@@ -305,17 +284,17 @@ export function renderHomeView(root, db, navigate, startGuidedStep = null, openP
       <div class="modal-backdrop" id="qr-modal-bg">
         <div class="modal-panel" style="max-width:390px;text-align:center;padding:24px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-            <strong style="font-size:17px;color:#BE4B64;display:flex;align-items:center;gap:6px;">
-              ${daisyLogoSVG(24)} Ủng hộ Admin CJDUZ
+            <strong style="font-size:17px;color:var(--primary-4);display:flex;align-items:center;gap:8px;">
+              ${daisyLogoSVG(28)} Ủng hộ Admin D ● TOPIK
             </strong>
             <button type="button" id="close-qr-modal" style="background:var(--bg-body);border:1.5px solid var(--border-card);width:32px;height:32px;border-radius:10px;font-size:18px;cursor:pointer;">×</button>
           </div>
           <p style="margin:0 0 12px;font-size:13.5px;color:var(--text-muted);">
-            Cảm ơn bạn đã đồng hành và tiếp thêm động lực cho CJDUZ 🌸
+            Cảm ơn bạn đã đồng hành và tiếp thêm động lực cho D ● TOPIK 💙
           </p>
-          <img src="/media/vietqr_admin.jpg" alt="VietQR VIETCOMBANK 0201000736282 NGUYEN CHI DUC" style="width:100%;max-width:270px;border-radius:16px;border:2px solid #F5CAD6;padding:6px;background:#FFF;margin-bottom:12px;" />
+          <img src="/media/vietqr_admin.jpg" alt="VietQR VIETCOMBANK 0201000736282 NGUYEN CHI DUC" style="width:100%;max-width:270px;border-radius:16px;border:2px solid var(--border-card);padding:6px;background:#FFF;margin-bottom:12px;" />
           <div style="background:var(--bg-body);border:1px solid var(--border-card);border-radius:14px;padding:10px 14px;font-size:13.5px;line-height:1.6;">
-            <div>Ngân hàng: <strong style="color:#0F766E;">VIETCOMBANK</strong></div>
+            <div>Ngân hàng: <strong style="color:var(--primary-1);">VIETCOMBANK</strong></div>
             <div>Số tài khoản: <strong style="font-size:15.5px;color:var(--text-main);">0201000736282</strong></div>
             <div>Chủ TK: <strong>NGUYEN CHI DUC</strong></div>
           </div>
@@ -367,11 +346,14 @@ export function renderHomeView(root, db, navigate, startGuidedStep = null, openP
   root.querySelector("#btn-mia-writing").addEventListener("click", () => navigate("practice", { sub: "topik2", skill: "writing" }));
   root.querySelector("#btn-mia-check").addEventListener("click", () => navigate("check-tools", { tab: "mistakes" }));
 
-  root.querySelector("#home-target-select").addEventListener("change", (e) => {
-    store.state.targetLevel = e.target.value;
-    store.save();
-    renderHomeView(root, db, navigate, startGuidedStep, openProfileSettings, modalRoot);
-  });
+  const targetSel = root.querySelector("#home-target-select");
+  if (targetSel) {
+    targetSel.addEventListener("change", (e) => {
+      store.state.targetLevel = e.target.value;
+      store.save();
+      renderHomeView(root, db, navigate, startGuidedStep, openProfileSettings, modalRoot);
+    });
+  }
   root.querySelector("#home-exam-date").addEventListener("change", (e) => {
     store.state.examDate = e.target.value;
     store.save();
@@ -381,10 +363,10 @@ export function renderHomeView(root, db, navigate, startGuidedStep = null, openP
   root.querySelectorAll("[data-quick]").forEach((el) => {
     el.addEventListener("click", () => {
       const q = el.dataset.quick;
-      if (q === "vocab-review") navigate("theory", { sub: "vocab-review" });
-      if (q === "chapter-translate") navigate("practice", { sub: "skills", skill: "translate", lesson: s.lastLesson.lesson || 1 });
+      if (q === "vocab-review") navigate("theory", { sub: "vocab-review", book: bookId, lesson: s.lastLesson?.lesson || 1, part: 1 });
+      if (q === "chapter-translate") navigate("theory", { sub: "lesson-detail", book: bookId, lesson: s.lastLesson?.lesson || 1, tab: "workbook" });
       if (q === "shorts-shadowing") navigate("practice", { sub: "skills", skill: "shadowing" });
-      if (q === "exams-20") navigate("mock-test", { sub: "topik1", viewMode: "exams", category: "curated" });
+      if (q === "exams-20") navigate("mock-test", { sub: evalObj.examLevel, viewMode: "exams", category: "curated" });
     });
   });
 

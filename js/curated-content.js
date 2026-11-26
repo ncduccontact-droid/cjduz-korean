@@ -174,7 +174,7 @@ export const TEXTBOOK_SERIES = [
     title: "Tiếng Hàn Tổng Hợp · Sơ Cấp 1",
     subtitle: "Quyển 1 · 15 Bài · 537 từ + 51 ngữ pháp Kyuri",
     topikTarget: "TOPIK I · Cấp 1",
-    color: "linear-gradient(145deg, #00B2A5, #007A72)",
+    color: "linear-gradient(155deg, #E2F3FF 0%, #B8E0FF 100%)",
     badge: "ĐỦ AUDIO KYURI",
     hasExtractedData: true,
     lessons: [
@@ -204,7 +204,7 @@ export const TEXTBOOK_SERIES = [
     title: "Tiếng Hàn Tổng Hợp · Sơ Cấp 2",
     subtitle: "Quyển 2 · Bài 16 → 30 · Hoàn thiện TOPIK I",
     topikTarget: "TOPIK I · Cấp 2",
-    color: "linear-gradient(145deg, #0099AD, #006678)",
+    color: "linear-gradient(155deg, #DCF0FF 0%, #A3D5FF 100%)",
     badge: "SƠ CẤP 2",
     hasExtractedData: false,
     syllabus: ["Gặp gỡ & Hẹn lịch", "Thăm hỏi sức khỏe & Bệnh viện", "Bưu điện & Ngân hàng", "Du lịch đảo Jeju", "Nhà trọ & Chuyển nhà", "Kế hoạch tương lai & Ước mơ"]
@@ -215,7 +215,7 @@ export const TEXTBOOK_SERIES = [
     title: "Tiếng Hàn Tổng Hợp · Trung Cấp 3",
     subtitle: "Quyển 3 · Lối vào TOPIK II & Tường thuật",
     topikTarget: "TOPIK II · Cấp 3",
-    color: "linear-gradient(145deg, #2589BD, #185A82)",
+    color: "linear-gradient(155deg, #D8EEFF 0%, #8ECAFC 100%)",
     badge: "TRUNG CẤP 1",
     hasExtractedData: false,
     syllabus: ["Đời sống đại học & Chọn ngành", "Thói quen tiêu dùng", "Sự cố & Bảo hành sửa chữa", "Lối sống lành mạnh", "Câu gián tiếp (-다고 하다)", "Phỏng vấn & Việc làm thêm"]
@@ -226,7 +226,7 @@ export const TEXTBOOK_SERIES = [
     title: "Tiếng Hàn Tổng Hợp · Trung Cấp 4",
     subtitle: "Quyển 4 · Giao tiếp công sở & Viết 51–53",
     topikTarget: "TOPIK II · Cấp 4",
-    color: "linear-gradient(145deg, #FE9A05, #D97706)",
+    color: "linear-gradient(155deg, #D7F0FA 0%, #8FD2F3 100%)",
     badge: "TRUNG CẤP 2",
     hasExtractedData: false,
     syllabus: ["Văn hóa doanh nghiệp Hàn Quốc", "Giải quyết hiểu lầm", "Truyền thông & Mạng xã hội", "Môi trường & Tái chế", "Biểu đồ thống kê (Câu 53)", "Nghệ thuật & Điện ảnh"]
@@ -237,7 +237,7 @@ export const TEXTBOOK_SERIES = [
     title: "Tiếng Hàn Tổng Hợp · Cao Cấp 5",
     subtitle: "Quyển 5 · Báo chí, Kinh tế & Nghị luận",
     topikTarget: "TOPIK II · Cấp 5",
-    color: "linear-gradient(145deg, #7C3AED, #5B21B6)",
+    color: "linear-gradient(155deg, #DBF3F8 0%, #9CDCED 100%)",
     badge: "CAO CẤP 1",
     hasExtractedData: false,
     syllabus: ["Kinh tế vĩ mô & Thị trường", "Khoa học công nghệ AI", "Lịch sử & Di sản Hàn Quốc", "Giáo dục & Xã hội già hóa", "Thành ngữ bốn chữ (사자성어)"]
@@ -248,7 +248,7 @@ export const TEXTBOOK_SERIES = [
     title: "Tiếng Hàn Tổng Hợp · Cao Cấp 6",
     subtitle: "Quyển 6 · Học thuật & Chinh phục Cấp 6",
     topikTarget: "TOPIK II · Cấp 6",
-    color: "linear-gradient(145deg, #E11D48, #9F1239)",
+    color: "linear-gradient(155deg, #E2F6F9 0%, #B0E0E6 100%)",
     badge: "CAO CẤP 2",
     hasExtractedData: false,
     syllabus: ["Triết học & Giá trị sống", "Pháp luật & Quyền công dân", "Ngoại giao & Toàn cầu hóa", "Phê bình văn học", "Nghị luận chuyên sâu 700 chữ (Câu 54)"]

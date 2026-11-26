@@ -1,5 +1,5 @@
-import { store, BOOK_SURVEY_OPTIONS, DEFAULT_ROADMAP_PROFILE } from "./store.js?v=20261126-8";
-import { ico, daisyLogoSVG } from "./icons.js?v=20261126-8";
+import { store, isLocalPreviewHost, BOOK_SURVEY_OPTIONS, DEFAULT_ROADMAP_PROFILE } from "./store.js?v=20261126-10";
+import { ico, daisyLogoSVG } from "./icons.js?v=20261126-10";
 
 let authConfigCache = null;
 
@@ -374,7 +374,11 @@ export async function openAuthModal(modalRoot, initialView = "profile", onComple
 
           <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;">
             <button type="button" class="btn-primary" id="btn-save-prof">${ico("cloud", 16)} Lưu cài đặt lộ trình</button>
-            <button type="button" class="btn-outline-teal" id="btn-logout-acc" style="border-color:var(--danger);color:var(--danger);">Đăng xuất</button>
+            ${isLocalPreviewHost() ? `
+              <button type="button" class="btn-outline-teal" id="btn-preview-survey">Xem thử Khảo sát đầu vào</button>
+            ` : `
+              <button type="button" class="btn-outline-teal" id="btn-logout-acc" style="border-color:var(--danger);color:var(--danger);">Đăng xuất</button>
+            `}
           </div>
         </div>
       </div>
@@ -401,10 +405,20 @@ export async function openAuthModal(modalRoot, initialView = "profile", onComple
       msg = "✔ Đã cập nhật lộ trình học vào Hồ sơ học viên!";
       renderProfileModal();
     });
-    modalRoot.querySelector("#btn-logout-acc").addEventListener("click", async () => {
-      await store.logout();
-      close();
-    });
+    const prevSurveyBtn = modalRoot.querySelector("#btn-preview-survey");
+    if (prevSurveyBtn) {
+      prevSurveyBtn.addEventListener("click", () => {
+        window._forcePreviewSurvey = true;
+        close();
+      });
+    }
+    const logoutBtn = modalRoot.querySelector("#btn-logout-acc");
+    if (logoutBtn) {
+      logoutBtn.addEventListener("click", async () => {
+        await store.logout();
+        close();
+      });
+    }
   }
 
   renderProfileModal();

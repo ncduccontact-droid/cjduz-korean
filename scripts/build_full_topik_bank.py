@@ -895,11 +895,11 @@ async def main():
         {"slug": "r96", "round": "96", "year": 2024, "category": "trend", "curated": True,
          "ribbon": "⭐ XU HƯỚNG 2024", "curatedNote": "Tổng hợp chủ đề xã hội, tiêu dùng xanh & AI sát xu hướng ra đề Kỳ 96.",
          "titleSuffix": "Đề Phục Dựng Xu Hướng Kỳ 96 (2024)",
-         "sourceOrg": "Phục dựng theo Ma trận NIIED & Chủ đề thực tế Kỳ 96 (CJDUZ Biên soạn)", "sourceUrl": "https://www.topik.go.kr"},
+         "sourceOrg": "Phục dựng theo Ma trận NIIED & Chủ đề thực tế Kỳ 96 (D ● TOPIK Biên soạn)", "sourceUrl": "https://www.topik.go.kr"},
         {"slug": "r102", "round": "102", "year": 2025, "category": "trend", "curated": True,
          "ribbon": "⭐ MỚI NHẤT 2025", "curatedNote": "Cập nhật chủ đề đời sống & học thuật mới nhất năm 2025 theo chuẩn NIIED.",
          "titleSuffix": "Đề Phục Dựng Xu Hướng Kỳ 102 (2025)",
-         "sourceOrg": "Phục dựng theo Ma trận NIIED & Chủ đề thực tế Kỳ 102 (CJDUZ Biên soạn)", "sourceUrl": "https://www.topik.go.kr"}
+         "sourceOrg": "Phục dựng theo Ma trận NIIED & Chủ đề thực tế Kỳ 102 (D ● TOPIK Biên soạn)", "sourceUrl": "https://www.topik.go.kr"}
     ]
 
     def pick_singles(type_id, count, exam_idx):

@@ -1,5 +1,5 @@
-import { store, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261126-8";
-import { ico } from "../icons.js?v=20261126-8";
+import { store, ROADMAP_SCORE_SCALES, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261126-10";
+import { ico } from "../icons.js?v=20261126-10";
 
 /**
  * Hydrates a 70-question TOPIK I or 104-question TOPIK II exam from normalized slots + itemPool.
@@ -206,7 +206,7 @@ export function renderMockTestView(root, db, navigate, params = {}, registerClea
 
           <button type="button" id="mode-card-segments" style="text-align:left;padding:13px 16px;border-radius:15px;cursor:pointer;border:1.5px solid ${viewMode === "segments" ? "var(--yellow-2)" : "var(--border-card)"};background:#FFFFFF;box-shadow:${viewMode === "segments" ? "0 3px 0 var(--yellow-lip)" : "0 2px 0 var(--border-lip)"};">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
-              <strong style="font-size:15.5px;color:#B45309;">${ico("layers", 17)} Luyện từng phần · Từng dạng (1 → ${levelKey === "topik1" ? "8" : "10"})</strong>
+              <strong style="font-size:15.5px;color:var(--primary-1);">${ico("layers", 17)} Luyện từng phần · Từng dạng (1 → ${levelKey === "topik1" ? "8" : "10"})</strong>
               ${viewMode === "segments" ? `<span class="badge-orange">Đang chọn</span>` : ""}
             </div>
             <div style="font-size:13px;color:var(--text-muted);">
@@ -392,7 +392,7 @@ function renderSingleExamOverview(root, sys, exam, navigate) {
 
         ${exam.level === "topik2" ? `
           <div class="box-kind">
-            <strong style="font-size:17px;color:#B45309;display:block;margin-bottom:6px;">✍️ Phần Viết · 쓰기</strong>
+            <strong style="font-size:17px;color:var(--primary-1);display:block;margin-bottom:6px;">✍️ Phần Viết · 쓰기</strong>
             <p style="font-size:13.5px;color:var(--text-muted);margin:0 0 12px;">
               Câu 51 → Câu 54 (4 câu tự luận · 100 điểm · 50 phút) — Có ô điền ㉠㉡, giấy kẻ ô 원고지 &amp; bài mẫu.
             </p>
@@ -816,20 +816,28 @@ function renderExamRoom(root, sys, exam, scope, navigate, registerCleanup) {
           ` : ""}
         </div>
 
-        ${resultSummary ? `
+        ${resultSummary ? (() => {
+          const rScale = ROADMAP_SCORE_SCALES[store.state.roadmapProfile?.startBook || "q1"] || ROADMAP_SCORE_SCALES.q1;
+          const scaledToRoadmap = Math.round((resultSummary.score / Math.max(1, totalMaxPts)) * rScale.maxScore);
+          const passCheck = scaledToRoadmap >= rScale.passScore;
+          return `
           <div class="prediction-banner" style="margin-bottom:18px;">
             <div>
               <h2 style="margin:0 0 6px;color:var(--primary-1);">
                 🎉 Tổng điểm: ${resultSummary.score} / ${totalMaxPts} điểm — ${resultSummary.grade}
               </h2>
-              <div style="font-size:14px;">
+              <div style="font-size:14px;margin-bottom:6px;">
                 Đúng <strong>${resultSummary.correctCount}/${questions.length}</strong> câu
                 ${isFullExam ? ` · Chi tiết: 🎧 Nghe <strong>${resultSummary.listenScore}/100đ</strong> ${exam.level === "topik2" ? `· ✍️ Viết <strong>${resultSummary.writeScore}/100đ</strong>` : ""} · 📖 Đọc <strong>${resultSummary.readScore}/100đ</strong>` : ""}
+              </div>
+              <div style="font-size:13px;font-weight:700;color:${passCheck ? "var(--success)" : "var(--primary-4)"};">
+                📊 So với lộ trình đang học (${rScale.label} · Chuẩn ≥ ${rScale.passScore}/${rScale.maxScore}đ): Quy đổi <strong>${scaledToRoadmap}/${rScale.maxScore}đ</strong> — ${passCheck ? "✔ ĐẠT CHUẨN LỘ TRÌNH!" : `Cần thêm +${rScale.passScore - scaledToRoadmap}đ để đạt chuẩn.`}
               </div>
             </div>
             <button type="button" class="btn-primary" id="btn-go-mistakes">Mở Sổ tay câu sai →</button>
           </div>
-        ` : ""}
+          `;
+        })() : ""}
 
         <div class="exam-room-grid">
           <!-- LEFT: QUESTION SHEET -->
@@ -884,7 +892,7 @@ function renderExamRoom(root, sys, exam, scope, navigate, registerCleanup) {
                       🔊 Phát Audio giọng Hàn chuẩn
                     </button>
                   ` : ""}
-                  <button type="button" class="btn-outline-teal" id="btn-q-flag" style="padding:6px 12px;font-size:13px;${flagged.has(q.id) ? "background:rgba(254,154,5,0.16);border-color:var(--yellow-2);color:#B45309;" : ""}">
+                  <button type="button" class="btn-outline-teal" id="btn-q-flag" style="padding:6px 12px;font-size:13px;${flagged.has(q.id) ? "background:var(--primary-3);border-color:var(--primary);color:var(--primary-1);" : ""}">
                     🚩 ${flagged.has(q.id) ? "Đã gắn cờ" : "Gắn cờ"}
                   </button>
                 </div>
@@ -942,7 +950,7 @@ function renderExamRoom(root, sys, exam, scope, navigate, registerCleanup) {
             ` : ""}
 
             ${writeList.length ? `
-              <strong style="display:block;margin-bottom:6px;font-size:13.5px;color:#B45309;">✍️ Tự luận · 쓰기 (51~54)</strong>
+              <strong style="display:block;margin-bottom:6px;font-size:13.5px;color:var(--primary-1);">✍️ Tự luận · 쓰기 (51~54)</strong>
               <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:14px;">
                 ${writeList.map(({ item, i }) => renderOmrCell(item, i)).join("")}
               </div>

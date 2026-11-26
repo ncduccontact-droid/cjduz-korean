@@ -117,7 +117,7 @@ def send_cjduz_email(to_email, subject, html_body):
         return False, "Chưa cấu hình GMAIL_APP_PASSWORD cho nguyenchiduc2808@gmail.com trong web/.env"
 
     msg = MIMEMultipart("alternative")
-    msg["From"] = f"CJDUZ Korean <{sender}>"
+    msg["From"] = f"D ● TOPIK <{sender}>"
     msg["To"] = to_email
     msg["Subject"] = subject
     msg.attach(MIMEText(html_body, "html", "utf-8"))
@@ -133,18 +133,18 @@ def send_cjduz_email(to_email, subject, html_body):
 
 def build_otp_email_html(title, name, code, note):
     return f"""
-    <div style="font-family:Inter,Arial,sans-serif;max-width:540px;margin:0 auto;border:1px solid #E0F2F0;border-radius:16px;overflow:hidden;">
-      <div style="background:#00B2A5;color:#FFFFFF;padding:20px 24px;">
-        <strong style="font-size:20px;letter-spacing:0.04em;">🌼 CJDUZ · Học Tiếng Hàn Tổng Hợp &amp; TOPIK</strong>
+    <div style="font-family:Inter,Arial,sans-serif;max-width:540px;margin:0 auto;border:1px solid #C3E2FF;border-radius:16px;overflow:hidden;">
+      <div style="background:linear-gradient(90deg,#E3F3FF 0%,#D4ECFF 100%);color:#0B2D50;padding:20px 24px;border-bottom:2px solid #9BCEFA;">
+        <strong style="font-size:20px;letter-spacing:0.04em;">D <span style="color:#007BFF;">●</span> TOPIK · Học Tiếng Hàn Tổng Hợp &amp; TOPIK</strong>
       </div>
-      <div style="padding:24px;color:#363636;line-height:1.6;">
-        <h2 style="margin:0 0 10px;color:#008B82;font-size:20px;">{html.escape(title)}</h2>
+      <div style="padding:24px;color:#0B2D50;line-height:1.6;">
+        <h2 style="margin:0 0 10px;color:#007BFF;font-size:20px;">{html.escape(title)}</h2>
         <p>Xin chào <strong>{html.escape(name or 'bạn')}</strong>,</p>
         <p>{html.escape(note)}</p>
-        <div style="background:#E0F2F0;border-radius:12px;padding:16px;text-align:center;margin:18px 0;">
-          <span style="font-size:30px;font-weight:800;letter-spacing:6px;color:#006B66;">{html.escape(code)}</span>
+        <div style="background:#E6F4FF;border:1px solid #C3E2FF;border-radius:12px;padding:16px;text-align:center;margin:18px 0;">
+          <span style="font-size:30px;font-weight:800;letter-spacing:6px;color:#005EC4;">{html.escape(code)}</span>
         </div>
-        <p style="font-size:13px;color:#575757;">Mã có hiệu lực trong 15 phút. Email được gửi tự động từ hệ thống hỗ trợ học viên <strong>{SENDER_EMAIL}</strong>.</p>
+        <p style="font-size:13px;color:#4A6A8A;">Mã có hiệu lực trong 15 phút. Email được gửi tự động từ hệ thống hỗ trợ học viên <strong>{SENDER_EMAIL}</strong>.</p>
       </div>
     </div>
     """
@@ -444,12 +444,12 @@ class CJDUZKoreanHandler(SimpleHTTPRequestHandler):
 
             sent, mail_msg = send_cjduz_email(
                 email,
-                f"[CJDUZ] Mã xác thực đăng ký tài khoản: {code}",
+                f"[D ● TOPIK] Mã xác thực đăng ký tài khoản: {code}",
                 build_otp_email_html(
-                    "Xác thực đăng ký tài khoản CJDUZ",
+                    "Xác thực đăng ký tài khoản D ● TOPIK",
                     name,
                     code,
-                    "Cảm ơn bạn đã đăng ký học Tiếng Hàn trên CJDUZ! Nhập mã xác thực 6 chữ số dưới đây để kích hoạt lộ trình cá nhân hóa của riêng bạn:"
+                    "Cảm ơn bạn đã đăng ký học Tiếng Hàn trên D ● TOPIK! Nhập mã xác thực 6 chữ số dưới đây để kích hoạt lộ trình cá nhân hóa của riêng bạn:"
                 )
             )
             if not sent:
@@ -611,12 +611,12 @@ class CJDUZKoreanHandler(SimpleHTTPRequestHandler):
                 uid = cur.lastrowid
                 send_cjduz_email(
                     g_email,
-                    "[CJDUZ] Chào mừng bạn đăng ký thành công bằng Google!",
+                    "[D ● TOPIK] Chào mừng bạn đăng ký thành công bằng Google!",
                     build_otp_email_html(
                         "Tài khoản Google đã kết nối thành công!",
                         g_name,
                         "WELCOME",
-                        "Lộ trình học Tiếng Hàn & luyện thi TOPIK cá nhân hóa của riêng bạn đã được khởi tạo trên CJDUZ."
+                        "Lộ trình học Tiếng Hàn & luyện thi TOPIK cá nhân hóa của riêng bạn đã được khởi tạo trên D ● TOPIK."
                     )
                 )
 
@@ -648,9 +648,9 @@ class CJDUZKoreanHandler(SimpleHTTPRequestHandler):
 
             sent, mail_msg = send_cjduz_email(
                 email,
-                f"[CJDUZ] Mã khôi phục mật khẩu của bạn: {code}",
+                f"[D ● TOPIK] Mã khôi phục mật khẩu của bạn: {code}",
                 build_otp_email_html(
-                    "Yêu cầu đặt lại mật khẩu CJDUZ",
+                    "Yêu cầu đặt lại mật khẩu D ● TOPIK",
                     row[1],
                     code,
                     "Bạn vừa yêu cầu đặt lại mật khẩu. Nhập mã khôi phục 6 chữ số bên dưới để tạo mật khẩu mới:"

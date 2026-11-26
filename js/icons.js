@@ -1,25 +1,20 @@
-// Cute Soft-Rounded Duo-Tone SVG Icon System & Kawaii Smiling Daisy Mascot for CJDUZ
+// Cute Soft-Rounded Duo-Tone SVG Icon System & Official D ● TOPIK Pixel-Smile Speech-Bubble Mascot
 
-export function daisyLogoSVG(size = 34) {
-  return `
-    <svg width="${size}" height="${size}" viewBox="0 0 64 64" fill="none" aria-hidden="true">
-      <g transform="translate(32,32)">
-        <g fill="#FFFFFF" stroke="rgba(15,23,42,0.08)" stroke-width="1">
-          <ellipse rx="8.5" ry="21" transform="rotate(0)"/>
-          <ellipse rx="8.5" ry="21" transform="rotate(45)"/>
-          <ellipse rx="8.5" ry="21" transform="rotate(90)"/>
-          <ellipse rx="8.5" ry="21" transform="rotate(135)"/>
-        </g>
-        <circle r="11.5" fill="#FDE047" stroke="#F59E0B" stroke-width="2.2"/>
-        <circle cx="-4.2" cy="-1.2" r="1.45" fill="#422006"/>
-        <circle cx="4.2" cy="-1.2" r="1.45" fill="#422006"/>
-        <ellipse cx="-6.3" cy="1.8" rx="2.1" ry="1.2" fill="#FB7185" opacity="0.65"/>
-        <ellipse cx="6.3" cy="1.8" rx="2.1" ry="1.2" fill="#FB7185" opacity="0.65"/>
-        <path d="M-3 2.2 Q0 5.1 3 2.2" stroke="#422006" stroke-width="1.7" stroke-linecap="round" fill="none"/>
-      </g>
-    </svg>
-  `;
+export function dTopikMascotHTML(size = 36) {
+  const h = Math.round(size * 0.94);
+  return `<img src="/media/d_topik_mascot.png" width="${size}" height="${h}" alt="D ● TOPIK" class="dtopik-mascot-img" style="width:${size}px;height:auto;object-fit:contain;display:inline-block;vertical-align:middle;flex-shrink:0;" />`;
 }
+
+export function dTopikLogoFullHTML(height = 38) {
+  return `<img src="/media/d_topik_logo.png" height="${height}" alt="D ● TOPIK" class="dtopik-logo-img" style="height:${height}px;width:auto;object-fit:contain;display:block;flex-shrink:0;" />`;
+}
+
+export function dTopikWordmarkHTML() {
+  return `<span class="dtopik-wordmark">D <span class="dtopik-dot">●</span> TOPIK</span>`;
+}
+
+// Keep alias so all imports across views render the official D ● TOPIK mascot seamlessly
+export const daisyLogoSVG = dTopikMascotHTML;
 
 const ICON_PATHS = {
   home: `<path d="M4 10.5L12 4l8 6.5V19a2 2 0 0 1-2 2h-3.5v-5.2a1.5 1.5 0 0 0-1.5-1.5h-2a1.5 1.5 0 0 0-1.5 1.5V21H6a2 2 0 0 1-2-2v-8.5z" fill="currentColor" fill-opacity="0.16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`,

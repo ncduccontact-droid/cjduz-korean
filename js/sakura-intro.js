@@ -36,11 +36,11 @@ export function playSakuraPageIntro() {
   resize();
 
   const PETAL_COLORS = [
-    ["#FFD6E3", "#FFAEC6"],
-    ["#FFE4EE", "#FFC1D5"],
-    ["#FFC6D9", "#FF94B6"],
-    ["#FFF0F5", "#FFD1E0"],
-    ["#FFB8D0", "#F988AE"]
+    ["#FFD8E6", "#FFB2C9"],
+    ["#FFE6F0", "#FFC4D8"],
+    ["#E3F4FF", "#9AD4FF"],
+    ["#FFF2F7", "#FFD2E2"],
+    ["#D4EEFF", "#7AC3FA"]
   ];
 
   // Create 82 multi-depth sakura petals + 7 full 5-petal blossoms sweeping from bottom-left / left to top-right / right

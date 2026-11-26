@@ -1,4 +1,4 @@
-// Hierarchical Multi-Layer URL Router for CJDUZ Korean (History API + Ancestor Chain Guard)
+// Hierarchical Multi-Layer URL Router for D ● TOPIK (History API + Sub-Part Support + Ancestor Chain Guard)
 
 export function buildUrl(route, params = {}) {
   if (!route || route === "home") return "/";
@@ -6,19 +6,25 @@ export function buildUrl(route, params = {}) {
 
   if (route === "theory") {
     const sub = params.sub || "index";
-    if (sub === "index") return "/ly-thuyet";
-    if (sub === "vocab-book") return `/ly-thuyet/sach/${encodeURIComponent(params.book || "sc1")}`;
+    if (sub === "index") {
+      return params.book ? `/ly-thuyet/quyen/${encodeURIComponent(params.book)}` : "/ly-thuyet";
+    }
+    if (sub === "vocab-book") return `/ly-thuyet/sach/${encodeURIComponent(params.book || "q1")}`;
     if (sub === "lesson-detail") {
-      const bk = encodeURIComponent(params.book || "sc1");
+      const bk = encodeURIComponent(params.book || "q1");
       const ls = Number(params.lesson || 1);
       const tab = params.tab || "vocab";
+      const partSeg = params.part ? `/phan-${Number(params.part)}` : "";
       return tab === "vocab"
-        ? `/ly-thuyet/sach/${bk}/bai-${ls}`
+        ? `/ly-thuyet/sach/${bk}/bai-${ls}${partSeg}`
         : `/ly-thuyet/sach/${bk}/bai-${ls}/${encodeURIComponent(tab)}`;
     }
     if (sub === "vocab-review") {
-      const bk = encodeURIComponent(params.book || "all");
+      const bk = encodeURIComponent(params.book || "q1");
       const mode = encodeURIComponent(params.mode || "flashcard");
+      if (params.lesson && params.part) {
+        return `/ly-thuyet/on-tu-vung/${bk}/bai-${Number(params.lesson)}/phan-${Number(params.part)}/${mode}`;
+      }
       if (params.lesson) return `/ly-thuyet/on-tu-vung/${bk}/bai-${Number(params.lesson)}/${mode}`;
       return `/ly-thuyet/on-tu-vung/${bk}/${mode}`;
     }
@@ -26,7 +32,7 @@ export function buildUrl(route, params = {}) {
     if (sub === "grammar-list") return `/ly-thuyet/ngu-phap/${encodeURIComponent(params.mode || "sc1")}`;
     if (sub === "frequent") return "/ly-thuyet/cau-thuong-gap";
     if (sub === "hanja") return "/ly-thuyet/am-han-han";
-    if (sub === "textbook-detail") return `/ly-thuyet/giao-trinh/${encodeURIComponent(params.bookId || "sc2")}`;
+    if (sub === "textbook-detail") return `/ly-thuyet/sach/${encodeURIComponent(params.bookId || "q2")}`;
     return "/ly-thuyet";
   }
 
@@ -77,14 +83,20 @@ export function parseUrl(pathname = "/") {
 
   const segs = clean.split("/").filter(Boolean).map((s) => decodeURIComponent(s));
 
-  // /ly-thuyet/...
   if (segs[0] === "ly-thuyet") {
     if (segs.length === 1) return { route: "theory", params: { sub: "index" } };
-    if (segs[1] === "sach") {
-      const book = segs[2] || "sc1";
+    if (segs[1] === "quyen") {
+      return { route: "theory", params: { sub: "index", book: segs[2] || "q1" } };
+    }
+    if (segs[1] === "sach" || segs[1] === "giao-trinh") {
+      const book = segs[2] || "q1";
       if (!segs[3]) return { route: "theory", params: { sub: "vocab-book", book } };
       const m = segs[3].match(/^bai-(\d+)$/);
       const lesson = m ? Number(m[1]) : 1;
+      if (segs[4] && segs[4].startsWith("phan-")) {
+        const part = Number(segs[4].slice(5)) || 1;
+        return { route: "theory", params: { sub: "lesson-detail", book, lesson, tab: "vocab", part } };
+      }
       const tab = segs[4] || "vocab";
       return { route: "theory", params: { sub: "lesson-detail", book, lesson, tab } };
     }
@@ -92,6 +104,11 @@ export function parseUrl(pathname = "/") {
       const book = segs[2] === "all" ? undefined : segs[2];
       if (segs[3] && segs[3].startsWith("bai-")) {
         const lesson = Number(segs[3].slice(4)) || 1;
+        if (segs[4] && segs[4].startsWith("phan-")) {
+          const part = Number(segs[4].slice(5)) || 1;
+          const mode = segs[5] || "flashcard";
+          return { route: "theory", params: { sub: "vocab-review", book, lesson, part, mode } };
+        }
         const mode = segs[4] || "flashcard";
         return { route: "theory", params: { sub: "vocab-review", book, lesson, mode } };
       }
@@ -102,11 +119,9 @@ export function parseUrl(pathname = "/") {
     if (segs[1] === "ngu-phap") return { route: "theory", params: { sub: "grammar-list", mode: segs[2] || "sc1" } };
     if (segs[1] === "cau-thuong-gap") return { route: "theory", params: { sub: "frequent" } };
     if (segs[1] === "am-han-han") return { route: "theory", params: { sub: "hanja" } };
-    if (segs[1] === "giao-trinh") return { route: "theory", params: { sub: "textbook-detail", bookId: segs[2] || "sc2" } };
     return { route: "theory", params: { sub: "index" } };
   }
 
-  // /luyen-tap/...
   if (segs[0] === "luyen-tap") {
     if (segs.length === 1) return { route: "practice", params: { sub: "skills", skill: "shadowing" } };
     if (segs[1] === "cau-truc") {
@@ -125,13 +140,11 @@ export function parseUrl(pathname = "/") {
     return { route: "practice", params: { sub: "skills", skill: "shadowing" } };
   }
 
-  // /de-thi/...
   if (segs[0] === "de-thi") {
     if (segs.length === 1) return { route: "mock-test", params: { sub: "topik1", viewMode: "exams", category: "all" } };
     if (segs[1] === "tuyen-chon") return { route: "mock-test", params: { sub: "topik1", viewMode: "exams", category: "curated" } };
     const sub = segs[1] === "topik-2" ? "topik2" : "topik1";
     if (segs.length === 2) return { route: "mock-test", params: { sub, viewMode: "exams", category: "all" } };
-
     if (segs[2] === "nhom") {
       return { route: "mock-test", params: { sub, viewMode: "exams", category: segs[3] || "all" } };
     }
@@ -150,7 +163,6 @@ export function parseUrl(pathname = "/") {
     return { route: "mock-test", params: { sub, viewMode: "exams", category: "all" } };
   }
 
-  // /cong-cu/...
   if (segs[0] === "cong-cu") {
     return { route: "check-tools", params: { tab: segs[1] || "analytics" } };
   }
@@ -158,9 +170,6 @@ export function parseUrl(pathname = "/") {
   return { route: "home", params: {} };
 }
 
-/**
- * Computes the exact hierarchical parent URL one layer up so Back buttons never jump out of the app.
- */
 export function getParentUrl(pathname = "/") {
   const clean = (pathname || "/").replace(/\/+$/, "") || "/";
   if (clean === "/") return "/";
@@ -168,13 +177,17 @@ export function getParentUrl(pathname = "/") {
 
   if (segs[0] === "ly-thuyet") {
     if (segs.length === 1) return "/";
-    if (segs[1] === "sach") {
-      if (segs.length === 3) return "/ly-thuyet";             // /ly-thuyet/sach/sc1 -> /ly-thuyet
-      if (segs.length === 4) return `/ly-thuyet/sach/${segs[2]}`; // /ly-thuyet/sach/sc1/bai-1 -> /ly-thuyet/sach/sc1
-      if (segs.length >= 5) return `/ly-thuyet/sach/${segs[2]}/${segs[3]}`; // tab -> lesson
+    if (segs[1] === "quyen") return "/ly-thuyet";
+    if (segs[1] === "sach" || segs[1] === "giao-trinh") {
+      if (segs.length === 3) return "/ly-thuyet";
+      if (segs.length === 4) return `/ly-thuyet/sach/${segs[2]}`;
+      if (segs.length >= 5) return `/ly-thuyet/sach/${segs[2]}/${segs[3]}`;
     }
     if (segs[1] === "on-tu-vung") {
       const bk = segs[2];
+      if (segs[3]?.startsWith("bai-") && segs[4]?.startsWith("phan-")) {
+        return `/ly-thuyet/sach/${bk}/${segs[3]}/${segs[4]}`;
+      }
       if (segs[3]?.startsWith("bai-")) return `/ly-thuyet/sach/${bk}/${segs[3]}`;
       if (bk && bk !== "all") return `/ly-thuyet/sach/${bk}`;
       return "/ly-thuyet";
@@ -185,7 +198,7 @@ export function getParentUrl(pathname = "/") {
   if (segs[0] === "luyen-tap") {
     if (segs.length <= 2) return "/";
     if (segs[1] === "cau-truc") {
-      if (segs.length >= 5) return `/luyen-tap/cau-truc/${segs[2]}/${segs[3]}`; // drill -> part list
+      if (segs.length >= 5) return `/luyen-tap/cau-truc/${segs[2]}/${segs[3]}`;
       return "/luyen-tap/ky-nang/shadowing";
     }
     if (segs[1] === "ky-nang" && segs[2] === "textbook-shadow") {
@@ -195,38 +208,37 @@ export function getParentUrl(pathname = "/") {
   }
 
   if (segs[0] === "de-thi") {
-    if (segs.length <= 2) return "/"; // /de-thi/topik-1 -> /
+    if (segs.length <= 2) return "/";
     const lv = segs[1] === "topik-2" ? "topik-2" : "topik-1";
     if (segs[2] === "nhom") return `/de-thi/${lv}`;
     if (segs[2] === "tung-phan") {
-      if (segs.length >= 5) return `/de-thi/${lv}/tung-phan/${segs[3]}`; // type drill -> skill types
-      return `/de-thi/${lv}`; // skill types -> exam hub
+      if (segs.length >= 5) return `/de-thi/${lv}/tung-phan/${segs[3]}`;
+      return `/de-thi/${lv}`;
     }
     if (segs[2] === "de") {
-      if (segs.length >= 5) return `/de-thi/${lv}/de/${segs[3]}`; // exam room -> exam overview
-      return `/de-thi/${lv}`; // exam overview -> exam list
+      if (segs.length >= 5) return `/de-thi/${lv}/de/${segs[3]}`;
+      return `/de-thi/${lv}`;
     }
     return `/de-thi/${lv}`;
   }
 
   if (segs[0] === "cong-cu") {
-    if (segs.length >= 2) return "/cong-cu";
-    return "/";
+    return segs.length >= 2 ? "/cong-cu" : "/";
   }
 
   return "/";
 }
 
 export function getAncestorChain(pathname = "/") {
+  const clean = (pathname || "/").replace(/\/+$/, "") || "/";
+  if (clean === "/") return [];
   const chain = [];
-  let cur = (pathname || "/").replace(/\/+$/, "") || "/";
-  const seen = new Set();
-  while (cur && !seen.has(cur)) {
-    seen.add(cur);
+  let cur = clean;
+  let safety = 0;
+  while (cur !== "/" && safety < 8) {
     chain.unshift(cur);
-    if (cur === "/") break;
     cur = getParentUrl(cur);
+    safety++;
   }
-  if (chain[0] !== "/") chain.unshift("/");
   return chain;
 }

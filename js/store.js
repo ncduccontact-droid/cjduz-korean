@@ -1,15 +1,36 @@
-// 100% Cloud-Account Bound Progress Store (Zero localStorage progress dependency)
+// 100% Cloud-Account Bound Progress Store on Production + Automatic Localhost Review Bypass
 const AUTH_TOKEN_KEY = "cjduz_auth_token_v3";
+const LOCAL_PREVIEW_STATE_KEY = "dtopik_local_preview_state_v1";
+
+export function isLocalPreviewHost() {
+  if (typeof window === "undefined") return false;
+  const h = window.location.hostname;
+  return h === "localhost" || h === "127.0.0.1" || h === "[::1]" || h.endsWith(".local");
+}
+
+function createLocalReviewSession() {
+  return {
+    mode: "local-preview",
+    token: "",
+    user: {
+      id: 0,
+      email: "local-review@d-topik",
+      name: "Review Local",
+      avatar: "",
+      authProvider: "local"
+    }
+  };
+}
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
 }
 
 export const UI_THEMES = [
-  { id: "mint", name: "Matcha Daisy", desc: "Xanh ngọc sữa & Cúc vàng (Khuyên dùng)", swatch: "#149E8E", accent: "#F59E0B" },
-  { id: "soda", name: "Soda Sky", desc: "Xanh dương pastel Hàn Quốc & Kem bơ", swatch: "#3B7DDD", accent: "#F59E0B" },
-  { id: "peach", name: "Peach Camellia", desc: "Hồng đào phấn dịu & Lá trà non", swatch: "#E06D85", accent: "#149E8E" },
-  { id: "lavender", name: "Taro Milk", desc: "Tím khoai môn sữa & Cam quýt", swatch: "#6E62D6", accent: "#F59E0B" }
+  { id: "sky", name: "Pastel Sexy Blue", desc: "Xanh dương pastel tươi sáng chuẩn D ● TOPIK", swatch: "#007BFF", accent: "#B0E0E6" },
+  { id: "uma", name: "UMA Ice Cloud", desc: "Xanh băng mây trắng trong trẻo (Ảnh 2)", swatch: "#2496FF", accent: "#BCE4FF" },
+  { id: "powder", name: "Powder Aqua", desc: "Xanh phấn #B0E0E6 dịu mát (Ảnh 3)", swatch: "#0F86EB", accent: "#B0E0E6" },
+  { id: "mint_sky", name: "Mint Sky Pastel", desc: "Xanh bạc hà pastel nhẹ nhàng", swatch: "#149E8E", accent: "#BEECE6" }
 ];
 
 export const BOOK_SURVEY_OPTIONS = [
@@ -33,8 +54,8 @@ export const DEFAULT_ROADMAP_PROFILE = {
 
 function createFreshState(roadmapProfile = DEFAULT_ROADMAP_PROFILE) {
   return {
-    uiTheme: "mint",
-    onboardingCompleted: false,
+    uiTheme: "sky",
+    onboardingCompleted: isLocalPreviewHost(),
     targetLevel: roadmapProfile.targetLevel || "TOPIK II - Cấp 4",
     examDate: roadmapProfile.examDate || "2027-04-18",
     roadmapProfile: { ...DEFAULT_ROADMAP_PROFILE, ...roadmapProfile },
@@ -48,6 +69,8 @@ function createFreshState(roadmapProfile = DEFAULT_ROADMAP_PROFILE) {
     srs: {},
     completedLessons: {},
     chapterHomeworkDone: {},
+    workbookScores: {},
+    translationDone: {},
     roadmapDone: {},
     roadmapStepDone: {},
     partStats: {},
@@ -89,11 +112,26 @@ function loadSavedTokenMeta() {
       }
     }
   } catch {}
+  if (isLocalPreviewHost()) return createLocalReviewSession();
   return { mode: "guest", token: "", user: null };
 }
 
+function loadInitialState() {
+  const base = createFreshState();
+  if (isLocalPreviewHost() && typeof sessionStorage !== "undefined") {
+    try {
+      const raw = sessionStorage.getItem(LOCAL_PREVIEW_STATE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        return { ...base, ...parsed, onboardingCompleted: true };
+      }
+    } catch {}
+  }
+  return base;
+}
+
 function applyDocumentTheme(themeId) {
-  const valid = UI_THEMES.some((t) => t.id === themeId) ? themeId : "mint";
+  const valid = UI_THEMES.some((t) => t.id === themeId) ? themeId : "sky";
   if (typeof document !== "undefined") {
     document.documentElement.dataset.theme = valid;
   }
@@ -104,7 +142,7 @@ let dirtyPendingSync = false;
 
 export const store = {
   session: loadSavedTokenMeta(),
-  state: createFreshState(),
+  state: loadInitialState(),
   syncStatus: "synced", // synced | syncing | error
   listeners: new Set(),
 
@@ -114,7 +152,7 @@ export const store = {
 
     if (typeof window !== "undefined") {
       const flushOnUnload = () => {
-        if (dirtyPendingSync && this.isAuthenticated()) {
+        if (dirtyPendingSync && this.hasCloudAccount()) {
           this.flushCloudSyncBeacon();
         }
       };
@@ -125,19 +163,24 @@ export const store = {
     }
   },
 
-  isAuthenticated() {
+  hasCloudAccount() {
     return this.session?.mode === "user" && Boolean(this.session?.user?.email);
   },
 
+  isAuthenticated() {
+    if (isLocalPreviewHost()) return true;
+    return this.hasCloudAccount();
+  },
+
   setTheme(themeId) {
-    const valid = UI_THEMES.some((t) => t.id === themeId) ? themeId : "mint";
+    const valid = UI_THEMES.some((t) => t.id === themeId) ? themeId : "sky";
     this.state.uiTheme = valid;
     applyDocumentTheme(valid);
     this.save();
   },
 
   flushCloudSyncBeacon() {
-    if (!this.isAuthenticated()) return;
+    if (!this.hasCloudAccount()) return;
     clearTimeout(syncTimer);
     dirtyPendingSync = false;
     try {
@@ -161,7 +204,7 @@ export const store = {
   },
 
   async pushToCloudNow() {
-    if (!this.isAuthenticated()) return;
+    if (!this.hasCloudAccount()) return;
     dirtyPendingSync = false;
     this.syncStatus = "syncing";
     this.notify();
@@ -193,13 +236,20 @@ export const store = {
 
   save(skipCloud = false) {
     this.state.updatedAt = Date.now();
-    applyDocumentTheme(this.state.uiTheme);
+    const validTheme = UI_THEMES.some((t) => t.id === this.state.uiTheme) ? this.state.uiTheme : "sky";
+    this.state.uiTheme = validTheme;
+    applyDocumentTheme(validTheme);
     try {
-      localStorage.setItem(AUTH_TOKEN_KEY, JSON.stringify(this.session));
+      if (this.hasCloudAccount()) {
+        localStorage.setItem(AUTH_TOKEN_KEY, JSON.stringify(this.session));
+      }
+      if (isLocalPreviewHost() && typeof sessionStorage !== "undefined") {
+        sessionStorage.setItem(LOCAL_PREVIEW_STATE_KEY, JSON.stringify(this.state));
+      }
     } catch {}
     this.notify();
 
-    if (!skipCloud && this.isAuthenticated()) {
+    if (!skipCloud && this.hasCloudAccount()) {
       dirtyPendingSync = true;
       this.syncStatus = "syncing";
       clearTimeout(syncTimer);
@@ -252,14 +302,15 @@ export const store = {
         body: JSON.stringify({ token: this.session.token || "" })
       });
     } catch {}
-    this.session = { mode: "guest", token: "", user: null };
+    this.session = isLocalPreviewHost() ? createLocalReviewSession() : { mode: "guest", token: "", user: null };
     this.state = createFreshState();
     this.syncStatus = "synced";
     try {
       localStorage.removeItem(AUTH_TOKEN_KEY);
       localStorage.removeItem("cjduz_auth_session_v2");
+      if (typeof sessionStorage !== "undefined") sessionStorage.removeItem(LOCAL_PREVIEW_STATE_KEY);
     } catch {}
-    applyDocumentTheme("mint");
+    applyDocumentTheme("sky");
     this.notify();
   },
 
@@ -302,6 +353,36 @@ export const store = {
     this.save();
   },
 
+  recordWorkbookScore(bookId, lessonNum, correct, total) {
+    if (!this.state.workbookScores) this.state.workbookScores = {};
+    if (!this.state.chapterHomeworkDone) this.state.chapterHomeworkDone = {};
+    const normBook = bookId === "sc1" ? "q1" : (bookId === "sc2" ? "q2" : bookId);
+    const key = `${normBook}_${lessonNum}`;
+    const pct = total > 0 ? Math.round((correct / total) * 100) : 0;
+    const prev = this.state.workbookScores[key];
+    if (!prev || pct >= (prev.pct || 0) || total >= (prev.total || 0)) {
+      this.state.workbookScores[key] = { correct, total, pct, updatedAt: Date.now() };
+    }
+    if (correct > 0) {
+      this.state.chapterHomeworkDone[key] = true;
+      if (normBook === "q1") this.state.chapterHomeworkDone[`sc1_${lessonNum}`] = true;
+    }
+    this.touchStreak();
+    this.save();
+  },
+
+  recordTranslationSolved(bookId, lessonNum) {
+    if (!this.state.translationDone) this.state.translationDone = {};
+    if (!this.state.chapterHomeworkDone) this.state.chapterHomeworkDone = {};
+    const normBook = bookId === "sc1" ? "q1" : (bookId === "sc2" ? "q2" : bookId);
+    const key = `${normBook}_${lessonNum}`;
+    this.state.translationDone[key] = (this.state.translationDone[key] || 0) + 1;
+    this.state.chapterHomeworkDone[key] = true;
+    if (normBook === "q1") this.state.chapterHomeworkDone[`sc1_${lessonNum}`] = true;
+    this.touchStreak();
+    this.save();
+  },
+
   async restoreCloudSession() {
     // Always query /api/user/me (supports both HttpOnly cookie AND Bearer token, so clearing localStorage still recovers via cookie!)
     try {
@@ -314,7 +395,7 @@ export const store = {
         headers
       });
       if (!res.ok) {
-        this.session = { mode: "guest", token: "", user: null };
+        this.session = isLocalPreviewHost() ? createLocalReviewSession() : { mode: "guest", token: "", user: null };
         try { localStorage.removeItem(AUTH_TOKEN_KEY); } catch {}
         return;
       }
@@ -432,7 +513,7 @@ export const store = {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `cjduz_korean_backup_${todayISO()}.json`;
+    a.download = `d_topik_backup_${todayISO()}.json`;
     a.click();
     URL.revokeObjectURL(url);
   },
@@ -445,6 +526,130 @@ export const store = {
 };
 
 store.init();
+
+// ===== ROADMAP-CALIBRATED SCORE SCALE & READINESS EVALUATOR =====
+export const ROADMAP_SCORE_SCALES = {
+  hangeul: { bookId: "q1", label: "Nhập môn & Quyển 1", examLevel: "topik1", maxScore: 200, passScore: 80, nextScore: 140, gradeName: "TOPIK I · Cấp 1" },
+  q1: { bookId: "q1", label: "Quyển 1 · Sơ cấp 1", examLevel: "topik1", maxScore: 200, passScore: 80, nextScore: 140, gradeName: "TOPIK I · Cấp 1" },
+  q2: { bookId: "q2", label: "Quyển 2 · Sơ cấp 2", examLevel: "topik1", maxScore: 200, passScore: 140, nextScore: 180, gradeName: "TOPIK I · Cấp 2" },
+  q3: { bookId: "q3", label: "Quyển 3 · Trung cấp 1", examLevel: "topik2", maxScore: 300, passScore: 120, nextScore: 150, gradeName: "TOPIK II · Cấp 3" },
+  q4: { bookId: "q4", label: "Quyển 4 · Trung cấp 2", examLevel: "topik2", maxScore: 300, passScore: 150, nextScore: 190, gradeName: "TOPIK II · Cấp 4" },
+  q5: { bookId: "q5", label: "Quyển 5 · Cao cấp 1", examLevel: "topik2", maxScore: 300, passScore: 190, nextScore: 230, gradeName: "TOPIK II · Cấp 5" },
+  q6: { bookId: "q6", label: "Quyển 6 · Cao cấp 2", examLevel: "topik2", maxScore: 300, passScore: 230, nextScore: 270, gradeName: "TOPIK II · Cấp 6" }
+};
+
+export function normalizeBookId(raw) {
+  if (!raw || raw === "sc1" || raw === "hangeul" || raw === "zero") return "q1";
+  if (raw === "sc2") return "q2";
+  if (raw === "tc3") return "q3";
+  if (raw === "tc4") return "q4";
+  if (raw === "cc5") return "q5";
+  if (raw === "cc6") return "q6";
+  return raw;
+}
+
+export function getBookWords(db, rawBookId) {
+  const bid = normalizeBookId(rawBookId);
+  if (rawBookId === "topik1") return db.topik1Bank || [];
+  if (rawBookId === "sejong1") return db.sejongVocab || [];
+  if (rawBookId && String(rawBookId).startsWith("custom_")) {
+    return db.customDecks?.find((d) => d.deckId === rawBookId)?.items || [];
+  }
+  if (bid === "q1") return db.sc1Vocab || [];
+  const found = (db.books6 || []).find((b) => b.bookId === bid);
+  return found?.vocab || [];
+}
+
+export function getBookCurriculum(db, rawBookId) {
+  const bid = normalizeBookId(rawBookId);
+  return (db.books6 || []).find((b) => b.bookId === bid) || (db.books6 || [])[0] || null;
+}
+
+export function evaluateRoadmapScore(db) {
+  const s = store.state;
+  const profile = s.roadmapProfile || DEFAULT_ROADMAP_PROFILE;
+  const startKey = profile.startBook || "q1";
+  const scale = ROADMAP_SCORE_SCALES[startKey] || ROADMAP_SCORE_SCALES.q1;
+  const curBook = getBookCurriculum(db, scale.bookId);
+  const bookWords = getBookWords(db, scale.bookId);
+  const chapCount = Math.max(1, curBook?.chapters?.length || 15);
+
+  // 1. Vocabulary Mastery in Current Book (25%)
+  const masteredWords = bookWords.filter((w) => store.isMastered(w.id)).length;
+  const vocabPct = bookWords.length > 0 ? Math.min(100, Math.round((masteredWords / bookWords.length) * 100)) : 0;
+
+  // 2. Workbook Exercises in Current Book (25%)
+  const wbEntries = Object.entries(s.workbookScores || {}).filter(([k]) => k.startsWith(`${scale.bookId}_`));
+  const wbAvgAccuracy = wbEntries.length > 0
+    ? wbEntries.reduce((acc, [, v]) => acc + (v.pct || 0), 0) / wbEntries.length
+    : 0;
+  const wbCoverage = Math.min(1, wbEntries.length / Math.max(3, Math.ceil(chapCount * 0.5)));
+  const workbookPct = Math.min(100, Math.round(wbAvgAccuracy * (0.45 + 0.55 * wbCoverage)));
+
+  // 3. Sentence Translation Mastery in Current Book (20%)
+  const trEntries = Object.entries(s.translationDone || {}).filter(([k]) => k.startsWith(`${scale.bookId}_`));
+  const totalTranslated = trEntries.reduce((acc, [, cnt]) => acc + Number(cnt || 0), 0);
+  const targetTrans = Math.max(12, chapCount * 3);
+  const translatePct = Math.min(100, Math.round((totalTranslated / targetTrans) * 100));
+
+  // 4. Exam & Segmented Drill Performance at Current Level (30%)
+  const prefix = scale.examLevel === "topik2" ? "t2_" : "t1_";
+  const partVals = Object.entries(s.partStats || {})
+    .filter(([pid]) => pid.startsWith(prefix) || !pid.startsWith("t"))
+    .map(([, v]) => v);
+  const drillTotal = partVals.reduce((a, v) => a + (v.total || 0), 0);
+  const drillCorrect = partVals.reduce((a, v) => a + (v.correct || 0), 0);
+  const drillAcc = drillTotal > 0 ? Math.round((drillCorrect / drillTotal) * 100) : 0;
+
+  const matchingExams = (s.examHistory || []).filter((h) => h.maxScore === scale.maxScore);
+  let examPct = drillTotal > 0 ? Math.min(100, Math.round(drillAcc * Math.min(1, 0.5 + drillTotal / 30))) : 0;
+  if (matchingExams.length > 0) {
+    const recentAvgScore = matchingExams.slice(0, 3).reduce((a, h) => a + Number(h.score || 0), 0) / Math.min(3, matchingExams.length);
+    const recentPct = Math.round((recentAvgScore / scale.maxScore) * 100);
+    examPct = drillTotal > 0 ? Math.round(recentPct * 0.65 + examPct * 0.35) : recentPct;
+  }
+
+  // Weighted Composite Mastery (0..100) mapped onto Official TOPIK Scale (0..200 or 0..300)
+  const compositePct = vocabPct * 0.25 + workbookPct * 0.25 + translatePct * 0.20 + examPct * 0.30;
+  // Calibrate so 70% mastery of the active book reaches passScore, and 100% reaches nextScore/maxScore
+  let estimatedScore = 0;
+  if (compositePct <= 70) {
+    estimatedScore = Math.round((compositePct / 70) * scale.passScore);
+  } else {
+    estimatedScore = Math.round(scale.passScore + ((compositePct - 70) / 30) * (scale.nextScore - scale.passScore));
+  }
+  if (matchingExams.length > 0) {
+    const latestReal = Number(matchingExams[0].score || 0);
+    estimatedScore = Math.round(latestReal * 0.6 + estimatedScore * 0.4);
+  }
+  estimatedScore = Math.max(0, Math.min(scale.maxScore, estimatedScore));
+
+  const gapToPass = Math.max(0, scale.passScore - estimatedScore);
+  const passed = estimatedScore >= scale.passScore;
+
+  const pillarList = [
+    { key: "vocab", label: "Từ vựng", pct: vocabPct, detail: `${masteredWords}/${bookWords.length} từ` },
+    { key: "workbook", label: "Sách bài tập", pct: workbookPct, detail: `${wbEntries.length}/${chapCount} bài` },
+    { key: "translate", label: "Dịch câu", pct: translatePct, detail: `${totalTranslated} câu` },
+    { key: "exam", label: "Luyện đề", pct: examPct, detail: matchingExams.length ? `${matchingExams.length} đề` : `${drillTotal} câu` }
+  ];
+  const weakest = [...pillarList].sort((a, b) => a.pct - b.pct)[0];
+
+  const statusLabel = passed
+    ? `Đạt ngưỡng chuẩn ${scale.gradeName} (≥ ${scale.passScore}/${scale.maxScore}đ)`
+    : `Cần thêm +${gapToPass}đ để chạm chuẩn ${scale.gradeName} (${scale.passScore}/${scale.maxScore}đ)`;
+
+  return {
+    ...scale,
+    compositePct: Math.round(compositePct),
+    estimatedScore,
+    gapToPass,
+    passed,
+    statusLabel,
+    pillars: pillarList,
+    weakestPillar: weakest
+  };
+}
 
 // ===== ZERO-LATENCY PRELOAD AUDIO ENGINE (LRU Cache) =====
 const audioCache = new Map();

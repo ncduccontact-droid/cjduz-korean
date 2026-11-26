@@ -78,7 +78,7 @@ async function sendTransactionalEmail(env, toEmail, subject, htmlContent) {
     const tokData = await tokRes.json();
     if (tokData.access_token) {
       const rawMime = [
-        `From: "CJDUZ Korean" <${sender}>`,
+        `From: "D - TOPIK" <${sender}>`,
         `To: ${toEmail}`,
         `Subject: =?UTF-8?B?${btoa(unescape(encodeURIComponent(subject)))}?=`,
         "MIME-Version: 1.0",
@@ -104,15 +104,15 @@ async function sendTransactionalEmail(env, toEmail, subject, htmlContent) {
 
 function otpHtml(title, name, code, sender) {
   return `
-    <div style="font-family:Inter,Arial,sans-serif;max-width:540px;margin:0 auto;border:1px solid #E0F2F0;border-radius:16px;overflow:hidden;">
-      <div style="background:#00B2A5;color:#FFF;padding:18px 24px;font-weight:800;font-size:19px;">🌼 CJDUZ · docusync.online</div>
-      <div style="padding:24px;color:#363636;">
-        <h2 style="margin:0 0 10px;color:#008B82;">${title}</h2>
+    <div style="font-family:Inter,Arial,sans-serif;max-width:540px;margin:0 auto;border:1px solid #C3E2FF;border-radius:16px;overflow:hidden;">
+      <div style="background:#E3F3FF;color:#0B2D50;padding:18px 24px;font-weight:800;font-size:19px;border-bottom:2px solid #9BCEFA;">D <span style="color:#007BFF;">●</span> TOPIK · docusync.online</div>
+      <div style="padding:24px;color:#0B2D50;">
+        <h2 style="margin:0 0 10px;color:#007BFF;">${title}</h2>
         <p>Xin chào <strong>${name}</strong>,</p>
-        <div style="background:#E0F2F0;border-radius:12px;padding:16px;text-align:center;margin:18px 0;">
-          <span style="font-size:30px;font-weight:800;letter-spacing:6px;color:#006B66;">${code}</span>
+        <div style="background:#E6F4FF;border:1px solid #C3E2FF;border-radius:12px;padding:16px;text-align:center;margin:18px 0;">
+          <span style="font-size:30px;font-weight:800;letter-spacing:6px;color:#005EC4;">${code}</span>
         </div>
-        <p style="font-size:13px;color:#575757;">Hỗ trợ học viên bởi ${sender} · Hiệu lực 15 phút.</p>
+        <p style="font-size:13px;color:#4A6A8A;">Hỗ trợ học viên bởi ${sender} · Hiệu lực 15 phút.</p>
       </div>
     </div>
   `;
@@ -183,7 +183,7 @@ export async function onRequest(context) {
     const pwHash = await pbkdf2Hash(password);
     const rp = body.roadmapProfile || {};
     const st = { ...(body.initialState || {}), roadmapProfile: rp };
-    const mailRes = await sendTransactionalEmail(env, email, `[CJDUZ] Mã xác thực đăng ký: ${code}`, otpHtml("Xác thực đăng ký CJDUZ", name, code, sender));
+    const mailRes = await sendTransactionalEmail(env, email, `[D ● TOPIK] Mã xác thực đăng ký: ${code}`, otpHtml("Xác thực đăng ký D ● TOPIK", name, code, sender));
 
     // If Gmail OAuth credentials are not bound yet, activate account immediately on D1 so users can sign up & get personalized roadmaps right away
     if (!mailRes.sent) {
@@ -260,7 +260,7 @@ export async function onRequest(context) {
       const st = { ...(body.initialState || {}), roadmapProfile: rp };
       await env.DB.prepare("INSERT INTO users(email, name, avatar, auth_provider, verified, roadmap_profile_json, state_json, created_at) VALUES (?, ?, ?, 'google', 1, ?, ?, ?)").bind(email, name, info.picture || "", JSON.stringify(rp), JSON.stringify(st), now).run();
       u = await env.DB.prepare("SELECT id, name, avatar, roadmap_profile_json, state_json FROM users WHERE email = ?").bind(email).first();
-      await sendTransactionalEmail(env, email, "[CJDUZ] Chào mừng bạn đến với CJDUZ Korean!", otpHtml("Chào mừng bạn đăng ký thành công!", name, "WELCOME", sender));
+      await sendTransactionalEmail(env, email, "[D ● TOPIK] Chào mừng bạn đến với D ● TOPIK!", otpHtml("Chào mừng bạn đăng ký thành công!", name, "WELCOME", sender));
     }
     const token = randomToken();
     await env.DB.prepare("INSERT INTO sessions(token, user_id, expires_at) VALUES (?, ?, ?)").bind(token, u.id, now + 30 * 86400).run();
@@ -277,7 +277,7 @@ export async function onRequest(context) {
     if (!u) return jsonResp({ ok: false, error: "Không tìm thấy tài khoản với email này." }, 404);
     const code = randomOtp();
     await env.DB.prepare("INSERT OR REPLACE INTO otp_codes(email, purpose, code, payload_json, expires_at) VALUES (?, 'reset', ?, '{}', ?)").bind(email, code, now + 900).run();
-    const mailRes = await sendTransactionalEmail(env, email, `[CJDUZ] Mã khôi phục mật khẩu: ${code}`, otpHtml("Đặt lại mật khẩu CJDUZ", u.name, code, sender));
+    const mailRes = await sendTransactionalEmail(env, email, `[D ● TOPIK] Mã khôi phục mật khẩu: ${code}`, otpHtml("Đặt lại mật khẩu D ● TOPIK", u.name, code, sender));
     return jsonResp({ ok: true, email, sender, mailSent: mailRes.sent });
   }
 

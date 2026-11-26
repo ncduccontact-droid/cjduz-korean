@@ -1,5 +1,5 @@
-import { store, DEFAULT_ROADMAP_PROFILE } from "../store.js?v=20261126-8";
-import { ico, daisyLogoSVG } from "../icons.js?v=20261126-8";
+import { store, DEFAULT_ROADMAP_PROFILE, normalizeBookId, getBookWords, getBookCurriculum, evaluateRoadmapScore } from "../store.js?v=20261126-10";
+import { ico, daisyLogoSVG } from "../icons.js?v=20261126-10";
 
 const PLACEMENT_QUESTIONS = [
   { q: "1. Chọn câu chào lịch sự khi mới gặp lần đầu:", opts: ["안녕히 가세요.", "만나서 반갑습니다.", "잘 먹겠습니다.", "주말 잘 보내세요."], ans: 1 },
@@ -11,7 +11,7 @@ const PLACEMENT_QUESTIONS = [
 ];
 
 export const STAGE_LABELS = {
-  hangeul: "Nhập môn Hangeul",
+  hangeul: "Nhập môn & Quyển 1",
   q1: "Quyển 1 · Sơ cấp 1",
   q2: "Quyển 2 · Sơ cấp 2",
   q3: "Quyển 3 · Trung cấp 1",
@@ -30,26 +30,42 @@ export const TRACK_LABELS = {
   speaking_first: "Ưu tiên Nghe – Nói"
 };
 
-function countLessonMastered(db, bookKey, lessonNum) {
-  let pool = db.sc1Vocab || [];
-  if (bookKey === "topik1") pool = db.topik1Bank || [];
-  else if (bookKey === "sejong1") pool = db.sejongVocab || [];
-  const words = pool.filter((w) => w.lesson === lessonNum);
-  const mastered = words.filter((w) => store.isMastered(w.id)).length;
-  return { mastered, total: words.length, lessonTitle: words[0]?.lessonTitle || `Bài ${lessonNum}` };
-}
-
 /**
- * Shared Smart Roadmap Engine used by BOTH Home ("Hôm nay học gì?") and Roadmap ("Lộ trình 30 ngày").
- * Automatically detects which steps are already done and highlights the exact NEXT step to study!
+ * Standardized 4-Step Daily Study Plan Engine across ALL 6 BOOKS (Quyển 1 -> Quyển 6):
+ *   1. Học từ vựng (theo từng Phần nhỏ 8–15 từ của Chương đang học)
+ *   2. Làm bài tập (Sách bài tập 익힘책 Phần I: Từ vựng & Ngữ pháp)
+ *   3. Luyện dịch câu (Việt → Hàn theo ngữ pháp chương)
+ *   4. Luyện đề sau cùng (Dạng câu / Đề thi chuẩn đúng cấp của Quyển đang học)
  */
 export function getGuidedStudyPlan(db, navigate, startGuidedStep = null) {
   const profile = store.state.roadmapProfile || DEFAULT_ROADMAP_PROFILE;
-  const book = profile.startBook || (profile.startStage === "zero" ? "hangeul" : (profile.startStage === "sc2" ? "q2" : (profile.startStage === "tc3" ? "q4" : "q1")));
-  const stage = book === "hangeul" ? "zero" : (book === "q2" ? "sc2" : (["q3", "q4", "q5", "q6"].includes(book) ? "tc3" : "sc1"));
-  const track = profile.focusTrack || "balanced";
-  const mins = Number(profile.dailyMinutes || 30);
-  const wordQuota = mins <= 15 ? 10 : (mins >= 60 ? 30 : 18);
+  const startBookRaw = profile.startBook || "q1";
+  const isHangeulIntro = startBookRaw === "hangeul";
+  const bookId = normalizeBookId(startBookRaw);
+  const bookCur = getBookCurriculum(db, bookId);
+  const bookPool = getBookWords(db, bookId);
+  const chapters = bookCur?.chapters || [];
+  const chapCount = Math.max(1, chapters.length || 15);
+  const isTopik2 = ["q3", "q4", "q5", "q6"].includes(bookId);
+
+  // Flatten all (lesson, part) pairs across the chosen Book so each day advances cleanly part-by-part!
+  const allSubUnits = [];
+  chapters.forEach((ch) => {
+    const chWords = bookPool.filter((w) => w.lesson === ch.lesson);
+    (ch.parts || [{ part: 1, title: "Phần 1 · Từ vựng" }]).forEach((pt) => {
+      const pWords = chWords.filter((w) => Number(w.part || 1) === pt.part);
+      allSubUnits.push({
+        lesson: ch.lesson,
+        lessonTitle: ch.title,
+        part: pt.part,
+        partTitle: pt.title,
+        words: pWords.length ? pWords : chWords.slice(0, 12)
+      });
+    });
+  });
+  if (allSubUnits.length === 0) {
+    allSubUnits.push({ lesson: 1, lessonTitle: "Giới thiệu", part: 1, partTitle: "Phần 1 · Quốc gia", words: bookPool.slice(0, 12) });
+  }
 
   const launch = (day, stepIdx, totalSteps, label, route, routeParams) => {
     if (typeof startGuidedStep === "function") {
@@ -61,201 +77,125 @@ export function getGuidedStudyPlan(db, navigate, startGuidedStep = null) {
   const days = Array.from({ length: 30 }, (_, idx) => {
     const day = idx + 1;
     const isMilestone = day % 5 === 0;
+    const unit = allSubUnits[idx % allSubUnits.length];
+    const lsNum = unit.lesson;
+    const pMast = unit.words.filter((w) => store.isMastered(w.id)).length;
+    const wbStat = store.state.workbookScores?.[`${bookId}_${lsNum}`];
+    const trCnt = store.state.translationDone?.[`${bookId}_${lsNum}`] || 0;
+
+    // Determine Exam Type calibrated to the active Book
+    const maxType = isTopik2 ? 10 : 8;
+    const typeRanges = {
+      q1: [1, 2, 3, 4],
+      q2: [4, 5, 6, 7, 8],
+      q3: [1, 2, 3, 4, 5],
+      q4: [4, 5, 6, 7, 8],
+      q5: [7, 8, 9, 10],
+      q6: [8, 9, 10]
+    };
+    const allowedTypes = typeRanges[bookId] || [1, 2, 3, 4, 5, 6, 7, maxType];
+    const dNum = allowedTypes[idx % allowedTypes.length];
+    const skillKey = day % 2 === 1 ? "listening" : "reading";
+    const segTypeId = `${isTopik2 ? "t2" : "t1"}_${skillKey === "listening" ? "l" : "r"}_d${dNum}`;
+
     let rawTasks = [];
     let shortTopic = "";
 
-    if (isMilestone) {
-      const isTopik2 = stage === "tc3" || (profile.targetLevel || "").includes("TOPIK II");
-      const milestoneIdx = Math.floor(day / 5);
-      shortTopic = `Kiểm tra chặng ${milestoneIdx}`;
+    if (isHangeulIntro && day <= 3) {
+      const hTopics = ["14 Phụ âm & Nguyên âm đơn", "Phụ âm căng & Patchim", "7 Quy tắc nối âm & căng âm"];
+      shortTopic = `Nhập môn · ${hTopics[day - 1]}`;
       rawTasks = [
         {
-          tag: "Bước 1 · Ôn từ",
-          icon: "cards",
-          label: `Ôn thẻ từ vựng SRS chặng ${milestoneIdx}`,
-          route: "theory",
-          params: { sub: "vocab-review" },
-          hint: "Củng cố trí nhớ dài hạn"
-        },
-        {
-          tag: "Bước 2 · Làm đề",
-          icon: "exam",
-          label: book === "q6" ? "Thi Full 104 câu TOPIK II bấm giờ" : (isTopik2 ? "Làm 1 đề tuyển chọn TOPIK II" : "Làm 1 đề tuyển chọn TOPIK I"),
-          route: "mock-test",
-          params: { sub: isTopik2 ? "topik2" : "topik1", viewMode: "exams", category: "curated" },
-          autoDone: (store.state.examHistory?.length || 0) >= milestoneIdx,
-          hint: `${store.state.examHistory?.length || 0} đề đã nộp`
-        },
-        {
-          tag: "Bước 3 · Sửa sai",
-          icon: "chart",
-          label: "Rà lại Sổ tay câu sai",
-          route: "check-tools",
-          params: { tab: "mistakes" },
-          hint: `${store.state.mistakes?.length || 0} câu cần lưu ý`
-        }
-      ];
-    } else if (stage === "zero" && day <= 4) {
-      const hangeulTopics = [
-        "14 Phụ âm & Nguyên âm đơn",
-        "Phụ âm căng & Nguyên âm ghép",
-        "Patchim & Bàn phím Hàn",
-        "7 Quy tắc nối âm & căng âm"
-      ];
-      shortTopic = `Hangeul · ${hangeulTopics[day - 1]}`;
-      const vStat = countLessonMastered(db, "sc1", 1);
-      rawTasks = [
-        {
-          tag: "Bước 1 · Bảng chữ",
-          icon: "sparkle",
-          label: `Lab Hangeul: ${hangeulTopics[day - 1]}`,
-          route: "theory",
-          params: { sub: "hangeul" },
-          hint: "Nghe mẫu & soi biến âm"
-        },
-        {
-          tag: "Bước 2 · Từ vựng",
+          tag: "Bước 1 · Học từ & Chữ",
           icon: "book",
-          label: `Làm quen từ vựng Bài 01 (${vStat.lessonTitle})`,
+          label: `Lab Hangeul (${hTopics[day - 1]}) & ${unit.partTitle}`,
           route: "theory",
-          params: { sub: "lesson-detail", book: "sc1", lesson: 1, tab: "vocab" },
-          autoDone: vStat.mastered >= Math.min(8, Math.max(1, vStat.total)),
-          hint: `Đã thuộc ${vStat.mastered}/${vStat.total} từ`
+          params: day === 1 ? { sub: "hangeul" } : { sub: "vocab-review", book: "q1", lesson: 1, part: day - 1, mode: "flashcard" },
+          autoDone: pMast >= Math.min(5, Math.max(1, unit.words.length)),
+          hint: `${unit.words.length} từ nhỏ gọn`
         },
         {
-          tag: "Bước 3 · Tập nói",
-          icon: "video",
-          label: "Shadowing lời chào qua Shorts",
-          route: "practice",
-          params: { sub: "skills", skill: "shadowing" },
-          hint: "Nhại theo phụ đề chạy"
-        }
-      ];
-    } else if (stage === "tc3") {
-      // Tailored by exact Book: q3 (Dạng 1–4), q4 (Dạng 4–7 + Câu 51–53), q5 (Dạng 7–10 + Câu 54), q6 (Dạng 9–10 + Full 104 câu)
-      const bookLabelMap = { q3: "Quyển 3 · Trung cấp 1", q4: "Quyển 4 · Trung cấp 2", q5: "Quyển 5 · Cao cấp 1", q6: "Quyển 6 · Cao cấp 2" };
-      const bookIdMap = { q3: "tc3", q4: "tc4", q5: "cc5", q6: "cc6" };
-      const typePoolByBook = {
-        q3: [1, 2, 3, 4, 5],
-        q4: [4, 5, 6, 7, 8],
-        q5: [7, 8, 9, 10],
-        q6: [8, 9, 10]
-      };
-      const tArr = typePoolByBook[book] || [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-      const cycle = tArr[(day - 1) % tArr.length];
-      const dListen = `t2_l_d${cycle}`;
-      const dRead = `t2_r_d${cycle}`;
-      shortTopic = `${bookLabelMap[book] || "TOPIK II"} · Bài ${(day % 15) + 1}`;
-      rawTasks = [
-        {
-          tag: "Bước 1 · Giáo trình & Từ",
-          icon: "book",
-          label: day % 3 === 0
-            ? `Chủ điểm ${bookLabelMap[book] || "Trung cấp"}`
-            : (day % 2 === 1 ? "Biểu hiện & Đồng nghĩa TOPIK II" : "Sơ đồ gốc từ Âm Hán – Hàn"),
-          route: "theory",
-          params: day % 3 === 0 ? { sub: "textbook-detail", bookId: bookIdMap[book] || "tc3" } : { sub: day % 2 === 1 ? "frequent" : "hanja" },
-          hint: bookLabelMap[book] || "Mở rộng vốn từ Cấp 3–6"
-        },
-        {
-          tag: "Bước 2 · Luyện dạng",
+          tag: "Bước 2 · Làm bài tập",
           icon: "layers",
-          label: day % 2 === 1 ? `Luyện Nghe TOPIK II · Dạng ${cycle}` : `Luyện Đọc TOPIK II · Dạng ${cycle}`,
-          route: "mock-test",
-          params: { sub: "topik2", viewMode: "segments", skill: day % 2 === 1 ? "listening" : "reading", typeId: day % 2 === 1 ? dListen : dRead },
-          autoDone: (store.state.partStats?.[day % 2 === 1 ? dListen : dRead]?.total || 0) >= 3,
-          hint: `Đã giải ${store.state.partStats?.[day % 2 === 1 ? dListen : dRead]?.total || 0} câu`
+          label: `Làm Sách bài tập Bài 01 (${unit.lessonTitle})`,
+          route: "theory",
+          params: { sub: "lesson-detail", book: "q1", lesson: 1, tab: "workbook" },
+          autoDone: Boolean(wbStat),
+          hint: wbStat ? `Đạt ${wbStat.pct}%` : "Bài tập Từ & Ngữ pháp"
         },
         {
-          tag: "Bước 3 · Viết / Đề",
+          tag: "Bước 3 · Dịch câu",
           icon: "pen",
-          label: book === "q6"
-            ? "Giải phần Viết 51–54 hoặc Đề tuyển chọn TOPIK II"
-            : (track === "speaking_first" ? "Luyện bấm giờ 6 câu TOPIK Speaking" : `Viết 원고지 (${book === "q3" ? "Câu 51–52" : (book === "q4" ? "Biểu đồ Câu 53" : "Nghị luận Câu 54")})`),
-          route: book === "q6" ? "mock-test" : "practice",
-          params: book === "q6" ? { sub: "topik2", viewMode: "segments", skill: "writing" } : { sub: "topik2", skill: track === "speaking_first" ? "speaking" : "writing" },
-          hint: "Chuẩn thang điểm NIIED"
-        }
-      ];
-    } else if (stage === "sc2") {
-      const tpChunk = Math.min(12, ((day - 1) % 12) + 1);
-      const dIdx = ((day - 1) % 8) + 1;
-      const tid = day % 2 === 1 ? `t1_l_d${dIdx}` : `t1_r_d${dIdx}`;
-      const vStat = countLessonMastered(db, "topik1", tpChunk);
-      shortTopic = `TOPIK I · Chặng ${tpChunk} & Dạng ${dIdx}`;
-      rawTasks = [
-        {
-          tag: "Bước 1 · Từ vựng",
-          icon: "book",
-          label: `Học ${wordQuota} từ ngữ cảnh TOPIK I · Phần ${tpChunk}`,
+          label: "Luyện dịch câu Việt → Hàn Bài 01",
           route: "theory",
-          params: { sub: "lesson-detail", book: "topik1", lesson: tpChunk, tab: "vocab" },
-          autoDone: vStat.mastered >= Math.min(8, Math.max(1, vStat.total)),
-          hint: `Đã thuộc ${vStat.mastered}/${vStat.total} mục`
+          params: { sub: "lesson-detail", book: "q1", lesson: 1, tab: "translate" },
+          autoDone: trCnt >= 2,
+          hint: trCnt ? `Đã dịch ${trCnt} câu` : "Ghép cụm từ chuẩn"
         },
         {
-          tag: "Bước 2 · Luyện dạng",
-          icon: "layers",
-          label: day % 2 === 1 ? `Luyện Nghe TOPIK I · Dạng ${dIdx}` : `Luyện Đọc TOPIK I · Dạng ${dIdx}`,
+          tag: "Bước 4 · Luyện đề cuối",
+          icon: "exam",
+          label: `Làm quen Nghe TOPIK I · Dạng ${dNum}`,
           route: "mock-test",
-          params: { sub: "topik1", viewMode: "segments", skill: day % 2 === 1 ? "listening" : "reading", typeId: tid },
-          autoDone: (store.state.partStats?.[tid]?.total || 0) >= 3,
-          hint: `Đã giải ${store.state.partStats?.[tid]?.total || 0} câu`
-        },
-        {
-          tag: "Bước 3 · Phản xạ",
-          icon: "video",
-          label: track === "topik_intensive" ? "Ôn câu tủ thường gặp TOPIK I" : "Shadowing 1 clip YouTube Shorts",
-          route: track === "topik_intensive" ? "theory" : "practice",
-          params: track === "topik_intensive" ? { sub: "frequent" } : { sub: "skills", skill: "shadowing" },
-          hint: "Tăng tốc phản xạ nghe"
+          params: { sub: "topik1", viewMode: "segments", skill: "listening", typeId: `t1_l_d${dNum}` },
+          autoDone: (store.state.partStats?.[`t1_l_d${dNum}`]?.total || 0) >= 3,
+          hint: "Chốt ngày chuẩn cấu trúc thi"
         }
       ];
     } else {
-      // Default Stage: Sơ cấp 1 (15 Lessons, 2 days per lesson for thorough mastery)
-      const effectiveDay = stage === "zero" ? day - 4 : day;
-      const lessonNum = Math.min(15, Math.max(1, Math.ceil(effectiveDay / 2)));
-      const isSecondDayOfLesson = effectiveDay % 2 === 0;
-      const vStat = countLessonMastered(db, "sc1", lessonNum);
-      const hwDone = Boolean(store.state.chapterHomeworkDone?.[`sc1_${lessonNum}`]);
-      const dIdx = ((day - 1) % 8) + 1;
-      const tid = `t1_l_d${dIdx}`;
+      shortTopic = isMilestone
+        ? `${STAGE_LABELS[bookId]} · Tổng kết Chặng ${Math.floor(day / 5)}`
+        : `${STAGE_LABELS[bookId]} · Bài ${String(lsNum).padStart(2, "0")} (${unit.partTitle.split("·")[0].trim()})`;
 
-      shortTopic = `Bài ${String(lessonNum).padStart(2, "0")} · ${vStat.lessonTitle}`;
       rawTasks = [
         {
-          tag: "Bước 1 · Từ & Ngữ pháp",
+          tag: "Bước 1 · Học từ vựng",
+          icon: "cards",
+          label: `Lật thẻ B${String(lsNum).padStart(2, "0")} · ${unit.partTitle} (${unit.words.length} từ)`,
+          route: "theory",
+          params: { sub: "vocab-review", book: bookId, lesson: lsNum, part: unit.part, mode: "flashcard" },
+          autoDone: pMast >= Math.min(6, Math.max(1, Math.ceil(unit.words.length * 0.6))),
+          hint: `Thuộc ${pMast}/${unit.words.length} từ phần này`
+        },
+        {
+          tag: "Bước 2 · Làm bài tập",
           icon: "book",
-          label: isSecondDayOfLesson
-            ? `Ngữ pháp & Hội thoại Bài ${String(lessonNum).padStart(2, "0")} (${vStat.lessonTitle})`
-            : `Từ vựng Bài ${String(lessonNum).padStart(2, "0")}: ${vStat.lessonTitle}`,
+          label: `Làm Sách bài tập Bài ${String(lsNum).padStart(2, "0")}: ${unit.lessonTitle}`,
           route: "theory",
-          params: { sub: "lesson-detail", book: "sc1", lesson: lessonNum, tab: isSecondDayOfLesson ? "grammar" : "vocab" },
-          autoDone: !isSecondDayOfLesson && vStat.mastered >= Math.min(8, Math.max(1, vStat.total)),
-          hint: `Thuộc ${vStat.mastered}/${vStat.total} từ`
+          params: { sub: "lesson-detail", book: bookId, lesson: lsNum, tab: "workbook" },
+          autoDone: Boolean(wbStat && wbStat.total > 0),
+          hint: wbStat ? `Điểm Sách BT: ${wbStat.pct}%` : "Từ vựng & Ngữ pháp 익힘책"
         },
         {
-          tag: "Bước 2 · Dịch câu",
+          tag: "Bước 3 · Dịch câu",
           icon: "pen",
-          label: `Luyện dịch câu & Bài tập Bài ${String(lessonNum).padStart(2, "0")}`,
+          label: `Luyện dịch câu Việt → Hàn Bài ${String(lsNum).padStart(2, "0")}`,
           route: "theory",
-          params: { sub: "lesson-detail", book: "sc1", lesson: lessonNum, tab: "exercises" },
-          autoDone: hwDone,
-          hint: hwDone ? "Đã làm bài tập chương" : "Việt → Hàn & câu TOPIK"
+          params: { sub: "lesson-detail", book: bookId, lesson: lsNum, tab: "translate" },
+          autoDone: trCnt >= 2,
+          hint: trCnt ? `Đã dịch đúng ${trCnt} câu` : "Rèn trật tự tiểu từ & đuôi câu"
         },
-        {
-          tag: "Bước 3 · Thực chiến",
-          icon: track === "topik_intensive" || isSecondDayOfLesson ? "layers" : "video",
-          label: track === "topik_intensive" || isSecondDayOfLesson
-            ? `Luyện Nghe TOPIK I · Dạng ${dIdx}`
-            : "Shadowing 1 clip YouTube Shorts",
-          route: track === "topik_intensive" || isSecondDayOfLesson ? "mock-test" : "practice",
-          params: track === "topik_intensive" || isSecondDayOfLesson
-            ? { sub: "topik1", viewMode: "segments", skill: "listening", typeId: tid }
-            : { sub: "skills", skill: "shadowing" },
-          autoDone: (track === "topik_intensive" || isSecondDayOfLesson) && (store.state.partStats?.[tid]?.total || 0) >= 3,
-          hint: track === "topik_intensive" || isSecondDayOfLesson ? "Làm quen cấu trúc đề" : "Bắt nhịp nói người Hàn"
-        }
+        isMilestone
+          ? {
+              tag: "Bước 4 · Luyện đề cuối",
+              icon: "exam",
+              label: isTopik2
+                ? `Thi đề tuyển chọn TOPIK II (Chấm thang ${STAGE_LABELS[bookId]})`
+                : `Thi đề tuyển chọn TOPIK I (Chấm thang ${STAGE_LABELS[bookId]})`,
+              route: "mock-test",
+              params: { sub: isTopik2 ? "topik2" : "topik1", viewMode: "exams", category: "curated" },
+              autoDone: (store.state.examHistory?.length || 0) >= Math.floor(day / 5),
+              hint: "Đánh giá điểm tổng hợp cuối chặng"
+            }
+          : {
+              tag: "Bước 4 · Luyện đề cuối",
+              icon: "exam",
+              label: `Luyện ${skillKey === "listening" ? "Nghe" : "Đọc"} ${isTopik2 ? "TOPIK II" : "TOPIK I"} · Dạng ${dNum}`,
+              route: "mock-test",
+              params: { sub: isTopik2 ? "topik2" : "topik1", viewMode: "segments", skill: skillKey, typeId: segTypeId },
+              autoDone: (store.state.partStats?.[segTypeId]?.total || 0) >= 3,
+              hint: `Đã làm ${store.state.partStats?.[segTypeId]?.total || 0} câu dạng này`
+            }
       ];
     }
 
@@ -296,6 +236,7 @@ export function getGuidedStudyPlan(db, navigate, startGuidedStep = null) {
 
   return {
     profile,
+    bookId,
     days,
     activeDay,
     nextTask,
@@ -303,25 +244,72 @@ export function getGuidedStudyPlan(db, navigate, startGuidedStep = null) {
   };
 }
 
+export function renderRoadmapScoreCardHTML(evalObj) {
+  const pctBar = Math.min(100, Math.round((evalObj.estimatedScore / evalObj.maxScore) * 100));
+  const passLinePct = Math.round((evalObj.passScore / evalObj.maxScore) * 100);
+  return `
+    <div class="box-kind" style="background:linear-gradient(135deg,var(--primary-3) 0%,#FFFFFF 75%);padding:18px 20px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
+        <div>
+          <span class="badge-orange">📊 Đánh giá thang điểm theo lộ trình: ${evalObj.label}</span>
+          <div style="margin-top:6px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;">
+            <strong style="font-size:28px;font-weight:800;color:var(--primary);">${evalObj.estimatedScore} <span style="font-size:16px;color:var(--text-muted);">/ ${evalObj.maxScore} điểm</span></strong>
+            <span style="font-size:13px;font-weight:700;color:${evalObj.passed ? "var(--success)" : "var(--primary-1)"};">
+              · ${evalObj.statusLabel}
+            </span>
+          </div>
+        </div>
+        <span class="meta-chip" style="background:#FFFFFF;color:var(--primary-4);font-weight:800;">
+          Chuẩn ${evalObj.gradeName}: ≥ ${evalObj.passScore}đ
+        </span>
+      </div>
+
+      <!-- Score Scale Bar with Pass Threshold Marker -->
+      <div style="position:relative;padding-top:4px;margin-bottom:14px;">
+        <div class="progress-track" style="height:11px;background:#DCEBFA;">
+          <div class="progress-fill" style="width:${pctBar}%;background:${evalObj.passed ? "var(--success)" : "var(--primary)"};"></div>
+        </div>
+        <div style="position:absolute;left:${passLinePct}%;top:0;bottom:-4px;width:2px;background:var(--primary-4);" title="Mốc đạt ${evalObj.passScore}đ"></div>
+      </div>
+
+      <!-- 4 Standardized Daily Pillars Breakdown -->
+      <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;">
+        ${evalObj.pillars.map((p) => `
+          <div style="background:#FFFFFF;border:1px solid var(--border-card);border-radius:11px;padding:8px 10px;">
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;">
+              <strong style="color:var(--text-main);">${p.label}</strong>
+              <span style="font-weight:800;color:var(--primary);">${p.pct}%</span>
+            </div>
+            <div class="progress-track" style="height:5px;margin-bottom:4px;">
+              <div class="progress-fill" style="width:${p.pct}%"></div>
+            </div>
+            <span style="font-size:11px;color:var(--text-muted);">${p.detail}</span>
+          </div>
+        `).join("")}
+      </div>
+    </div>
+  `;
+}
+
 export function renderRoadmapView(root, db, navigate, openAccountCustomizer) {
   let takingPlacement = false;
-  let editingCustom = false;
   let userAnswers = {};
   let placementResult = null;
 
   function render() {
     const plan = getGuidedStudyPlan(db, navigate);
+    const evalObj = evaluateRoadmapScore(db);
     const { profile, days, activeDay, nextTask, completedDaysCount } = plan;
     const pct = Math.round((completedDaysCount / days.length) * 100);
     const userName = store.session.user?.name || "bạn";
 
     root.innerHTML = `
       <div class="container-narrow">
-        <div class="box-kind" style="border-radius:20px;padding:22px;margin-bottom:22px;">
+        <div class="box-kind" style="border-radius:20px;padding:22px;margin-bottom:18px;">
           <div class="roadmap-hero-grid">
             <div style="background:var(--primary-3);border:1.5px solid var(--border-card);border-radius:16px;padding:18px;text-align:center;">
-              <div style="display:inline-grid;place-items:center;width:62px;height:62px;border-radius:18px;background:var(--primary);border:2px solid var(--primary-1);box-shadow:0 3px 0 var(--primary-1);">
-                ${daisyLogoSVG(40)}
+              <div style="display:inline-grid;place-items:center;width:64px;height:64px;border-radius:18px;background:#FFFFFF;border:1.5px solid var(--border-card);box-shadow:0 3px 0 var(--border-lip);">
+                ${daisyLogoSVG(44)}
               </div>
               <strong style="display:block;margin-top:8px;color:var(--primary-1);font-size:15px;">Lộ trình của ${userName}</strong>
               <span style="font-size:12.5px;color:var(--text-muted);">Đang ở <strong>Ngày ${activeDay.day}/30</strong> · Xong ${completedDaysCount} ngày</span>
@@ -332,9 +320,8 @@ export function renderRoadmapView(root, db, navigate, openAccountCustomizer) {
 
             <div>
               <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
-                <span class="badge-orange">${STAGE_LABELS[profile.startBook] || STAGE_LABELS[profile.startStage] || STAGE_LABELS.q1}</span>
-                <span class="meta-chip" style="color:var(--primary-1);">${TRACK_LABELS[profile.focusTrack] || TRACK_LABELS.balanced}</span>
-                <span class="meta-chip">${profile.dailyMinutes || 30} phút/ngày</span>
+                <span class="badge-orange">${STAGE_LABELS[profile.startBook] || STAGE_LABELS.q1}</span>
+                <span class="meta-chip" style="color:var(--primary-1);">Chuẩn 4 bước/ngày: Từ vựng → Bài tập → Dịch câu → Luyện đề</span>
               </div>
               <h2 style="margin:0 0 6px;font-size:20px;">Đang học: Ngày ${activeDay.day} — ${activeDay.shortTopic}</h2>
               <p style="margin:0 0 12px;color:var(--text-muted);font-size:14px;">
@@ -345,195 +332,141 @@ export function renderRoadmapView(root, db, navigate, openAccountCustomizer) {
                   ▶ Học tiếp Bước ${nextTask.stepIdx + 1}/${nextTask.totalSteps}
                 </button>
                 <button class="btn-outline-teal" id="btn-start-placement">
-                  ${ico("sparkle", 15)} Test xếp lớp
+                  ${ico("sparkle", 15)} Test xếp Quyển
                 </button>
                 <button class="btn-outline-teal" id="btn-customize-roadmap">
-                  ${ico("compass", 15)} Đổi mục tiêu
+                  ${ico("user", 15)} Đổi Quyển học (Hồ sơ)
                 </button>
               </div>
-
-              ${editingCustom ? `
-                <div style="margin-top:14px;background:var(--bg-body);border:1.5px solid var(--border-card);border-radius:14px;padding:14px;">
-                  <div class="grid-2" style="gap:10px;margin-bottom:10px;">
-                    <div>
-                      <label style="font-size:12px;font-weight:700;display:block;margin-bottom:4px;">Xuất phát điểm</label>
-                      <select id="rm-stage" class="box-select" style="width:100%;">
-                        <option value="zero" ${profile.startStage === "zero" ? "selected" : ""}>Mất gốc / Học từ Hangeul</option>
-                        <option value="sc1" ${profile.startStage === "sc1" ? "selected" : ""}>Sơ cấp 1 (Giáo trình Tổng Hợp)</option>
-                        <option value="sc2" ${profile.startStage === "sc2" ? "selected" : ""}>Nước rút TOPIK I Cấp 2</option>
-                        <option value="tc3" ${profile.startStage === "tc3" ? "selected" : ""}>Trung cấp TOPIK II &amp; Viết 원고지</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label style="font-size:12px;font-weight:700;display:block;margin-bottom:4px;">Trọng tâm ưu tiên</label>
-                      <select id="rm-track" class="box-select" style="width:100%;">
-                        <option value="balanced" ${profile.focusTrack === "balanced" ? "selected" : ""}>Song hành TOPIK × Giao tiếp</option>
-                        <option value="topik_intensive" ${profile.focusTrack === "topik_intensive" ? "selected" : ""}>Chuyên sâu giải đề</option>
-                        <option value="speaking_first" ${profile.focusTrack === "speaking_first" ? "selected" : ""}>Ưu tiên Nghe – Nói – Shadowing</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
-                    <select id="rm-mins" class="box-select">
-                      <option value="15" ${Number(profile.dailyMinutes) === 15 ? "selected" : ""}>15 phút/ngày</option>
-                      <option value="30" ${Number(profile.dailyMinutes) === 30 ? "selected" : ""}>30 phút/ngày</option>
-                      <option value="60" ${Number(profile.dailyMinutes) === 60 ? "selected" : ""}>60 phút/ngày</option>
-                    </select>
-                    <button class="btn-primary" id="btn-apply-rm">Lưu lộ trình</button>
-                  </div>
-                </div>
-              ` : ""}
-
-              ${placementResult ? `
-                <div style="margin-top:12px;background:var(--primary-3);padding:10px 14px;border-radius:12px;font-size:13.5px;color:var(--primary-4);">
-                  <strong>Kết quả: ${placementResult.score}/${PLACEMENT_QUESTIONS.length} câu đúng</strong> — ${placementResult.advice}
-                </div>
-              ` : ""}
             </div>
           </div>
         </div>
 
-        ${takingPlacement ? renderPlacementHTML() : `
-          <div class="section-head" style="margin-top:0;">
-            <h2>Chi tiết 30 ngày học (Tích ✔ từng bước hoặc học đến đâu tự lưu đến đó)</h2>
-          </div>
-          <div class="grid-2">
-            ${days.map((d) => {
-              const isToday = d.day === activeDay.day && !d.isDayComplete;
-              return `
-                <div class="box-kind" style="border:${isToday ? "2px solid var(--primary)" : "1.5px solid var(--border-card)"};background:${isToday ? "linear-gradient(180deg,#FFFFFF 0%,var(--primary-3) 100%)" : "#FFFFFF"};">
-                  <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px;">
-                    <div>
-                      ${isToday ? `<span class="badge-orange" style="margin-bottom:4px;">📍 HÔM NAY · ĐANG HỌC</span>` : ""}
-                      <strong style="font-size:15.5px;display:block;color:${d.isDayComplete ? "var(--success)" : "var(--text-main)"};">
-                        ${d.isDayComplete ? "✔ " : ""}${d.title}
-                      </strong>
-                    </div>
-                    <span class="meta-chip" style="flex-shrink:0;">${d.doneSteps}/${d.totalSteps} bước</span>
-                  </div>
+        <!-- ROADMAP-CALIBRATED SCORE EVALUATION -->
+        <div style="margin-bottom:22px;">
+          ${renderRoadmapScoreCardHTML(evalObj)}
+        </div>
 
-                  <div style="display:flex;flex-direction:column;gap:7px;">
-                    ${d.tasks.map((t) => `
-                      <div style="display:flex;align-items:center;gap:8px;background:#FFFFFF;border:1px solid ${t.done ? "rgba(34,197,94,0.4)" : "var(--border-card)"};border-radius:11px;padding:7px 10px;">
-                        <button type="button" class="step-check-btn ${t.done ? "checked" : ""}" data-step-chk="${d.day}" data-sidx="${t.stepIdx}" data-stotal="${d.totalSteps}" title="Đánh dấu hoàn thành bước này">✓</button>
-                        <button type="button" data-day="${d.day}" data-task="${t.stepIdx}" style="flex:1;text-align:left;background:none;border:none;padding:0;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px;">
-                          <span style="font-size:13.5px;font-weight:600;${t.done ? "text-decoration:line-through;color:var(--text-muted);" : "color:var(--text-main);"}">${t.label}</span>
-                          <span style="color:var(--primary-1);font-weight:700;font-size:12.5px;flex-shrink:0;">${t.done ? "Xem lại" : "Học →"}</span>
-                        </button>
-                      </div>
+        ${takingPlacement ? `
+          <div class="box-kind" style="border:2px solid var(--primary);margin-bottom:24px;">
+            <h3 style="margin:0 0 14px;color:var(--primary-1);">📝 Bài Test Xếp Quyển Nhanh (6 Câu · Từ Sơ cấp 1 đến TOPIK II)</h3>
+            <div style="display:flex;flex-direction:column;gap:16px;">
+              ${PLACEMENT_QUESTIONS.map((item, qi) => `
+                <div style="background:var(--bg-body);padding:14px;border-radius:10px;">
+                  <div style="font-weight:700;margin-bottom:8px;">${item.q}</div>
+                  <div class="grid-2" style="gap:8px;">
+                    ${item.opts.map((opt, oi) => `
+                      <button type="button" class="ko" data-q="${qi}" data-o="${oi}" style="text-align:left;padding:9px 12px;border-radius:8px;border:1.5px solid ${userAnswers[qi] === oi ? "var(--primary)" : "var(--border-card)"};background:${userAnswers[qi] === oi ? "var(--primary-3)" : "#FFFFFF"};cursor:pointer;font-weight:600;">
+                        ${["①", "②", "③", "④"][oi]} ${opt}
+                      </button>
                     `).join("")}
                   </div>
                 </div>
-              `;
-            }).join("")}
+              `).join("")}
+            </div>
+            <div style="margin-top:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+              <button class="btn-primary" id="btn-submit-placement">Chấm điểm &amp; Áp dụng Quyển phù hợp</button>
+              ${placementResult ? `<div style="font-weight:700;color:var(--primary-1);">${placementResult}</div>` : ""}
+            </div>
           </div>
-        `}
+        ` : ""}
+
+        <div class="section-head" style="margin-top:0;">
+          <h2>Chi tiết 30 ngày chuẩn hóa (${STAGE_LABELS[profile.startBook] || "Quyển 1"})</h2>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          ${days.map((d) => {
+            const isToday = d.day === activeDay.day;
+            return `
+              <div class="box-kind" style="border:${isToday ? "2px solid var(--primary)" : "1.5px solid var(--border-card)"};background:${isToday ? "linear-gradient(180deg,#FFFFFF 0%,var(--primary-3) 100%)" : "#FFFFFF"};">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
+                  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                    ${isToday ? `<span class="badge-orange">📍 HÔM NAY</span>` : ""}
+                    <strong style="font-size:16px;color:${d.isDayComplete ? "var(--success)" : "var(--text-main)"};">
+                      ${d.title}
+                    </strong>
+                  </div>
+                  <span class="meta-chip" style="color:${d.isDayComplete ? "var(--success)" : "var(--primary-1)"};">
+                    ${d.isDayComplete ? "✔ Hoàn thành cả 4 bước" : `Xong ${d.doneSteps}/${d.totalSteps} bước`}
+                  </span>
+                </div>
+
+                <div class="today-stepper">
+                  ${d.tasks.map((t) => {
+                    const isNextHere = isToday && !t.done && t.stepIdx === nextTask.stepIdx;
+                    return `
+                      <div class="today-step-row ${t.done ? "is-done" : (isNextHere ? "is-next" : "")}">
+                        <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+                          <button type="button" class="step-check-btn ${t.done ? "checked" : ""}" data-rm-chk="${d.day}" data-sidx="${t.stepIdx}" data-stotal="${d.totalSteps}" title="Đánh dấu hoàn thành bước này">✓</button>
+                          <div style="min-width:0;">
+                            <span style="font-size:11.5px;font-weight:800;color:var(--primary-1);">${t.tag}</span>
+                            <span style="font-size:12px;color:var(--text-muted);"> · ${t.hint}</span>
+                            <strong style="font-size:14px;display:block;${t.done ? "text-decoration:line-through;color:var(--text-muted);" : ""}">${t.label}</strong>
+                          </div>
+                        </div>
+                        <button type="button" class="${isNextHere ? "btn-primary" : "btn-outline-teal"}" data-day="${d.day}" data-ti="${t.stepIdx}" style="padding:5px 13px;font-size:12.5px;flex-shrink:0;">
+                          ${t.done ? "Xem lại" : (isNextHere ? "Học ngay →" : "Mở")}
+                        </button>
+                      </div>
+                    `;
+                  }).join("")}
+                </div>
+              </div>
+            `;
+          }).join("")}
+        </div>
       </div>
     `;
 
     root.querySelector("#btn-rm-continue-next").addEventListener("click", () => nextTask.go());
     root.querySelector("#btn-start-placement").addEventListener("click", () => {
       takingPlacement = !takingPlacement;
-      editingCustom = false;
       render();
     });
     root.querySelector("#btn-customize-roadmap").addEventListener("click", () => {
-      if (openAccountCustomizer && store.session.mode === "user") {
-        openAccountCustomizer();
-      } else {
-        editingCustom = !editingCustom;
-        takingPlacement = false;
-        render();
-      }
+      if (openAccountCustomizer) openAccountCustomizer();
     });
 
-    const applyBtn = root.querySelector("#btn-apply-rm");
-    if (applyBtn) {
-      applyBtn.addEventListener("click", () => {
-        store.updateRoadmapProfile({
-          startStage: root.querySelector("#rm-stage").value,
-          focusTrack: root.querySelector("#rm-track").value,
-          dailyMinutes: Number(root.querySelector("#rm-mins").value)
-        });
-        editingCustom = false;
-        render();
-      });
-    }
-
     if (takingPlacement) {
-      root.querySelectorAll("[data-pq]").forEach((radio) => {
-        radio.addEventListener("change", () => {
-          userAnswers[Number(radio.dataset.pq)] = Number(radio.value);
+      root.querySelectorAll("[data-q]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          userAnswers[Number(btn.dataset.q)] = Number(btn.dataset.o);
+          render();
         });
       });
       root.querySelector("#btn-submit-placement").addEventListener("click", () => {
         let correct = 0;
-        PLACEMENT_QUESTIONS.forEach((item, i) => {
-          if (userAnswers[i] === item.ans) correct += 1;
+        PLACEMENT_QUESTIONS.forEach((it, i) => {
+          if (userAnswers[i] === it.ans) correct += 1;
         });
-        let advice = "";
-        if (correct <= 1) {
-          advice = "Đã xếp lộ trình bắt đầu từ Hangeul & Biến âm → Sơ cấp 1.";
-          store.updateRoadmapProfile({ startStage: "zero", targetLevel: "TOPIK I - Cấp 1" });
-        } else if (correct <= 3) {
-          advice = "Đã xếp lộ trình vào Giáo trình Tổng Hợp Sơ cấp 1 + Shadowing.";
-          store.updateRoadmapProfile({ startStage: "sc1", targetLevel: "TOPIK I - Cấp 2" });
-        } else if (correct === 4) {
-          advice = "Đã xếp lộ trình vào Nước rút TOPIK I & Luyện từng dạng.";
-          store.updateRoadmapProfile({ startStage: "sc2", targetLevel: "TOPIK I - Cấp 2" });
-        } else {
-          advice = "Đã xếp lộ trình lên Trung cấp TOPIK II & Viết 원고지.";
-          store.updateRoadmapProfile({ startStage: "tc3", targetLevel: "TOPIK II - Cấp 4" });
-        }
-        placementResult = { score: correct, advice };
+        const recommendedBook = correct <= 2 ? "q1" : (correct <= 4 ? "q2" : "q3");
+        const recTarget = correct <= 2 ? "TOPIK I - Cấp 1" : (correct <= 4 ? "TOPIK I - Cấp 2" : "TOPIK II - Cấp 4");
+        store.updateRoadmapProfile({ startBook: recommendedBook, targetLevel: recTarget }, true);
+        placementResult = `Đúng ${correct}/6 câu → Đã chuyển sang ${STAGE_LABELS[recommendedBook]}!`;
         takingPlacement = false;
         render();
       });
-    } else {
-      root.querySelectorAll("[data-step-chk]").forEach((btn) => {
-        btn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          const dy = Number(btn.dataset.stepChk);
-          const si = Number(btn.dataset.sidx);
-          const st = Number(btn.dataset.stotal);
-          const cur = Boolean(store.state.roadmapStepDone?.[`d${dy}_${si}`]);
-          store.setRoadmapStepDone(dy, si, st, !cur);
-          render();
-        });
-      });
-      root.querySelectorAll("[data-task]").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const dObj = days.find((x) => x.day === Number(btn.dataset.day));
-          dObj.tasks[Number(btn.dataset.task)].go();
-        });
-      });
     }
-  }
 
-  function renderPlacementHTML() {
-    return `
-      <div class="box-kind">
-        <h3 style="margin:0 0 14px;">Bài Test Xếp Lộ Trình Nhanh (6 câu)</h3>
-        <div style="display:flex;flex-direction:column;gap:14px;">
-          ${PLACEMENT_QUESTIONS.map((item, qi) => `
-            <div style="background:var(--bg-body);padding:13px;border-radius:12px;">
-              <strong class="ko" style="display:block;margin-bottom:8px;">${item.q}</strong>
-              <div class="grid-2">
-                ${item.opts.map((opt, oi) => `
-                  <label class="ko" style="display:flex;align-items:center;gap:8px;cursor:pointer;background:#FFF;padding:8px 12px;border-radius:10px;border:1px solid var(--border-card);">
-                    <input type="radio" name="pq_${qi}" data-pq="${qi}" value="${oi}" ${userAnswers[qi] === oi ? "checked" : ""} />
-                    <span>${opt}</span>
-                  </label>
-                `).join("")}
-              </div>
-            </div>
-          `).join("")}
-        </div>
-        <div style="margin-top:16px;text-align:right;">
-          <button class="btn-primary" id="btn-submit-placement">Chấm điểm &amp; Áp dụng lộ trình</button>
-        </div>
-      </div>
-    `;
+    root.querySelectorAll("[data-rm-chk]").forEach((chk) => {
+      chk.addEventListener("click", () => {
+        const dNum = Number(chk.dataset.rmChk);
+        const sIdx = Number(chk.dataset.sidx);
+        const sTot = Number(chk.dataset.stotal);
+        const curDone = Boolean(store.state.roadmapStepDone?.[`d${dNum}_${sIdx}`]);
+        store.setRoadmapStepDone(dNum, sIdx, sTot, !curDone);
+        render();
+      });
+    });
+
+    root.querySelectorAll("[data-day][data-ti]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const dObj = days.find((x) => x.day === Number(btn.dataset.day));
+        const task = dObj?.tasks[Number(btn.dataset.ti)];
+        if (task) task.go();
+      });
+    });
   }
 
   render();
