@@ -1,37 +1,39 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi" data-theme="mint">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CJDUZ · Học Tiếng Hàn Tổng Hợp &amp; Luyện Thi TOPIK</title>
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%2300B2A5'/%3E%3Cg transform='translate(32,32)' fill='%23FFFFFF'%3E%3Cellipse rx='6.5' ry='18' transform='rotate(0)'/%3E%3Cellipse rx='6.5' ry='18' transform='rotate(30)'/%3E%3Cellipse rx='6.5' ry='18' transform='rotate(60)'/%3E%3Cellipse rx='6.5' ry='18' transform='rotate(90)'/%3E%3Cellipse rx='6.5' ry='18' transform='rotate(120)'/%3E%3Cellipse rx='6.5' ry='18' transform='rotate(150)'/%3E%3Ccircle r='9' fill='%23FFD769' stroke='%23FE9A05' stroke-width='2'/%3E%3C/g%3E%3C/svg%3E" />
+  <title>CJDUZ · Tiếng Hàn &amp; TOPIK</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%23149E8E'/%3E%3Cg transform='translate(32,32)'%3E%3Cg fill='%23FFFFFF'%3E%3Cellipse rx='8.5' ry='21'/%3E%3Cellipse rx='8.5' ry='21' transform='rotate(45)'/%3E%3Cellipse rx='8.5' ry='21' transform='rotate(90)'/%3E%3Cellipse rx='8.5' ry='21' transform='rotate(135)'/%3E%3C/g%3E%3Ccircle r='11.5' fill='%23FDE047' stroke='%23F59E0B' stroke-width='2'/%3E%3Ccircle cx='-4' cy='-1' r='1.5' fill='%23422006'/%3E%3Ccircle cx='4' cy='-1' r='1.5' fill='%23422006'/%3E%3Cpath d='M-3 2.2 Q0 5 3 2.2' stroke='%23422006' stroke-width='1.8' stroke-linecap='round' fill='none'/%3E%3C/g%3E%3C/svg%3E" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
-  <link rel="stylesheet" href="/css/migii.css?v=20261126-5" />
+  <link rel="stylesheet" href="/css/migii.css?v=20261126-6" />
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
   <header class="migii-navbar">
     <div class="navbar-inner">
       <div class="brand-logo" id="brand-home-btn" role="button" tabindex="0" aria-label="CJDUZ Trang chủ">
-        <div class="brand-mascot" aria-hidden="true">
-          <svg width="30" height="30" viewBox="0 0 64 64" fill="none">
-            <g transform="translate(32,32)" fill="#FFFFFF">
-              <ellipse rx="6.2" ry="20" transform="rotate(0)"/>
-              <ellipse rx="6.2" ry="20" transform="rotate(30)"/>
-              <ellipse rx="6.2" ry="20" transform="rotate(60)"/>
-              <ellipse rx="6.2" ry="20" transform="rotate(90)"/>
-              <ellipse rx="6.2" ry="20" transform="rotate(120)"/>
-              <ellipse rx="6.2" ry="20" transform="rotate(150)"/>
-              <circle r="9.5" fill="#FFD769" stroke="#FE9A05" stroke-width="2.2"/>
+        <div class="brand-mascot" id="brand-mascot-slot" aria-hidden="true">
+          <svg width="32" height="32" viewBox="0 0 64 64" fill="none">
+            <g transform="translate(32,32)">
+              <g fill="#FFFFFF">
+                <ellipse rx="8.5" ry="21"/><ellipse rx="8.5" ry="21" transform="rotate(45)"/>
+                <ellipse rx="8.5" ry="21" transform="rotate(90)"/><ellipse rx="8.5" ry="21" transform="rotate(135)"/>
+              </g>
+              <circle r="11.5" fill="#FDE047" stroke="#F59E0B" stroke-width="2.2"/>
+              <circle cx="-4.2" cy="-1.2" r="1.5" fill="#422006"/><circle cx="4.2" cy="-1.2" r="1.5" fill="#422006"/>
+              <ellipse cx="-6.2" cy="1.8" rx="2" ry="1.2" fill="#FB7185" opacity="0.7"/>
+              <ellipse cx="6.2" cy="1.8" rx="2" ry="1.2" fill="#FB7185" opacity="0.7"/>
+              <path d="M-3 2.2 Q0 5.1 3 2.2" stroke="#422006" stroke-width="1.8" stroke-linecap="round" fill="none"/>
             </g>
           </svg>
         </div>
         <div class="brand-title">
-          <strong style="letter-spacing:0.04em;">CJDUZ</strong>
-          <span>한국어 · Tổng Hợp &amp; TOPIK</span>
+          <strong>CJDUZ</strong>
+          <span>한국어 · TOPIK</span>
         </div>
       </div>
 
@@ -43,52 +45,47 @@
         <div class="nav-item-wrap">
           <button class="nav-pill" data-route="practice">Luyện tập ▾</button>
           <div class="nav-dropdown">
-            <button class="dropdown-link" data-route="practice" data-sub="skills">
-              <span>Kỹ năng Nghe · Đọc · Shadowing</span>
-              <span class="ko" style="font-size:12px;opacity:.85">실전</span>
-            </button>
-            <button class="dropdown-link" data-route="practice" data-sub="topik1">
-              <span>Ôn theo cấu trúc TOPIK I</span>
-              <span style="font-size:12px;opacity:.85">Cấp 1–2</span>
-            </button>
-            <button class="dropdown-link" data-route="practice" data-sub="topik2">
-              <span>Ôn cấu trúc TOPIK II &amp; Speaking</span>
-              <span style="font-size:12px;opacity:.85">Cấp 3–6</span>
-            </button>
+            <button class="dropdown-link" data-route="practice" data-sub="skills">Kỹ năng &amp; Shorts</button>
+            <button class="dropdown-link" data-route="practice" data-sub="topik1">TOPIK I</button>
+            <button class="dropdown-link" data-route="practice" data-sub="topik2">TOPIK II &amp; Speaking</button>
           </div>
         </div>
 
         <div class="nav-item-wrap">
           <button class="nav-pill" data-route="mock-test">Đề thi ▾</button>
           <div class="nav-dropdown">
-            <button class="dropdown-link" data-route="mock-test" data-sub="topik1" data-vmode="exams" data-cat="curated">
-              <span>⭐ Đề thi tuyển chọn (TOPIK I &amp; II)</span>
-            </button>
-            <button class="dropdown-link" data-route="mock-test" data-sub="topik1" data-vmode="exams" data-cat="all">
-              <span>📝 Full Đề TOPIK I (70 câu · NIIED/IBT)</span>
-            </button>
-            <button class="dropdown-link" data-route="mock-test" data-sub="topik2" data-vmode="exams" data-cat="all">
-              <span>📝 Full Đề TOPIK II (104 câu · NIIED/IBT)</span>
-            </button>
-            <button class="dropdown-link" data-route="mock-test" data-sub="topik1" data-vmode="segments">
-              <span>🧩 Luyện đề từng phần · Từng dạng (1→10)</span>
-            </button>
+            <button class="dropdown-link" data-route="mock-test" data-sub="topik1" data-vmode="exams" data-cat="curated">Đề tuyển chọn</button>
+            <button class="dropdown-link" data-route="mock-test" data-sub="topik1" data-vmode="exams" data-cat="all">TOPIK I (70 câu)</button>
+            <button class="dropdown-link" data-route="mock-test" data-sub="topik2" data-vmode="exams" data-cat="all">TOPIK II (104 câu)</button>
+            <button class="dropdown-link" data-route="mock-test" data-sub="topik1" data-vmode="segments">Luyện từng dạng</button>
           </div>
         </div>
 
-        <button class="nav-pill" data-route="check-tools">Check &amp; Công cụ</button>
+        <button class="nav-pill" data-route="check-tools">Công cụ</button>
       </nav>
 
       <div class="nav-actions">
-        <div class="streak-pill" id="nav-streak" title="Chuỗi ngày học liên tiếp">
-          <span>🔥</span>
+        <div class="streak-pill" id="nav-streak" title="Chuỗi ngày học">
+          <span id="streak-ico"></span>
           <span id="streak-count">1 ngày</span>
         </div>
+
+        <div class="theme-Menu-wrap" id="theme-menu-wrap">
+          <button class="btn-theme-pill" id="btn-theme-toggle" type="button" title="Xem thử bảng màu">
+            <span id="theme-ico"></span>
+            <span class="hide-sm">Màu</span>
+          </button>
+          <div class="theme-popover" id="theme-popover"></div>
+        </div>
+
         <button class="btn-quick-dict" id="open-quick-tool-btn" type="button">
-          🔎 <span class="hide-sm">Tra từ</span>
+          <span id="search-ico"></span>
+          <span class="hide-sm">Tra từ</span>
         </button>
-        <button class="user-auth-pill" id="open-auth-btn" type="button">
-          👤 <span id="nav-user-label">Đăng ký / Đăng nhập</span>
+
+        <button class="user-auth-pill" id="open-auth-btn" type="button" title="Đồng bộ theo tài khoản">
+          <span class="cloud-dot" id="cloud-sync-dot"></span>
+          <span id="nav-user-label">Tài khoản</span>
         </button>
       </div>
     </div>
@@ -96,23 +93,23 @@
 
   <div id="trial-banner-slot"></div>
 
-  <main id="app-root" style="min-height: calc(100vh - 165px);"></main>
+  <main id="app-root" style="min-height: calc(100vh - 145px);"></main>
 
   <nav class="mobile-bottom-nav" aria-label="Điều hướng di động">
     <button type="button" class="mobile-tab-btn active" data-mroute="home">
-      <span class="m-ico">🏠</span><span>Trang chủ</span>
+      <span class="m-ico" data-mico="home"></span><span>Trang chủ</span>
     </button>
     <button type="button" class="mobile-tab-btn" data-mroute="theory">
-      <span class="m-ico">📚</span><span>Lý thuyết</span>
+      <span class="m-ico" data-mico="book"></span><span>Lý thuyết</span>
     </button>
     <button type="button" class="mobile-tab-btn" data-mroute="practice">
-      <span class="m-ico">🎯</span><span>Luyện tập</span>
+      <span class="m-ico" data-mico="video"></span><span>Luyện tập</span>
     </button>
     <button type="button" class="mobile-tab-btn" data-mroute="mock-test">
-      <span class="m-ico">📝</span><span>Đề thi</span>
+      <span class="m-ico" data-mico="exam"></span><span>Đề thi</span>
     </button>
     <button type="button" class="mobile-tab-btn" data-mroute="roadmap">
-      <span class="m-ico">🌼</span><span>Lộ trình</span>
+      <span class="m-ico" data-mico="compass"></span><span>Lộ trình</span>
     </button>
   </nav>
 
@@ -120,31 +117,19 @@
 
   <footer class="migii-footer">
     <div class="footer-inner">
-      <div style="display:flex;align-items:center;gap:12px;">
-        <svg width="28" height="28" viewBox="0 0 64 64" fill="none" aria-hidden="true">
-          <g transform="translate(32,32)" fill="#FFFFFF">
-            <ellipse rx="6.2" ry="20" transform="rotate(0)"/>
-            <ellipse rx="6.2" ry="20" transform="rotate(30)"/>
-            <ellipse rx="6.2" ry="20" transform="rotate(60)"/>
-            <ellipse rx="6.2" ry="20" transform="rotate(90)"/>
-            <ellipse rx="6.2" ry="20" transform="rotate(120)"/>
-            <ellipse rx="6.2" ry="20" transform="rotate(150)"/>
-            <circle r="9.5" fill="#FFD769" stroke="#FE9A05" stroke-width="2.2"/>
-          </g>
-        </svg>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span id="footer-mascot"></span>
         <div>
-          <strong style="font-size:16px;letter-spacing:0.03em;">CJDUZ · Hệ thống học Tiếng Hàn Tổng Hợp &amp; Luyện Thi TOPIK</strong>
-          <div style="opacity:0.78;margin-top:3px;">
-            Tích hợp kho âm thanh giọng đọc Kyuri, Ôn tập SRS, Shadowing phát âm và Ma trận đề TOPIK I &amp; II.
-          </div>
+          <strong style="color:var(--text-main);">CJDUZ · Tiếng Hàn Tổng Hợp &amp; TOPIK</strong>
+          <span style="margin-left:8px;">Từ vựng Kyuri · Shadowing Shorts · 30 Đề Full NIIED</span>
         </div>
       </div>
-      <div style="opacity:0.85;font-size:13px;">
-        © CJDUZ Korean Studio · Lưu tiến độ tự động trên trình duyệt
+      <div style="font-weight:600;color:var(--primary-1);" id="footer-sync-badge">
+        ☁️ Tiến độ lưu tự động theo tài khoản Cloud
       </div>
     </div>
   </footer>
 
-  <script type="module" src="/js/app.js?v=20261126-5"></script>
+  <script type="module" src="/js/app.js?v=20261126-6"></script>
 </body>
 </html>

@@ -1,5 +1,6 @@
-import { store, speakKoreanTTS } from "../store.js?v=20261126-5";
-import { analyzePronunciationRules, conjugateKoreanPredicate } from "../korean-engine.js?v=20261126-5";
+import { store, speakKoreanTTS } from "../store.js?v=20261126-6";
+import { ico } from "../icons.js?v=20261126-6";
+import { analyzePronunciationRules, conjugateKoreanPredicate } from "../korean-engine.js?v=20261126-6";
 
 const PARTICLE_NOTES = [
   { suffix: "에서는", role: "Tiểu từ Nơi diễn ra hành động + Nhấn mạnh chủ đề" },
@@ -94,19 +95,16 @@ export function renderCheckAndToolsView(root, db, navigate, params = {}) {
     root.innerHTML = `
       <div class="container-web">
         <div class="breadcrumb-bar">
-          <span>Check &amp; Công cụ</span>
+          <span>Công cụ</span>
           <span>▶</span>
-          <span>Trung tâm Check điểm yếu, Sổ tay câu sai &amp; Công cụ thông minh</span>
+          <span>Thống kê &amp; Trợ thủ học tập</span>
         </div>
 
         <div class="skill-pills-row">
-          <button class="btn-skill ${tab === "analytics" ? "active" : ""}" data-tb="analytics">📊 Check Điểm yếu &amp; Lịch sử thi</button>
-          <button class="btn-skill ${tab === "mistakes" ? "active" : ""}" data-tb="mistakes">📕 Sổ tay câu sai (${mistakes.length})</button>
-          <button class="btn-skill ${tab === "xray" ? "active" : ""}" data-tb="xray">
-            🔬 Giải phẫu câu X-Ray &amp; Chia ĐT
-            <span class="badge-mia">X-RAY</span>
-          </button>
-          <button class="btn-skill ${tab === "import" ? "active" : ""}" data-tb="import">📥 Kéo-thả file Anki (.apkg)</button>
+          <button class="btn-skill ${tab === "analytics" ? "active" : ""}" data-tb="analytics">${ico("chart", 16)} Điểm yếu &amp; Lịch sử thi</button>
+          <button class="btn-skill ${tab === "mistakes" ? "active" : ""}" data-tb="mistakes">${ico("book", 16)} Sổ tay câu sai (${mistakes.length})</button>
+          <button class="btn-skill ${tab === "xray" ? "active" : ""}" data-tb="xray">${ico("sparkle", 16)} Giải phẫu câu &amp; Chia ĐT</button>
+          <button class="btn-skill ${tab === "import" ? "active" : ""}" data-tb="import">${ico("upload", 16)} Nhập gói Anki (.apkg)</button>
         </div>
 
         <div id="check-tools-body"></div>

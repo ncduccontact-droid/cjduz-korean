@@ -298,10 +298,16 @@ class CJDUZKoreanHandler(SimpleHTTPRequestHandler):
     def log_message(self, fmt, *args):
         pass
 
-    def send_json(self, status, data):
+    def send_json(self, status, data, cookie_val=None):
         payload = json.dumps(data, ensure_ascii=False).encode("utf-8")
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Cache-Control", "no-store")
+        if cookie_val is not None:
+            if cookie_val == "":
+                self.send_header("Set-Cookie", "cjduz_token=; Path=/; Max-Age=0; SameSite=Lax; HttpOnly")
+            else:
+                self.send_header("Set-Cookie", f"cjduz_token={cookie_val}; Path=/; Max-Age=2592000; SameSite=Lax; HttpOnly")
         self.send_header("Content-Length", str(len(payload)))
         self.end_headers()
         self.wfile.write(payload)
@@ -312,10 +318,17 @@ class CJDUZKoreanHandler(SimpleHTTPRequestHandler):
             return {}
         return json.loads(self.rfile.read(length).decode("utf-8"))
 
-    def get_bearer_token(self):
+    def get_bearer_token(self, body=None):
         auth = self.headers.get("Authorization", "")
-        if auth.startswith("Bearer "):
+        if auth.startswith("Bearer ") and auth[7:].strip():
             return auth[7:].strip()
+        cookie_hdr = self.headers.get("Cookie", "")
+        for part in cookie_hdr.split(";"):
+            kv = part.strip().split("=", 1)
+            if len(kv) == 2 and kv[0] == "cjduz_token" and kv[1].strip():
+                return kv[1].strip()
+        if isinstance(body, dict) and body.get("token"):
+            return str(body["token"]).strip()
         return ""
 
     def is_local_dev(self):
@@ -459,7 +472,7 @@ class CJDUZKoreanHandler(SimpleHTTPRequestHandler):
                     "autoActivated": True,
                     "token": tok,
                     "user": {"id": uid, "email": email, "name": name, "authProvider": "email", "roadmapProfile": roadmap_profile, "state": st_init}
-                })
+                }, cookie_val=tok)
             resp = {
                 "ok": True,
                 "email": email,
@@ -512,7 +525,7 @@ class CJDUZKoreanHandler(SimpleHTTPRequestHandler):
                 "ok": True,
                 "token": token,
                 "user": {"id": uid, "email": email, "name": payload["name"], "authProvider": "email", "roadmapProfile": rp, "state": st}
-            })
+            }, cookie_val=token)
 
         # 3. LOGIN WITH EMAIL & PASSWORD
         if path == "/api/auth/login":
@@ -540,7 +553,7 @@ class CJDUZKoreanHandler(SimpleHTTPRequestHandler):
                     "roadmapProfile": json.loads(row[5] or "{}"),
                     "state": json.loads(row[6] or "{}")
                 }
-            })
+            }, cookie_val=token)
 
         # 4. GOOGLE OAUTH SIGN-IN / REGISTER
         if path == "/api/auth/google":
@@ -684,12 +697,23 @@ class CJDUZKoreanHandler(SimpleHTTPRequestHandler):
                 }
             })
 
+        if path == "/api/auth/logout":
+            tok = self.get_bearer_token(body)
+            if tok:
+                conn = sqlite3.connect(AUTH_DB_FILE)
+                conn.execute("DELETE FROM sessions WHERE token = ?", (tok,))
+                conn.commit()
+                conn.close()
+            return self.send_json(200, {"ok": True}, cookie_val="")
+
         # 7. SYNC PER-USER PROGRESS & PERSONALIZED ROADMAP
         if path == "/api/user/sync":
-            user = get_user_by_token(self.get_bearer_token())
+            user = get_user_by_token(self.get_bearer_token(body))
             if not user:
                 return self.send_json(401, {"ok": False, "error": "Chưa đăng nhập"})
             new_state = body.get("state") or {}
+            saved_at = int(time.time() * 1000)
+            new_state["updatedAt"] = saved_at
             rp = new_state.get("roadmapProfile") or user["roadmapProfile"] or {}
             conn = sqlite3.connect(AUTH_DB_FILE)
             conn.execute(
@@ -698,7 +722,7 @@ class CJDUZKoreanHandler(SimpleHTTPRequestHandler):
             )
             conn.commit()
             conn.close()
-            return self.send_json(200, {"ok": True})
+            return self.send_json(200, {"ok": True, "savedAt": saved_at})
 
         self.send_error(404)
 

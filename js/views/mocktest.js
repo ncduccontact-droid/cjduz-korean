@@ -1,4 +1,5 @@
-import { store, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261126-5";
+import { store, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261126-6";
+import { ico } from "../icons.js?v=20261126-6";
 
 /**
  * Hydrates a 70-question TOPIK I or 104-question TOPIK II exam from normalized slots + itemPool.
@@ -172,100 +173,99 @@ export function renderMockTestView(root, db, navigate, params = {}, registerClea
       <div class="breadcrumb-bar">
         <button type="button" id="bc-home">Trang chủ</button>
         <span>▶</span>
-        <span>Trung tâm Luyện Đề TOPIK (${levelKey === "topik1" ? "TOPIK I · Full 70 câu" : "TOPIK II · Full 104 câu"})</span>
+        <span>Đề thi ${levelKey === "topik1" ? "TOPIK I (70 câu)" : "TOPIK II (104 câu)"}</span>
       </div>
 
-      <!-- 2-MODE MASTER SWITCHER BANNER -->
-      <div class="box-kind" style="padding:18px 22px;margin-bottom:20px;background:linear-gradient(135deg,#E6F7F5 0%,#FFFFFF 100%);border:1.5px solid var(--primary);">
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;margin-bottom:14px;">
-          <div>
-            <strong style="font-size:18.5px;color:var(--primary-1);display:block;">
-              🎯 Chọn phương thức luyện đề ${levelKey === "topik1" ? "TOPIK I (Chuẩn 70 câu · 200 điểm)" : "TOPIK II (Chuẩn 104 câu · 300 điểm)"}
-            </strong>
-            <span style="font-size:13.5px;color:var(--text-muted);">
-              Chuyển linh hoạt giữa <strong>Kiểu 1: Vào thi Full Đề như thật</strong> và <strong>Kiểu 2: Luyện nhuần nhuyễn từng phần (Nghe · Đọc · Viết từ Dạng 1 → Dạng cuối)</strong>
-            </span>
-          </div>
+      <!-- CLEAN 2-MODE SWITCHER -->
+      <div class="box-kind" style="padding:16px 20px;margin-bottom:18px;background:linear-gradient(135deg,var(--primary-3) 0%,#FFFFFF 100%);">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:12px;">
+          <strong style="font-size:17.5px;color:var(--primary-1);">
+            ${ico("exam", 19)} Luyện đề ${levelKey === "topik1" ? "TOPIK I · 70 câu · 200 điểm" : "TOPIK II · 104 câu · 300 điểm"}
+          </strong>
 
-          <div style="display:flex;gap:8px;background:#F1F5F9;padding:5px;border-radius:99px;">
-            <button type="button" id="lv-btn-t1" style="padding:8px 18px;border-radius:99px;border:none;font-weight:800;cursor:pointer;background:${levelKey === "topik1" ? "var(--primary)" : "transparent"};color:${levelKey === "topik1" ? "#FFF" : "var(--text-main)"};">
-              TOPIK I (70 câu)
+          <div style="display:flex;gap:6px;background:#FFFFFF;border:1.5px solid var(--border-card);padding:4px;border-radius:99px;">
+            <button type="button" id="lv-btn-t1" style="padding:6px 16px;border-radius:99px;border:none;font-weight:700;cursor:pointer;background:${levelKey === "topik1" ? "var(--primary)" : "transparent"};color:${levelKey === "topik1" ? "#FFF" : "var(--text-main)"};">
+              TOPIK I
             </button>
-            <button type="button" id="lv-btn-t2" style="padding:8px 18px;border-radius:99px;border:none;font-weight:800;cursor:pointer;background:${levelKey === "topik2" ? "var(--primary)" : "transparent"};color:${levelKey === "topik2" ? "#FFF" : "var(--text-main)"};">
-              TOPIK II (104 câu)
+            <button type="button" id="lv-btn-t2" style="padding:6px 16px;border-radius:99px;border:none;font-weight:700;cursor:pointer;background:${levelKey === "topik2" ? "var(--primary)" : "transparent"};color:${levelKey === "topik2" ? "#FFF" : "var(--text-main)"};">
+              TOPIK II
             </button>
           </div>
         </div>
 
         <div class="grid-2" style="gap:12px;">
-          <button type="button" id="mode-card-exams" style="text-align:left;padding:15px 18px;border-radius:14px;cursor:pointer;border:2px solid ${viewMode === "exams" ? "var(--primary)" : "#CBD5E1"};background:${viewMode === "exams" ? "#FFFFFF" : "rgba(255,255,255,0.65)"};box-shadow:${viewMode === "exams" ? "var(--shadow-el)" : "none"};">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-              <strong style="font-size:16px;color:var(--primary-1);">📝 Kiểu 1: Vào làm Full Đề thi thật (${rawExams.length} đề)</strong>
-              ${viewMode === "exams" ? `<span class="badge-orange">ĐANG CHỌN</span>` : ""}
+          <button type="button" id="mode-card-exams" style="text-align:left;padding:13px 16px;border-radius:15px;cursor:pointer;border:1.5px solid ${viewMode === "exams" ? "var(--primary)" : "var(--border-card)"};background:#FFFFFF;box-shadow:${viewMode === "exams" ? "0 3px 0 var(--primary)" : "0 2px 0 var(--border-lip)"};">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+              <strong style="font-size:15.5px;color:var(--primary-1);">${ico("exam", 17)} Vào làm Full Đề (${rawExams.length} đề)</strong>
+              ${viewMode === "exams" ? `<span class="badge-orange">Đang chọn</span>` : ""}
             </div>
             <div style="font-size:13px;color:var(--text-muted);">
-              Trọn vẹn ${levelKey === "topik1" ? "70 câu (30 Nghe + 40 Đọc · 100 phút)" : "104 câu (50 Nghe + 4 Viết + 50 Đọc · 180 phút)"}, có <strong>⭐ Đề thi tuyển chọn</strong> &amp; ghi rõ nguồn NIIED / Sejong / IBT.
+              Đủ ${levelKey === "topik1" ? "70 câu · 100 phút" : "104 câu · 180 phút"} chuẩn thi thật
             </div>
           </button>
 
-          <button type="button" id="mode-card-segments" style="text-align:left;padding:15px 18px;border-radius:14px;cursor:pointer;border:2px solid ${viewMode === "segments" ? "var(--yellow-2)" : "#CBD5E1"};background:${viewMode === "segments" ? "#FFFBEB" : "rgba(255,255,255,0.65)"};box-shadow:${viewMode === "segments" ? "var(--shadow-el)" : "none"};">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-              <strong style="font-size:16px;color:#B45309;">🧩 Kiểu 2: Luyện đề từng phần · Từng dạng (Dạng 1 → ${levelKey === "topik1" ? "Dạng 8" : "Dạng 10"})</strong>
-              ${viewMode === "segments" ? `<span class="badge-orange">ĐANG CHỌN</span>` : ""}
+          <button type="button" id="mode-card-segments" style="text-align:left;padding:13px 16px;border-radius:15px;cursor:pointer;border:1.5px solid ${viewMode === "segments" ? "var(--yellow-2)" : "var(--border-card)"};background:#FFFFFF;box-shadow:${viewMode === "segments" ? "0 3px 0 var(--yellow-lip)" : "0 2px 0 var(--border-lip)"};">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+              <strong style="font-size:15.5px;color:#B45309;">${ico("layers", 17)} Luyện từng phần · Từng dạng (1 → ${levelKey === "topik1" ? "8" : "10"})</strong>
+              ${viewMode === "segments" ? `<span class="badge-orange">Đang chọn</span>` : ""}
             </div>
             <div style="font-size:13px;color:var(--text-muted);">
-              Bóc tách cả <strong>Phần Nghe</strong>, <strong>Phần Đọc</strong>${levelKey === "topik2" ? ", <strong>Phần Viết</strong>" : ""} từ Dạng 1 đến Dạng cuối — chấm tức thì &amp; lặp câu sai đến khi nhuần nhuyễn 100%.
+              Tách riêng Nghe · Đọc${levelKey === "topik2" ? " · Viết" : ""}, chấm ngay &amp; lặp câu sai
             </div>
           </button>
         </div>
       </div>
 
       ${viewMode === "exams" ? `
-        <!-- FILTER PILLS INCLUDING ⭐ ĐỀ THI TUYỂN CHỌN -->
-        <div class="exam-nav" style="margin-bottom:18px;flex-wrap:wrap;">
-          <button class="${category === "all" ? "active" : ""}" data-cat="all">📚 Tất cả Full đề (${rawExams.length})</button>
-          <button class="${category === "curated" ? "active" : ""}" data-cat="curated">⭐ Đề thi tuyển chọn (${curatedCount})</button>
-          <button class="${category === "niied" ? "active" : ""}" data-cat="niied">🏛️ Đề chính thức NIIED (Kỳ 35 → 64)</button>
-          <button class="${category === "sejong_ibt" ? "active" : ""}" data-cat="sejong_ibt">💻 Đề TOPIK IBT &amp; Học viện Sejong</button>
-          <button class="${category === "trend" ? "active" : ""}" data-cat="trend">🔥 Xu hướng mới 2024–2025 (Kỳ 96 &amp; 102)</button>
+        <div class="exam-nav">
+          <button class="${category === "all" ? "active" : ""}" data-cat="all">Tất cả (${rawExams.length})</button>
+          <button class="${category === "curated" ? "active" : ""}" data-cat="curated">★ Đề tuyển chọn (${curatedCount})</button>
+          <button class="${category === "niied" ? "active" : ""}" data-cat="niied">Đề NIIED (Kỳ 35–64)</button>
+          <button class="${category === "sejong_ibt" ? "active" : ""}" data-cat="sejong_ibt">IBT &amp; Sejong</button>
+          <button class="${category === "trend" ? "active" : ""}" data-cat="trend">Xu hướng 2024–2025</button>
         </div>
 
         <div class="grid-2">
           ${filteredExams.map((ex) => {
             const past = store.state.examHistory.find((h) => h.examId === ex.id);
             return `
-              <div class="box-kind" style="padding:22px;display:flex;flex-direction:column;justify-content:space-between;border:${ex.curated ? "1.5px solid rgba(254,154,5,0.45)" : "1px solid transparent"};">
+              <div class="box-kind" style="padding:18px 20px;display:flex;flex-direction:column;justify-content:space-between;">
                 <div>
-                  ${ex.ribbon ? `<div class="test-tape">${ex.ribbon}</div>` : ""}
-                  <h3 style="margin:0 0 6px;font-size:18px;padding-right:78px;">${ex.title}</h3>
-                  <div style="font-size:13px;color:var(--primary-1);font-weight:700;margin-bottom:6px;">
-                    📋 ${ex.structureDesc}
+                  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px;">
+                    <h3 style="margin:0;font-size:16.5px;line-height:1.35;">${ex.title}</h3>
+                    ${ex.curated ? `<span class="badge-orange" style="flex-shrink:0;">★ Tuyển chọn</span>` : ""}
                   </div>
+
+                  <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;">
+                    <span class="meta-chip" style="color:var(--primary-1);">Full ${ex.totalQuestions} câu</span>
+                    <span class="meta-chip">${ex.minutes} phút</span>
+                    <span class="meta-chip">Đỗ ${ex.passScore}/${ex.maxScore}đ</span>
+                  </div>
+
                   ${ex.curated && ex.curatedNote ? `
-                    <div style="font-size:13px;background:#FFFBEB;color:#92400E;padding:7px 11px;border-radius:8px;margin-bottom:8px;border-left:3px solid var(--yellow-2);">
-                      ⭐ <strong>Điểm nổi bật:</strong> ${ex.curatedNote}
+                    <div style="font-size:12.5px;color:var(--text-muted);margin-bottom:8px;">
+                      ${ex.curatedNote}
                     </div>
                   ` : ""}
-                  <div style="font-size:12.5px;color:#475569;background:#F8FAFC;padding:7px 11px;border-radius:8px;margin-bottom:10px;">
-                    📌 <strong>Nguồn đề:</strong> ${ex.sourceOrg}
-                    ${ex.sourceUrl ? ` · <a href="${ex.sourceUrl}" target="_blank" rel="noopener noreferrer" style="color:var(--primary-1);font-weight:700;text-decoration:underline;">${ex.sourceUrl.replace("https://", "")}</a>` : ""}
+
+                  <div style="font-size:12px;color:var(--text-muted);background:var(--bg-body);padding:6px 10px;border-radius:10px;margin-bottom:12px;">
+                    Nguồn: <strong style="color:var(--text-main);">${ex.sourceOrg}</strong>
+                    ${ex.sourceUrl ? ` · <a href="${ex.sourceUrl}" target="_blank" rel="noopener noreferrer" style="color:var(--primary-1);font-weight:700;">${ex.sourceUrl.replace("https://", "")}</a>` : ""}
                   </div>
-                  <div style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">
-                    ⏱️ <strong>${ex.minutes} phút</strong> &nbsp;|&nbsp; 🎯 Điểm đỗ: <strong>${ex.passScore}/${ex.maxScore}đ</strong> &nbsp;|&nbsp; 📝 Số lượng: <strong>Đủ ${ex.totalQuestions} câu chuẩn</strong>
-                  </div>
+
                   ${past ? `
-                    <div style="font-size:13px;color:var(--success);font-weight:700;margin-bottom:10px;">
-                      ✔ Lần thi gần nhất: ${past.score}/${past.maxScore} điểm (${past.grade})
+                    <div style="font-size:12.5px;color:var(--success);font-weight:700;margin-bottom:10px;">
+                      ✔ Gần nhất: ${past.score}/${past.maxScore}đ (${past.grade})
                     </div>
                   ` : ""}
                 </div>
 
-                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
-                  <button type="button" class="btn-primary" data-quick-full="${ex.id}" style="flex:1;justify-content:center;">
-                    ⚡ Vào làm Full ${ex.totalQuestions} câu
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                  <button type="button" class="btn-primary" data-quick-full="${ex.id}" style="flex:1;">
+                    Làm Full ${ex.totalQuestions} câu
                   </button>
                   <button type="button" class="btn-outline-teal" data-open-seg="${ex.id}">
-                    🧩 Chia phần / Từng dạng
+                    Chia phần
                   </button>
                 </div>
               </div>
@@ -273,17 +273,16 @@ export function renderMockTestView(root, db, navigate, params = {}, registerClea
           }).join("")}
         </div>
       ` : `
-        <!-- KIỂU 2: SEGMENTED SKILL & QUESTION-TYPE MASTERY HUB -->
-        <div class="skill-pills-row" style="margin-bottom:18px;">
+        <div class="skill-pills-row">
           <button type="button" class="btn-skill ${skill === "listening" ? "active" : ""}" data-seg-sk="listening">
-            🎧 Phần Nghe · 듣기 (${lvTaxonomy.listening.length} Dạng · ${levelKey === "topik1" ? "Câu 1~30" : "Câu 1~50"})
+            ${ico("headphones", 16)} Nghe · 듣기 (${lvTaxonomy.listening.length} dạng)
           </button>
           <button type="button" class="btn-skill ${skill === "reading" ? "active" : ""}" data-seg-sk="reading">
-            📖 Phần Đọc · 읽기 (${lvTaxonomy.reading.length} Dạng · ${levelKey === "topik1" ? "Câu 31~70" : "Đọc 1~50"})
+            ${ico("book", 16)} Đọc · 읽기 (${lvTaxonomy.reading.length} dạng)
           </button>
           ${levelKey === "topik2" ? `
             <button type="button" class="btn-skill ${skill === "writing" ? "active" : ""}" data-seg-sk="writing">
-              ✍️ Phần Viết · 쓰기 (3 Dạng · Câu 51~54 원고지)
+              ${ico("pen", 16)} Viết · 쓰기 (Câu 51–54)
             </button>
           ` : ""}
         </div>

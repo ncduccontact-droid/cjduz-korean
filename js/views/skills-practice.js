@@ -1,7 +1,8 @@
-import { store, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261126-5";
-import { analyzePronunciationRules, conjugateKoreanPredicate } from "../korean-engine.js?v=20261126-5";
-import { renderChapterExercises } from "../chapter-exercises.js?v=20261126-5";
-import { renderShortsShadowingStudio } from "../shorts-shadowing.js?v=20261126-5";
+import { store, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261126-6";
+import { ico } from "../icons.js?v=20261126-6";
+import { analyzePronunciationRules, conjugateKoreanPredicate } from "../korean-engine.js?v=20261126-6";
+import { renderChapterExercises } from "../chapter-exercises.js?v=20261126-6";
+import { renderShortsShadowingStudio } from "../shorts-shadowing.js?v=20261126-6";
 
 const READING_PASSAGES = [
   {
@@ -98,27 +99,25 @@ export function renderSkillsPracticeView(root, db, navigate, params = {}) {
       <div class="container-web">
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
           <div class="breadcrumb-bar" style="margin-bottom:0;">
-            <span>Luyện tập</span><span>▶</span><span>Dịch câu · Shadowing YouTube Shorts · Nghe · Đọc</span>
+            <span>Luyện tập</span><span>▶</span><span>Kỹ năng &amp; Shorts</span>
           </div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;">
-            <button type="button" class="btn-outline-teal" id="sw-to-topik1" style="padding:5px 12px;font-size:13px;">Ôn cấu trúc TOPIK I →</button>
-            <button type="button" class="btn-outline-teal" id="sw-to-topik2" style="padding:5px 12px;font-size:13px;">Cấu trúc TOPIK II →</button>
+            <button type="button" class="btn-outline-teal" id="sw-to-topik1" style="padding:5px 12px;font-size:13px;">Luyện dạng TOPIK I</button>
+            <button type="button" class="btn-outline-teal" id="sw-to-topik2" style="padding:5px 12px;font-size:13px;">Luyện dạng TOPIK II</button>
           </div>
         </div>
 
         <div class="skill-pills-row">
           <button class="btn-skill ${activeSkill === "translate" ? "active" : ""}" data-sk="translate">
-            ✍️ Dịch câu &amp; Bài tập chương
+            ${ico("pen", 16)} Dịch câu &amp; Bài tập chương
           </button>
           <button class="btn-skill ${activeSkill === "shadowing" || activeSkill === "textbook-shadow" ? "active" : ""}" data-sk="shadowing">
-            🎬 Shadowing Clip YouTube Shorts
+            ${ico("video", 16)} Shadowing Shorts
             <span class="badge-mia">HOT</span>
           </button>
-          <button class="btn-skill ${activeSkill === "listening" ? "active" : ""}" data-sk="listening">🎧 Nghe &amp; Chép chính tả</button>
-          <button class="btn-skill ${activeSkill === "reading" ? "active" : ""}" data-sk="reading">📖 Đọc (Chạm từ tra nghĩa)</button>
-          <button class="btn-skill ${activeSkill === "roleplay" ? "active" : ""}" data-sk="roleplay">
-            💬 Giao tiếp &amp; 3 Cấp Kính ngữ
-          </button>
+          <button class="btn-skill ${activeSkill === "listening" ? "active" : ""}" data-sk="listening">${ico("headphones", 16)} Nghe chép</button>
+          <button class="btn-skill ${activeSkill === "reading" ? "active" : ""}" data-sk="reading">${ico("book", 16)} Đọc hiểu</button>
+          <button class="btn-skill ${activeSkill === "roleplay" ? "active" : ""}" data-sk="roleplay">${ico("chat", 16)} Giao tiếp &amp; Kính ngữ</button>
         </div>
 
         <div id="skill-stage"></div>

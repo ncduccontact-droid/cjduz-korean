@@ -1,7 +1,8 @@
-import { store, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261126-5";
-import { analyzePronunciationRules, appendJamoToText } from "../korean-engine.js?v=20261126-5";
-import { HANGEUL_DATA, GRAMMAR_COMPARISONS, HANJA_ROOTS, FREQUENT_TOPIK_EXPRESSIONS, TEXTBOOK_SERIES } from "../curated-content.js?v=20261126-5";
-import { renderChapterExercises } from "../chapter-exercises.js?v=20261126-5";
+import { store, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261126-6";
+import { ico } from "../icons.js?v=20261126-6";
+import { analyzePronunciationRules, appendJamoToText } from "../korean-engine.js?v=20261126-6";
+import { HANGEUL_DATA, GRAMMAR_COMPARISONS, HANJA_ROOTS, FREQUENT_TOPIK_EXPRESSIONS, TEXTBOOK_SERIES } from "../curated-content.js?v=20261126-6";
+import { renderChapterExercises } from "../chapter-exercises.js?v=20261126-6";
 
 export function renderTheoryView(root, db, navigate, params = {}) {
   const sub = params.sub || "index";
@@ -25,129 +26,123 @@ export function renderTheoryView(root, db, navigate, params = {}) {
 
   root.innerHTML = `
     <div class="container-web">
-      <!-- TIER 1: TỪ VỰNG (Học từ vựng & Ôn từ vựng tách rõ như yêu cầu) -->
+      <!-- TIER 1: TỪ VỰNG -->
       <div class="section-head" style="margin-top:4px;">
-        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
-          <h2>Từ vựng (Học từ &amp; Ôn tập SRS)</h2>
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+          <h2>Từ vựng</h2>
           <select id="theory-vocab-select" class="box-select">
-            <option value="sc1">Sơ cấp 1 · Giáo trình Tổng Hợp (537 từ)</option>
-            <option value="topik1">Từ vựng &amp; Câu điền khuyết TOPIK I (440 mục)</option>
-            <option value="sejong1">Giáo trình Sejong (129 từ)</option>
+            <option value="sc1">Sơ cấp 1 · Tổng Hợp (537 từ)</option>
+            <option value="topik1">Từ vựng TOPIK I (432 mục)</option>
+            <option value="sejong1">Giao tiếp Sejong (129 từ)</option>
             ${db.customDecks.map((d) => `<option value="${d.deckId}">${d.title} (${d.count} từ)</option>`).join("")}
           </select>
         </div>
         <button class="btn-orange" id="btn-start-srs-top">
-          🔁 Vào Phòng Ôn Từ Vựng (${dueIds.length} thẻ đến hạn)
+          ${ico("cards", 17)} Ôn thẻ SRS (${dueIds.length})
         </button>
       </div>
 
       <div class="grid-2">
         <div class="theory-card" data-go-book="sc1">
-          <div style="display:flex;align-items:center;gap:14px;">
-            <div class="icon-vocab-badge">Aa</div>
+          <div style="display:flex;align-items:center;gap:13px;">
+            <div class="icon-vocab-badge">${ico("book", 22)}</div>
             <div>
-              <strong style="font-size:17px;display:block;">Từ vựng Tiếng Hàn Tổng Hợp · Sơ cấp 1</strong>
-              <span style="font-size:13.5px;color:var(--text-muted);">Trọn bộ 15 Bài · Đầy đủ giọng nữ Kyuri &amp; ghi chú biến âm</span>
+              <strong style="font-size:16.5px;display:block;">Tiếng Hàn Tổng Hợp · Sơ cấp 1</strong>
+              <span style="font-size:13px;color:var(--text-muted);">15 bài · Giọng Kyuri &amp; biến âm</span>
             </div>
           </div>
-          <div style="text-align:right;flex-shrink:0;">
-            <span style="color:var(--success);font-weight:700;">✔ ${sc1Mastered}/${db.sc1Vocab.length}</span>
-          </div>
+          <span class="meta-chip" style="color:var(--primary-1);">${sc1Mastered}/${db.sc1Vocab.length}</span>
         </div>
 
         <div class="theory-card" data-go-review="all">
-          <div style="display:flex;align-items:center;gap:14px;">
-            <div class="icon-vocab-badge" style="background:rgba(254,154,5,0.14);color:var(--yellow-2);border-color:rgba(254,154,5,0.3);">Ôn</div>
+          <div style="display:flex;align-items:center;gap:13px;">
+            <div class="icon-grammar-badge">${ico("cards", 22)}</div>
             <div>
-              <strong style="font-size:17px;display:block;">Từ vựng chưa thuộc &amp; Đánh dấu sao</strong>
-              <span style="font-size:13.5px;color:var(--text-muted);">4 chế độ: Flashcard · Trắc nghiệm · Nghe gõ Hangeul · Ghép cặp</span>
+              <strong style="font-size:16.5px;display:block;">Từ chưa thuộc &amp; Đánh dấu sao</strong>
+              <span style="font-size:13px;color:var(--text-muted);">Lật thẻ 3D · Trắc nghiệm · Gõ chữ · Ghép cặp</span>
             </div>
           </div>
-          <div style="text-align:right;flex-shrink:0;">
-            <span style="color:var(--yellow-2);font-weight:700;">★ ${starredList.length} · Chưa thuộc ${unlearnedList.length}</span>
-          </div>
+          <span class="badge-orange">★ ${starredList.length} · Còn ${unlearnedList.length}</span>
         </div>
 
         <div class="theory-card" data-go-book="topik1">
-          <div style="display:flex;align-items:center;gap:14px;">
-            <div class="icon-vocab-badge">T1</div>
+          <div style="display:flex;align-items:center;gap:13px;">
+            <div class="icon-vocab-badge">${ico("layers", 22)}</div>
             <div>
-              <strong style="font-size:17px;display:block;">Từ vựng &amp; Ngữ cảnh TOPIK I (Cấp 1–2)</strong>
-              <span style="font-size:13.5px;color:var(--text-muted);">440 mục kèm câu điền khuyết Cloze &amp; giải thích ngữ pháp</span>
+              <strong style="font-size:16.5px;display:block;">Từ vựng &amp; Câu điền khuyết TOPIK I</strong>
+              <span style="font-size:13px;color:var(--text-muted);">432 câu ngữ cảnh Cấp 1–2</span>
             </div>
           </div>
-          <span style="color:var(--success);font-weight:700;flex-shrink:0;">✔ ${tp1Mastered}/${db.topik1Bank.length}</span>
+          <span class="meta-chip" style="color:var(--primary-1);">${tp1Mastered}/${db.topik1Bank.length}</span>
         </div>
 
         <div class="theory-card" data-go-book="sejong1">
-          <div style="display:flex;align-items:center;gap:14px;">
-            <div class="icon-vocab-badge">SJ</div>
+          <div style="display:flex;align-items:center;gap:13px;">
+            <div class="icon-vocab-badge">${ico("chat", 22)}</div>
             <div>
-              <strong style="font-size:17px;display:block;">Từ vựng Giao tiếp Sejong (Bài 3, 4, 6, 7)</strong>
-              <span style="font-size:13.5px;color:var(--text-muted);">Vị trí, Sinh hoạt, Giao thông chỉ đường &amp; Lời mời</span>
+              <strong style="font-size:16.5px;display:block;">Từ vựng Giao tiếp Sejong</strong>
+              <span style="font-size:13px;color:var(--text-muted);">Vị trí, sinh hoạt, chỉ đường &amp; lời mời</span>
             </div>
           </div>
-          <span style="color:var(--success);font-weight:700;flex-shrink:0;">✔ ${sjMastered}/${db.sejongVocab.length}</span>
+          <span class="meta-chip" style="color:var(--primary-1);">${sjMastered}/${db.sejongVocab.length}</span>
         </div>
       </div>
 
-      <!-- TIER 2: NGỮ PHÁP, PHÁT ÂM & CÂU THƯỜNG GẶP TOPIK 1-2 -->
+      <!-- TIER 2: NGỮ PHÁP & PHÁT ÂM -->
       <div class="section-head">
-        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
-          <h2>Ngữ pháp, Biến âm &amp; Câu thường gặp TOPIK 1, 2</h2>
-        </div>
+        <h2>Ngữ pháp &amp; Phát âm</h2>
       </div>
 
       <div class="grid-2">
         <div class="theory-card" id="card-hangeul-lab">
-          <div style="display:flex;align-items:center;gap:14px;">
-            <div class="icon-grammar-badge" style="font-family:var(--font-ko);font-size:18px;">한글</div>
+          <div style="display:flex;align-items:center;gap:13px;">
+            <div class="icon-grammar-badge" style="font-family:var(--font-ko);font-size:16px;">한글</div>
             <div>
-              <strong style="font-size:17px;display:block;">Bảng chữ cái Hangeul, Bàn phím Hàn &amp; 7 Quy tắc Biến âm</strong>
-              <span style="font-size:13.5px;color:var(--text-muted);">Soi tự động nối âm [도길], căng âm [학꾜], biến âm mũi [안녕하심니까]</span>
+              <strong style="font-size:16.5px;display:block;">Hangeul &amp; 7 Quy tắc Biến âm</strong>
+              <span style="font-size:13px;color:var(--text-muted);">Soi tự động nối âm, căng âm, biến âm mũi</span>
             </div>
           </div>
-          <span style="color:var(--primary-1);font-weight:700;">Mở Lab →</span>
+          <span class="meta-chip" style="color:var(--primary-1);">Mở Lab</span>
         </div>
 
         <div class="theory-card" id="card-frequent-topik">
-          <div style="display:flex;align-items:center;gap:14px;">
-            <div class="icon-grammar-badge">HOT</div>
+          <div style="display:flex;align-items:center;gap:13px;">
+            <div class="icon-grammar-badge">${ico("star", 22)}</div>
             <div>
-              <strong style="font-size:17px;display:block;">Kho Câu &amp; Biểu hiện thường gặp TOPIK 1, 2</strong>
-              <span style="font-size:13.5px;color:var(--text-muted);">Mẫu câu phản xạ tủ, Phó từ nối câu, Từ đồng nghĩa &amp; Quán dụng ngữ</span>
+              <strong style="font-size:16.5px;display:block;">Biểu hiện thường gặp TOPIK 1 &amp; 2</strong>
+              <span style="font-size:13px;color:var(--text-muted);">Câu tủ hội thoại, liên từ, đồng nghĩa &amp; quán dụng ngữ</span>
             </div>
           </div>
-          <span style="color:var(--yellow-2);font-weight:700;">${FREQUENT_TOPIK_EXPRESSIONS.length} chủ điểm</span>
+          <span class="badge-orange">${FREQUENT_TOPIK_EXPRESSIONS.length} mục</span>
         </div>
 
         <div class="theory-card" id="card-sc1-grammar">
-          <div style="display:flex;align-items:center;gap:14px;">
-            <div class="icon-grammar-badge">ABC</div>
+          <div style="display:flex;align-items:center;gap:13px;">
+            <div class="icon-vocab-badge">${ico("pen", 21)}</div>
             <div>
-              <strong style="font-size:17px;display:block;">Ngữ pháp Tiếng Hàn Tổng Hợp · Sơ cấp 1 (Bài 1–15)</strong>
-              <span style="font-size:13.5px;color:var(--text-muted);">51 cấu trúc kèm 102 câu ví dụ phát âm giọng nữ Kyuri</span>
+              <strong style="font-size:16.5px;display:block;">Ngữ pháp Sơ cấp 1 (Bài 1–15)</strong>
+              <span style="font-size:13px;color:var(--text-muted);">51 cấu trúc kèm ví dụ giọng Kyuri</span>
             </div>
           </div>
-          <span style="color:var(--success);font-weight:700;">${db.sc1Grammar.length} cấu trúc</span>
+          <span class="meta-chip" style="color:var(--primary-1);">${db.sc1Grammar.length} mẫu</span>
         </div>
 
         <div class="theory-card" id="card-grammar-compare">
-          <div style="display:flex;align-items:center;gap:14px;">
-            <div class="icon-grammar-badge">VS</div>
+          <div style="display:flex;align-items:center;gap:13px;">
+            <div class="icon-grammar-badge">${ico("sparkle", 21)}</div>
             <div>
-              <strong style="font-size:17px;display:block;">Phân biệt các cặp Ngữ pháp dễ nhầm lẫn</strong>
-              <span style="font-size:13.5px;color:var(--text-muted);">은/는 vs 이/가 · -아서 vs -(으)니까 · 안 vs 못 · 에 vs 에서</span>
+              <strong style="font-size:16.5px;display:block;">Phân biệt Ngữ pháp dễ nhầm</strong>
+              <span style="font-size:13px;color:var(--text-muted);">은/는 vs 이/가 · -아서 vs -(으)니까 · 에 vs 에서</span>
             </div>
           </div>
-          <span style="color:var(--primary-1);font-weight:700;">${GRAMMAR_COMPARISONS.length} bảng so sánh</span>
+          <span class="meta-chip">${GRAMMAR_COMPARISONS.length} cặp</span>
         </div>
       </div>
 
-      <!-- TIER 3: KỆ SÁCH 6 CỘT GIÁO TRÌNH TIẾNG HÀN TỔNG HỢP & HÁN HÀN -->
+      <!-- TIER 3: KỆ SÁCH 6 QUYỂN -->
       <div class="section-head">
-        <h2>Kệ sách Giáo trình Tiếng Hàn Tổng Hợp (Quyển 1 → 6) &amp; Âm Hán – Hàn</h2>
-        <button class="btn-outline-teal" id="btn-open-hanja">🌳 Mở Sơ đồ Gốc từ Âm Hán – Hàn</button>
+        <h2>Bộ 6 quyển Giáo trình Tổng Hợp</h2>
+        <button class="btn-outline-teal" id="btn-open-hanja">${ico("sprout", 16)} Sơ đồ Âm Hán – Hàn</button>
       </div>
 
       <div class="grid-books-6">

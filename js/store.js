@@ -1,8 +1,16 @@
-const AUTH_SESSION_KEY = "cjduz_auth_session_v2";
+// 100% Cloud-Account Bound Progress Store (Zero localStorage progress dependency)
+const AUTH_TOKEN_KEY = "cjduz_auth_token_v3";
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
 }
+
+export const UI_THEMES = [
+  { id: "mint", name: "Matcha Daisy", desc: "Xanh ngọc sữa & Cúc vàng (Khuyên dùng)", swatch: "#149E8E", accent: "#F59E0B" },
+  { id: "soda", name: "Soda Sky", desc: "Xanh dương pastel Hàn Quốc & Kem bơ", swatch: "#3B7DDD", accent: "#F59E0B" },
+  { id: "peach", name: "Peach Camellia", desc: "Hồng đào phấn dịu & Lá trà non", swatch: "#E06D85", accent: "#149E8E" },
+  { id: "lavender", name: "Taro Milk", desc: "Tím khoai môn sữa & Cam quýt", swatch: "#6E62D6", accent: "#F59E0B" }
+];
 
 export const DEFAULT_ROADMAP_PROFILE = {
   startStage: "sc1",        // zero | sc1 | sc2 | tc3
@@ -14,13 +22,14 @@ export const DEFAULT_ROADMAP_PROFILE = {
 
 function createFreshState(roadmapProfile = DEFAULT_ROADMAP_PROFILE) {
   return {
+    uiTheme: "mint",
     targetLevel: roadmapProfile.targetLevel || "TOPIK II - Cấp 4",
     examDate: roadmapProfile.examDate || "2027-04-18",
     roadmapProfile: { ...DEFAULT_ROADMAP_PROFILE, ...roadmapProfile },
     lastLesson: roadmapProfile.startStage === "zero"
       ? { book: "sc1", lesson: 1, title: "Nhập môn Hangeul & Bài 01" }
       : (roadmapProfile.startStage === "sc2"
-        ? { book: "topik1", lesson: 1, title: "Chặng 1 · Từ vựng & Câu TOPIK I" }
+        ? { book: "topik1", lesson: 1, title: "Chặng 1 · Từ vựng TOPIK I" }
         : { book: "sc1", lesson: 1, title: "Bài 01 · Giới thiệu" }),
     streak: 1,
     lastActiveDate: todayISO(),
@@ -32,88 +41,169 @@ function createFreshState(roadmapProfile = DEFAULT_ROADMAP_PROFILE) {
     mistakes: [],
     examHistory: [],
     customYoutubeClips: [],
-    geminiApiKey: ""
+    updatedAt: 0
   };
 }
 
-function loadSessionMeta() {
+// Clean up any legacy browser-stored progress keys so ONLY server account holds user progress
+function purgeLegacyLocalProgress() {
   try {
-    const raw = localStorage.getItem(AUTH_SESSION_KEY);
-    if (!raw) return { mode: "guest", token: "", user: null };
-    const parsed = JSON.parse(raw);
-    if (parsed?.mode === "user" && parsed?.user && parsed?.token) return parsed;
-    return { mode: "guest", token: "", user: null };
-  } catch {
-    return { mode: "guest", token: "", user: null };
-  }
+    const toRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && (k.startsWith("cjduz_user_state_") || k === "cjduz_guest_temp")) {
+        toRemove.push(k);
+      }
+    }
+    toRemove.forEach((k) => localStorage.removeItem(k));
+  } catch {}
 }
 
-function stateKeyForSession(sess) {
-  if (sess?.mode === "user" && sess?.user?.id) {
-    return `cjduz_user_state_${sess.user.id}`;
+function loadSavedTokenMeta() {
+  try {
+    // Migrate from v2 session token if present so existing logged-in tab stays signed in seamlessly
+    const rawV3 = localStorage.getItem(AUTH_TOKEN_KEY);
+    if (rawV3) {
+      const p = JSON.parse(rawV3);
+      if (p?.mode === "user" && p?.user) return p;
+    }
+    const rawV2 = localStorage.getItem("cjduz_auth_session_v2");
+    if (rawV2) {
+      const p2 = JSON.parse(rawV2);
+      if (p2?.mode === "user" && p2?.user) {
+        localStorage.setItem(AUTH_TOKEN_KEY, JSON.stringify(p2));
+        return p2;
+      }
+    }
+  } catch {}
+  return { mode: "guest", token: "", user: null };
+}
+
+function applyDocumentTheme(themeId) {
+  const valid = UI_THEMES.some((t) => t.id === themeId) ? themeId : "mint";
+  if (typeof document !== "undefined") {
+    document.documentElement.dataset.theme = valid;
   }
-  return "cjduz_guest_temp";
 }
 
 let syncTimer = null;
+let dirtyPendingSync = false;
 
 export const store = {
-  session: loadSessionMeta(),
+  session: loadSavedTokenMeta(),
   state: createFreshState(),
+  syncStatus: "synced", // synced | syncing | error
   listeners: new Set(),
 
   init() {
-    this.state = this.loadStateForCurrentSession();
-    localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(this.session));
+    purgeLegacyLocalProgress();
+    applyDocumentTheme(this.state.uiTheme);
+
+    if (typeof window !== "undefined") {
+      const flushOnUnload = () => {
+        if (dirtyPendingSync && this.isAuthenticated()) {
+          this.flushCloudSyncBeacon();
+        }
+      };
+      window.addEventListener("pagehide", flushOnUnload);
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "hidden") flushOnUnload();
+      });
+    }
   },
 
   isAuthenticated() {
-    return this.session?.mode === "user" && Boolean(this.session?.user?.email) && Boolean(this.session?.token);
+    return this.session?.mode === "user" && Boolean(this.session?.user?.email);
   },
 
-  loadStateForCurrentSession() {
+  setTheme(themeId) {
+    const valid = UI_THEMES.some((t) => t.id === themeId) ? themeId : "mint";
+    this.state.uiTheme = valid;
+    applyDocumentTheme(valid);
+    this.save();
+  },
+
+  flushCloudSyncBeacon() {
+    if (!this.isAuthenticated()) return;
+    clearTimeout(syncTimer);
+    dirtyPendingSync = false;
     try {
-      const raw = localStorage.getItem(stateKeyForSession(this.session));
-      if (!raw) return createFreshState();
-      const parsed = JSON.parse(raw);
-      return {
-        ...createFreshState(parsed.roadmapProfile),
-        ...parsed,
-        roadmapProfile: { ...DEFAULT_ROADMAP_PROFILE, ...(parsed.roadmapProfile || {}) }
-      };
+      const payload = JSON.stringify({ token: this.session.token || "", state: this.state });
+      if (navigator.sendBeacon) {
+        const blob = new Blob([payload], { type: "application/json" });
+        navigator.sendBeacon("/api/user/sync", blob);
+      } else {
+        fetch("/api/user/sync", {
+          method: "POST",
+          keepalive: true,
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+            ...(this.session.token ? { "Authorization": `Bearer ${this.session.token}` } : {})
+          },
+          body: payload
+        }).catch(() => {});
+      }
+    } catch {}
+  },
+
+  async pushToCloudNow() {
+    if (!this.isAuthenticated()) return;
+    dirtyPendingSync = false;
+    this.syncStatus = "syncing";
+    this.notify();
+    try {
+      const res = await fetch("/api/user/sync", {
+        method: "POST",
+        keepalive: true,
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          ...(this.session.token ? { "Authorization": `Bearer ${this.session.token}` } : {})
+        },
+        body: JSON.stringify({ token: this.session.token || "", state: this.state })
+      });
+      if (res.ok) {
+        this.syncStatus = "synced";
+      } else {
+        this.syncStatus = "error";
+      }
     } catch {
-      return createFreshState();
+      this.syncStatus = "error";
     }
+    this.notify();
+  },
+
+  notify() {
+    this.listeners.forEach((fn) => fn(this.state, this.session, this.syncStatus));
   },
 
   save(skipCloud = false) {
-    localStorage.setItem(stateKeyForSession(this.session), JSON.stringify(this.state));
-    localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(this.session));
-    this.listeners.forEach((fn) => fn(this.state, this.session));
+    this.state.updatedAt = Date.now();
+    applyDocumentTheme(this.state.uiTheme);
+    try {
+      localStorage.setItem(AUTH_TOKEN_KEY, JSON.stringify(this.session));
+    } catch {}
+    this.notify();
 
     if (!skipCloud && this.isAuthenticated()) {
+      dirtyPendingSync = true;
+      this.syncStatus = "syncing";
       clearTimeout(syncTimer);
       syncTimer = setTimeout(() => {
-        fetch("/api/user/sync", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${this.session.token}`
-          },
-          body: JSON.stringify({ state: this.state })
-        }).catch(() => {});
-      }, 400);
+        this.pushToCloudNow();
+      }, 120);
     }
   },
 
-  applyAuthenticatedUser(token, userObj) {
+  applyAuthenticatedUser(token, userObj, syncBack = false) {
     const serverState = userObj.state && Object.keys(userObj.state).length > 0
       ? userObj.state
       : createFreshState(userObj.roadmapProfile || DEFAULT_ROADMAP_PROFILE);
 
     this.session = {
       mode: "user",
-      token,
+      token: token || this.session.token || "",
       user: {
         id: userObj.id,
         email: userObj.email,
@@ -132,14 +222,32 @@ export const store = {
         ...(serverState.roadmapProfile || {})
       }
     };
-    this.save(false);
+    this.syncStatus = "synced";
+    applyDocumentTheme(this.state.uiTheme);
+    this.save(!syncBack);
   },
 
-  logout() {
+  async logout() {
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          ...(this.session.token ? { "Authorization": `Bearer ${this.session.token}` } : {})
+        },
+        body: JSON.stringify({ token: this.session.token || "" })
+      });
+    } catch {}
     this.session = { mode: "guest", token: "", user: null };
     this.state = createFreshState();
-    localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(this.session));
-    this.listeners.forEach((fn) => fn(this.state, this.session));
+    this.syncStatus = "synced";
+    try {
+      localStorage.removeItem(AUTH_TOKEN_KEY);
+      localStorage.removeItem("cjduz_auth_session_v2");
+    } catch {}
+    applyDocumentTheme("mint");
+    this.notify();
   },
 
   updateRoadmapProfile(newProfile, resetCheckedDays = false) {
@@ -155,22 +263,26 @@ export const store = {
   },
 
   async restoreCloudSession() {
-    if (!this.isAuthenticated()) return;
+    // Always query /api/user/me (supports both HttpOnly cookie AND Bearer token, so clearing localStorage still recovers via cookie!)
     try {
+      const headers = {};
+      if (this.session?.token) {
+        headers["Authorization"] = `Bearer ${this.session.token}`;
+      }
       const res = await fetch("/api/user/me", {
-        headers: { "Authorization": `Bearer ${this.session.token}` }
+        credentials: "include",
+        headers
       });
       if (!res.ok) {
-        this.logout();
+        this.session = { mode: "guest", token: "", user: null };
+        try { localStorage.removeItem(AUTH_TOKEN_KEY); } catch {}
         return;
       }
       const data = await res.json();
       if (data.ok && data.user) {
-        this.applyAuthenticatedUser(this.session.token, data.user);
+        this.applyAuthenticatedUser(this.session.token || "cookie", data.user, false);
       }
-    } catch {
-      // Keep cached user state when offline
-    }
+    } catch {}
   },
 
   subscribe(fn) {

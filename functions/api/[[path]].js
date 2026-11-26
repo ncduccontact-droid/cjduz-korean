@@ -1,11 +1,33 @@
 // Cloudflare Pages Functions Serverless API (/api/*) for docusync.online
 // Uses Cloudflare D1 (env.DB), Google OAuth token verification, and transactional email from nguyenchiduc2808@gmail.com
 
-function jsonResp(data, status = 200) {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: { "Content-Type": "application/json; charset=utf-8" }
-  });
+function jsonResp(data, status = 200, cookieVal = null) {
+  const headers = {
+    "Content-Type": "application/json; charset=utf-8",
+    "Cache-Control": "no-store"
+  };
+  if (cookieVal !== null) {
+    headers["Set-Cookie"] = cookieVal === ""
+      ? "cjduz_token=; Path=/; Max-Age=0; SameSite=Lax; HttpOnly; Secure"
+      : `cjduz_token=${cookieVal}; Path=/; Max-Age=2592000; SameSite=Lax; HttpOnly; Secure`;
+  }
+  return new Response(JSON.stringify(data), { status, headers });
+}
+
+function extractToken(request, body = null) {
+  const authHeader = request.headers.get("Authorization") || "";
+  if (authHeader.startsWith("Bearer ") && authHeader.slice(7).trim()) {
+    return authHeader.slice(7).trim();
+  }
+  const cookieHdr = request.headers.get("Cookie") || "";
+  for (const part of cookieHdr.split(";")) {
+    const [k, v] = part.trim().split("=", 2);
+    if (k === "cjduz_token" && v) return v.trim();
+  }
+  if (body && typeof body.token === "string" && body.token.trim()) {
+    return body.token.trim();
+  }
+  return "";
 }
 
 async function pbkdf2Hash(password, saltHex) {
@@ -120,8 +142,7 @@ export async function onRequest(context) {
   }
 
   const now = Math.floor(Date.now() / 1000);
-  const authHeader = request.headers.get("Authorization") || "";
-  const bearer = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
+  let bearer = extractToken(request);
 
   if (request.method === "GET" && path === "/api/user/me") {
     const row = await env.DB.prepare(`
@@ -179,7 +200,7 @@ export async function onRequest(context) {
         autoActivated: true,
         token,
         user: { id: u.id, email, name, authProvider: "email", roadmapProfile: rp, state: st }
-      });
+      }, 200, token);
     }
 
     const payload = JSON.stringify({ name, password_hash: pwHash, roadmapProfile: rp, initialState: body.initialState || {} });
@@ -206,7 +227,7 @@ export async function onRequest(context) {
     await env.DB.prepare("DELETE FROM otp_codes WHERE email = ? AND purpose = 'register'").bind(email).run();
     const token = randomToken();
     await env.DB.prepare("INSERT INTO sessions(token, user_id, expires_at) VALUES (?, ?, ?)").bind(token, u.id, now + 30 * 86400).run();
-    return jsonResp({ ok: true, token, user: { id: u.id, email, name: p.name, authProvider: "email", roadmapProfile: rp, state: st } });
+    return jsonResp({ ok: true, token, user: { id: u.id, email, name: p.name, authProvider: "email", roadmapProfile: rp, state: st } }, 200, token);
   }
 
   if (path === "/api/auth/login") {
@@ -221,7 +242,7 @@ export async function onRequest(context) {
       ok: true,
       token,
       user: { id: u.id, email, name: u.name, avatar: u.avatar, authProvider: "email", roadmapProfile: JSON.parse(u.roadmap_profile_json || "{}"), state: JSON.parse(u.state_json || "{}") }
-    });
+    }, 200, token);
   }
 
   if (path === "/api/auth/google") {
@@ -275,12 +296,23 @@ export async function onRequest(context) {
     return jsonResp({ ok: true, token, user: { id: u.id, email, name: u.name, avatar: u.avatar, authProvider: "email", roadmapProfile: JSON.parse(u.roadmap_profile_json || "{}"), state: JSON.parse(u.state_json || "{}") } });
   }
 
+  if (path === "/api/auth/logout") {
+    bearer = bearer || extractToken(request, body);
+    if (bearer) {
+      await env.DB.prepare("DELETE FROM sessions WHERE token = ?").bind(bearer).run();
+    }
+    return jsonResp({ ok: true }, 200, "");
+  }
+
   if (path === "/api/user/sync") {
+    bearer = bearer || extractToken(request, body);
     const s = await env.DB.prepare("SELECT user_id FROM sessions WHERE token = ? AND expires_at > ?").bind(bearer, now).first();
     if (!s) return jsonResp({ ok: false, error: "Unauthorized" }, 401);
     const st = body.state || {};
+    const savedAt = Date.now();
+    st.updatedAt = savedAt;
     await env.DB.prepare("UPDATE users SET roadmap_profile_json = ?, state_json = ? WHERE id = ?").bind(JSON.stringify(st.roadmapProfile || {}), JSON.stringify(st), s.user_id).run();
-    return jsonResp({ ok: true });
+    return jsonResp({ ok: true, savedAt });
   }
 
   return jsonResp({ ok: false, error: "Not found" }, 404);

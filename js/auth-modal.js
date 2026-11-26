@@ -1,4 +1,5 @@
-import { store, DEFAULT_ROADMAP_PROFILE } from "./store.js?v=20261126-5";
+import { store, DEFAULT_ROADMAP_PROFILE } from "./store.js?v=20261126-6";
+import { ico, daisyLogoSVG } from "./icons.js?v=20261126-6";
 
 let authConfigCache = null;
 
@@ -188,22 +189,20 @@ export async function renderMandatoryAuthGate(appRoot, onAuthenticated) {
       <div class="container-web" style="padding-top:32px;">
         <div class="grid-2" style="align-items:center;gap:28px;">
           <!-- Left Pitch Card -->
-          <div class="achieve-card" style="padding:30px 28px;border-radius:22px;">
-            <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.18);padding:5px 14px;border-radius:99px;width:fit-content;font-size:13px;font-weight:700;">
-              🌼 YÊU CẦU ĐĂNG KÝ TÀI KHOẢN EMAIL ĐỂ BẮT ĐẦU HỌC
+          <div class="achieve-card" style="padding:26px;border-radius:22px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              ${daisyLogoSVG(38)}
+              <span class="badge-orange">${ico("cloud", 14)} Đồng bộ tiến độ 100% theo tài khoản</span>
             </div>
-            <h1 style="margin:6px 0;font-size:29px;line-height:1.28;font-weight:800;">
-              Hệ sinh thái Tiếng Hàn Tổng Hợp, Video Shadowing &amp; 20 Đề TOPIK Thật
+            <h1 style="margin:6px 0 4px;font-size:25px;line-height:1.3;font-weight:800;">
+              Học Tiếng Hàn Tổng Hợp, Shadowing Shorts &amp; 30 Đề Full TOPIK
             </h1>
-            <p style="margin:0 0 10px;opacity:0.92;font-size:15px;">
-              Đăng ký miễn phí bằng Email để hệ thống <strong>CJDUZ</strong> khởi tạo riêng cho bạn một lộ trình cá nhân hóa và lưu trữ toàn bộ tiến độ học tập:
-            </p>
-            <ul class="achieve-list" style="font-size:15px;gap:10px;">
-              <li><span>✔</span><span><strong>Từ vựng &amp; Flashcard 3D giọng Kyuri:</strong> Cache âm thanh phản hồi tức thì, phím tắt 1–4.</span></li>
-              <li><span>✔</span><span><strong>Bài tập từng chương &amp; Luyện dịch câu:</strong> Dịch câu Hàn–Việt &amp; bài tập chuẩn cấu trúc TOPIK.</span></li>
-              <li><span>✔</span><span><strong>20 Đề thi TOPIK chính thức (Kỳ 37 → 102):</strong> Giọng đọc Neural Hàn tự nhiên, chuẩn thang điểm thật.</span></li>
-              <li><span>✔</span><span><strong>Shadowing YouTube Shorts thực chiến:</strong> Tự động chạy phụ đề karaoke, bấm chữ tra từ &amp; tạm dừng như xem clip thật.</span></li>
-              <li><span>✔</span><span><strong>Mỗi tài khoản 1 lộ trình riêng:</strong> Cá nhân hóa 100% theo trình độ &amp; quỹ thời gian của bạn.</span></li>
+            <ul class="achieve-list" style="font-size:14.5px;gap:8px;">
+              <li><span style="color:var(--primary);font-weight:800;">•</span><span><strong>Từ vựng 3D Kyuri:</strong> Âm thanh 0ms, chấm SRS phím 1–4.</span></li>
+              <li><span style="color:var(--primary);font-weight:800;">•</span><span><strong>Bài tập chương:</strong> Luyện dịch câu Việt → Hàn &amp; câu chuẩn TOPIK.</span></li>
+              <li><span style="color:var(--primary);font-weight:800;">•</span><span><strong>30 Full Đề NIIED / Sejong / IBT:</strong> Đủ 70 câu TOPIK I &amp; 104 câu TOPIK II.</span></li>
+              <li><span style="color:var(--primary);font-weight:800;">•</span><span><strong>Shadowing YouTube Shorts:</strong> Chạy sub tự động, chạm từ tra nghĩa.</span></li>
+              <li><span style="color:var(--primary);font-weight:800;">•</span><span><strong>An toàn tuyệt đối:</strong> Đổi máy hoặc xóa trình duyệt vẫn giữ nguyên tiến độ.</span></li>
             </ul>
           </div>
 
@@ -252,21 +251,24 @@ export async function openAuthModal(modalRoot, initialView = "profile", onComple
 
           ${msg ? `<div style="margin-bottom:12px;padding:9px 12px;border-radius:8px;background:rgba(58,202,116,0.15);color:var(--primary-4);font-weight:600;font-size:13.5px;">${msg}</div>` : ""}
 
-          <div style="display:flex;align-items:center;gap:14px;background:#F8FAFB;padding:14px;border-radius:12px;margin-bottom:12px;">
-            <div style="width:48px;height:48px;border-radius:50%;background:var(--primary);color:#FFF;display:grid;place-items:center;font-weight:800;font-size:20px;">
-              ${(u.name || u.email)[0].toUpperCase()}
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--bg-body);border:1px solid var(--border-card);padding:12px 14px;border-radius:14px;margin-bottom:12px;">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <div style="width:44px;height:44px;border-radius:14px;background:var(--primary);color:#FFF;display:grid;place-items:center;font-weight:800;font-size:18px;">
+                ${(u.name || u.email)[0].toUpperCase()}
+              </div>
+              <div>
+                <strong style="font-size:16px;display:block;">${u.name}</strong>
+                <span style="font-size:13px;color:var(--text-muted);">${u.email}</span>
+              </div>
             </div>
-            <div>
-              <strong style="font-size:17px;display:block;">${u.name}</strong>
-              <span style="font-size:13.5px;color:var(--text-muted);">${u.email}</span>
-            </div>
+            <span class="meta-chip" style="color:var(--primary-1);">${ico("cloud", 14)} Đã lưu Cloud</span>
           </div>
 
           ${roadmapSelectorHTML("prof", store.state.roadmapProfile || rp)}
 
           <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:14px;">
-            <button type="button" class="btn-primary" id="btn-save-prof">💾 Lưu lộ trình riêng</button>
-            <button type="button" class="btn-outline-teal" id="btn-logout-acc" style="border-color:var(--danger);color:var(--danger);">Đăng xuất tài khoản</button>
+            <button type="button" class="btn-primary" id="btn-save-prof">${ico("cloud", 16)} Lưu vào tài khoản</button>
+            <button type="button" class="btn-outline-teal" id="btn-logout-acc" style="border-color:var(--danger);color:var(--danger);">Đăng xuất</button>
           </div>
         </div>
       </div>
@@ -280,11 +282,11 @@ export async function openAuthModal(modalRoot, initialView = "profile", onComple
     modalRoot.querySelector("#btn-save-prof").addEventListener("click", () => {
       const nextRp = readRoadmapInputs(modalRoot, "prof");
       store.updateRoadmapProfile(nextRp, false);
-      msg = "✔ Đã cập nhật lộ trình cá nhân hóa thành công!";
+      msg = "✔ Đã lưu lộ trình vào tài khoản Cloud!";
       renderProfileModal();
     });
-    modalRoot.querySelector("#btn-logout-acc").addEventListener("click", () => {
-      store.logout();
+    modalRoot.querySelector("#btn-logout-acc").addEventListener("click", async () => {
+      await store.logout();
       close();
     });
   }

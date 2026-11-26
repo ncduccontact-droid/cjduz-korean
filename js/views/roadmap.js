@@ -1,4 +1,5 @@
-import { store, DEFAULT_ROADMAP_PROFILE } from "../store.js?v=20261126-5";
+import { store, DEFAULT_ROADMAP_PROFILE } from "../store.js?v=20261126-6";
+import { ico, daisyLogoSVG } from "../icons.js?v=20261126-6";
 
 const PLACEMENT_QUESTIONS = [
   { q: "1. Chọn câu chào lịch sự khi mới gặp lần đầu:", opts: ["안녕히 가세요.", "만나서 반갑습니다.", "잘 먹겠습니다.", "주말 잘 보내세요."], ans: 1 },
@@ -173,21 +174,11 @@ export function renderRoadmapView(root, db, navigate, openAccountCustomizer) {
         <div class="box-kind" style="border-radius:16px;padding:24px;margin-bottom:24px;">
           <div class="roadmap-hero-grid">
             <div style="background:var(--primary-3);border-radius:16px;padding:22px;text-align:center;">
-              <div style="display:inline-grid;place-items:center;width:72px;height:72px;border-radius:20px;background:var(--primary);box-shadow:0 6px 16px rgba(0,178,165,0.28);">
-                <svg width="46" height="46" viewBox="0 0 64 64" fill="none" aria-hidden="true">
-                  <g transform="translate(32,32)" fill="#FFFFFF">
-                    <ellipse rx="6.2" ry="20" transform="rotate(0)"/>
-                    <ellipse rx="6.2" ry="20" transform="rotate(30)"/>
-                    <ellipse rx="6.2" ry="20" transform="rotate(60)"/>
-                    <ellipse rx="6.2" ry="20" transform="rotate(90)"/>
-                    <ellipse rx="6.2" ry="20" transform="rotate(120)"/>
-                    <ellipse rx="6.2" ry="20" transform="rotate(150)"/>
-                    <circle r="9.5" fill="#FFD769" stroke="#FE9A05" stroke-width="2.2"/>
-                  </g>
-                </svg>
+              <div style="display:inline-grid;place-items:center;width:68px;height:68px;border-radius:20px;background:var(--primary);border:2px solid var(--primary-1);box-shadow:0 3px 0 var(--primary-1);">
+                ${daisyLogoSVG(44)}
               </div>
-              <strong style="display:block;margin-top:10px;color:var(--primary-1);font-size:16px;">Lộ trình của ${userName}</strong>
-              <span style="font-size:13px;color:var(--text-muted);">Hoàn thành ${doneCount}/${days.length} ngày (${pct}%)</span>
+              <strong style="display:block;margin-top:10px;color:var(--primary-1);font-size:15.5px;">Lộ trình của ${userName}</strong>
+              <span style="font-size:13px;color:var(--text-muted);">${doneCount}/${days.length} ngày (${pct}%)</span>
               <div class="progress-track" style="margin-top:10px;">
                 <div class="progress-fill" style="width:${pct}%"></div>
               </div>
@@ -195,20 +186,20 @@ export function renderRoadmapView(root, db, navigate, openAccountCustomizer) {
 
             <div>
               <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
-                <span class="badge-orange" style="background:rgba(254,154,5,0.14);">${STAGE_LABELS[profile.startStage] || STAGE_LABELS.sc1}</span>
-                <span class="badge-orange" style="background:var(--primary-3);color:var(--primary-4);">${TRACK_LABELS[profile.focusTrack] || TRACK_LABELS.balanced}</span>
-                <span class="badge-orange" style="background:#F1F5F9;color:#334155;">⏱️ ${profile.dailyMinutes || 30} phút/ngày</span>
+                <span class="badge-orange">${STAGE_LABELS[profile.startStage] || STAGE_LABELS.sc1}</span>
+                <span class="meta-chip" style="color:var(--primary-1);">${TRACK_LABELS[profile.focusTrack] || TRACK_LABELS.balanced}</span>
+                <span class="meta-chip">${profile.dailyMinutes || 30} phút/ngày</span>
               </div>
-              <h2 style="margin:0 0 8px;font-size:22px;">Lộ trình Cá nhân hóa riêng theo hồ sơ mục tiêu ${store.state.targetLevel}</h2>
-              <p style="margin:0 0 14px;color:var(--text-muted);font-size:14.5px;">
-                Mỗi tài khoản đăng ký trên <strong>CJDUZ</strong> sở hữu một cấu trúc bài học hằng ngày riêng biệt dựa trên trình độ đầu vào, quỹ thời gian và định hướng (Giao tiếp hay Luyện đề TOPIK).
+              <h2 style="margin:0 0 6px;font-size:21px;">Lộ trình 30 ngày · Mục tiêu ${store.state.targetLevel}</h2>
+              <p style="margin:0 0 14px;color:var(--text-muted);font-size:14px;">
+                Tự động phân bổ từ vựng, dịch câu, Shadowing Shorts và đề TOPIK theo hồ sơ tài khoản của bạn.
               </p>
               <div style="display:flex;gap:10px;flex-wrap:wrap;">
                 <button class="btn-primary" id="btn-start-placement">
-                  📝 Làm Test đầu vào tự động xếp lộ trình
+                  ${ico("sparkle", 16)} Test xếp lớp nhanh
                 </button>
                 <button class="btn-outline-teal" id="btn-customize-roadmap">
-                  ⚙️ Tùy chỉnh thông số lộ trình của tôi
+                  ${ico("compass", 16)} Đổi mục tiêu
                 </button>
               </div>
 
