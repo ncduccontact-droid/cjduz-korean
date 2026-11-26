@@ -1,0 +1,13 @@
+name = "cjduz-korean"
+compatibility_date = "2026-11-01"
+pages_build_output_dir = "."
+
+[vars]
+GMAIL_SENDER = "nguyenchiduc2808@gmail.com"
+PUBLIC_DOMAIN = "https://docusync.online"
+
+# Bind Cloudflare D1 Database after running: wrangler d1 create cjduz-korean-db
+[[d1_databases]]
+binding = "DB"
+database_name = "cjduz-korean-db"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"

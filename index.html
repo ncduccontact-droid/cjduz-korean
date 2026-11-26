@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CJDUZ · Học Tiếng Hàn Tổng Hợp &amp; Luyện Thi TOPIK</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%2300B2A5'/%3E%3Cg transform='translate(32,32)' fill='%23FFFFFF'%3E%3Cellipse rx='6.5' ry='18' transform='rotate(0)'/%3E%3Cellipse rx='6.5' ry='18' transform='rotate(30)'/%3E%3Cellipse rx='6.5' ry='18' transform='rotate(60)'/%3E%3Cellipse rx='6.5' ry='18' transform='rotate(90)'/%3E%3Cellipse rx='6.5' ry='18' transform='rotate(120)'/%3E%3Cellipse rx='6.5' ry='18' transform='rotate(150)'/%3E%3Ccircle r='9' fill='%23FFD769' stroke='%23FE9A05' stroke-width='2'/%3E%3C/g%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+  <link rel="stylesheet" href="/css/migii.css" />
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+  <header class="migii-navbar">
+    <div class="navbar-inner">
+      <div class="brand-logo" id="brand-home-btn" role="button" tabindex="0" aria-label="CJDUZ Trang chủ">
+        <div class="brand-mascot" aria-hidden="true">
+          <svg width="30" height="30" viewBox="0 0 64 64" fill="none">
+            <g transform="translate(32,32)" fill="#FFFFFF">
+              <ellipse rx="6.2" ry="20" transform="rotate(0)"/>
+              <ellipse rx="6.2" ry="20" transform="rotate(30)"/>
+              <ellipse rx="6.2" ry="20" transform="rotate(60)"/>
+              <ellipse rx="6.2" ry="20" transform="rotate(90)"/>
+              <ellipse rx="6.2" ry="20" transform="rotate(120)"/>
+              <ellipse rx="6.2" ry="20" transform="rotate(150)"/>
+              <circle r="9.5" fill="#FFD769" stroke="#FE9A05" stroke-width="2.2"/>
+            </g>
+          </svg>
+        </div>
+        <div class="brand-title">
+          <strong style="letter-spacing:0.04em;">CJDUZ</strong>
+          <span>한국어 · Tổng Hợp &amp; TOPIK</span>
+        </div>
+      </div>
+
+      <nav class="nav-links" aria-label="Điều hướng chính">
+        <button class="nav-pill active" data-route="home">Trang chủ</button>
+        <button class="nav-pill" data-route="theory">Lý thuyết</button>
+        <button class="nav-pill" data-route="roadmap">Lộ trình</button>
+
+        <div class="nav-item-wrap">
+          <button class="nav-pill" data-route="practice">Luyện tập ▾</button>
+          <div class="nav-dropdown">
+            <button class="dropdown-link" data-route="practice" data-sub="skills">
+              <span>Kỹ năng Nghe · Đọc · Shadowing</span>
+              <span class="ko" style="font-size:12px;opacity:.85">실전</span>
+            </button>
+            <button class="dropdown-link" data-route="practice" data-sub="topik1">
+              <span>Ôn theo cấu trúc TOPIK I</span>
+              <span style="font-size:12px;opacity:.85">Cấp 1–2</span>
+            </button>
+            <button class="dropdown-link" data-route="practice" data-sub="topik2">
+              <span>Ôn cấu trúc TOPIK II &amp; Speaking</span>
+              <span style="font-size:12px;opacity:.85">Cấp 3–6</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="nav-item-wrap">
+          <button class="nav-pill" data-route="mock-test">Đề thi ▾</button>
+          <div class="nav-dropdown">
+            <button class="dropdown-link" data-route="mock-test" data-sub="topik1">
+              <span>Đề thi TOPIK I (PBT &amp; IBT)</span>
+            </button>
+            <button class="dropdown-link" data-route="mock-test" data-sub="topik2">
+              <span>Đề thi TOPIK II (PBT &amp; IBT)</span>
+            </button>
+          </div>
+        </div>
+
+        <button class="nav-pill" data-route="check-tools">Check &amp; Công cụ</button>
+      </nav>
+
+      <div class="nav-actions">
+        <div class="streak-pill" id="nav-streak" title="Chuỗi ngày học liên tiếp">
+          <span>🔥</span>
+          <span id="streak-count">1 ngày</span>
+        </div>
+        <button class="btn-quick-dict" id="open-quick-tool-btn" type="button">
+          🔎 <span class="hide-sm">Tra từ</span>
+        </button>
+        <button class="user-auth-pill" id="open-auth-btn" type="button">
+          👤 <span id="nav-user-label">Đăng nhập / Dùng thử</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div id="trial-banner-slot"></div>
+
+  <main id="app-root" style="min-height: calc(100vh - 165px);"></main>
+
+  <nav class="mobile-bottom-nav" aria-label="Điều hướng di động">
+    <button type="button" class="mobile-tab-btn active" data-mroute="home">
+      <span class="m-ico">🏠</span><span>Trang chủ</span>
+    </button>
+    <button type="button" class="mobile-tab-btn" data-mroute="theory">
+      <span class="m-ico">📚</span><span>Lý thuyết</span>
+    </button>
+    <button type="button" class="mobile-tab-btn" data-mroute="practice">
+      <span class="m-ico">🎯</span><span>Luyện tập</span>
+    </button>
+    <button type="button" class="mobile-tab-btn" data-mroute="mock-test">
+      <span class="m-ico">📝</span><span>Đề thi</span>
+    </button>
+    <button type="button" class="mobile-tab-btn" data-mroute="roadmap">
+      <span class="m-ico">🌼</span><span>Lộ trình</span>
+    </button>
+  </nav>
+
+  <div id="modal-root"></div>
+
+  <footer class="migii-footer">
+    <div class="footer-inner">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <svg width="28" height="28" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+          <g transform="translate(32,32)" fill="#FFFFFF">
+            <ellipse rx="6.2" ry="20" transform="rotate(0)"/>
+            <ellipse rx="6.2" ry="20" transform="rotate(30)"/>
+            <ellipse rx="6.2" ry="20" transform="rotate(60)"/>
+            <ellipse rx="6.2" ry="20" transform="rotate(90)"/>
+            <ellipse rx="6.2" ry="20" transform="rotate(120)"/>
+            <ellipse rx="6.2" ry="20" transform="rotate(150)"/>
+            <circle r="9.5" fill="#FFD769" stroke="#FE9A05" stroke-width="2.2"/>
+          </g>
+        </svg>
+        <div>
+          <strong style="font-size:16px;letter-spacing:0.03em;">CJDUZ · Hệ thống học Tiếng Hàn Tổng Hợp &amp; Luyện Thi TOPIK</strong>
+          <div style="opacity:0.78;margin-top:3px;">
+            Tích hợp kho âm thanh giọng đọc Kyuri, Ôn tập SRS, Shadowing phát âm và Ma trận đề TOPIK I &amp; II.
+          </div>
+        </div>
+      </div>
+      <div style="opacity:0.85;font-size:13px;">
+        © CJDUZ Korean Studio · Lưu tiến độ tự động trên trình duyệt
+      </div>
+    </div>
+  </footer>
+
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>

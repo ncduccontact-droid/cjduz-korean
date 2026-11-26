@@ -1,0 +1,444 @@
+import { store, playAudio, speakKoreanTTS } from "../store.js";
+import { TOPIK1_PARTS, TOPIK2_PARTS, WONGOKJI_PROMPTS, TOPIK_SPEAKING_TASKS } from "../topik-bank.js";
+
+export function renderTopikPracticeView(root, db, navigate, params = {}) {
+  const levelKey = params.sub === "topik2" ? "topik2" : "topik1";
+  let skill = params.skill || "listening"; // listening | reading | writing | speaking
+  let activePartId = params.partId || null;
+
+  // Build dynamic Cloze part from real 440 extracted TOPIK I Anki cards!
+  const dynamicClozeQuestions = db.topik1Bank
+    .filter((c) => c.cloze && c.korean)
+    .slice(0, 20)
+    .map((c, idx, arr) => {
+      const others = arr.filter((o) => o.id !== c.id).sort(() => Math.random() - 0.5).slice(0, 3).map((o) => o.korean);
+      const opts = [c.korean, ...others].sort(() => Math.random() - 0.5);
+      return {
+        id: `dyn_cloze_${c.id}`,
+        passage: c.cloze,
+        audioSrc: c.exampleAudio,
+        question: `Chọn từ phù hợp điền vào chỗ trống (${c.vietnamese}):`,
+        options: opts,
+        answer: opts.indexOf(c.korean),
+        explain: `${c.exampleKo} — ${c.exampleVi}`
+      };
+    });
+
+  const partsList = levelKey === "topik1"
+    ? [
+        ...TOPIK1_PARTS,
+        {
+          id: "t1_read_anki_cloze",
+          skill: "reading",
+          title: "Kho thực chiến · Điền từ vào câu TOPIK I (Trích từ gói Anki của bạn)",
+          tip: "Đọc ngữ cảnh câu và tiểu từ đứng ngay sau ô trống (에, 에서, 을/를, 이/가) để chọn từ loại chuẩn.",
+          questions: dynamicClozeQuestions
+        }
+      ]
+    : TOPIK2_PARTS;
+
+  function render() {
+    if (activePartId) {
+      const part = partsList.find((p) => p.id === activePartId);
+      if (part) return renderPartDrill(part);
+    }
+
+    const filteredParts = partsList.filter((p) => p.skill === skill);
+
+    root.innerHTML = `
+      <div class="container-web">
+        <div class="breadcrumb-bar">
+          <span>Luyện tập</span>
+          <span>▶</span>
+          <span>${levelKey === "topik1" ? "Ôn theo cấu trúc đề TOPIK I (Cấp 1–2)" : "Ôn theo cấu trúc đề TOPIK II & Speaking (Cấp 3–6)"}</span>
+        </div>
+
+        <!-- Level Switcher + Skill Filter Pill Row (#FE9A05 active like Migii) -->
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:8px;">
+          <div class="skill-pills-row" style="margin-bottom:0;">
+            <button class="btn-skill ${skill === "listening" ? "active" : ""}" data-sk="listening">Nghe (듣기)</button>
+            <button class="btn-skill ${skill === "reading" ? "active" : ""}" data-sk="reading">Đọc (읽기)</button>
+            ${levelKey === "topik2" ? `
+              <button class="btn-skill ${skill === "writing" ? "active" : ""}" data-sk="writing">
+                Viết 원고지 (쓰기)
+                <span class="badge-mia">CJDUZ</span>
+              </button>
+              <button class="btn-skill ${skill === "speaking" ? "active" : ""}" data-sk="speaking">
+                Nói 6 Câu (말하기)
+                <span class="badge-mia">MIC</span>
+              </button>
+            ` : ""}
+          </div>
+
+          <select id="switch-topik-lv" class="box-select">
+            <option value="topik1" ${levelKey === "topik1" ? "selected" : ""}>Cấu trúc đề TOPIK I</option>
+            <option value="topik2" ${levelKey === "topik2" ? "selected" : ""}>Cấu trúc đề TOPIK II &amp; Speaking</option>
+          </select>
+        </div>
+
+        <div id="topik-practice-body" style="margin-top:18px;"></div>
+      </div>
+    `;
+
+    root.querySelector("#switch-topik-lv").addEventListener("change", (e) => {
+      navigate("practice", { sub: e.target.value, skill: "listening" });
+    });
+    root.querySelectorAll("[data-sk]").forEach((b) => {
+      b.addEventListener("click", () => {
+        skill = b.dataset.sk;
+        activePartId = null;
+        render();
+      });
+    });
+
+    const body = root.querySelector("#topik-practice-body");
+    if (skill === "writing") return renderWongokjiStudio(body);
+    if (skill === "speaking") return renderTopikSpeakingRoom(body);
+
+    // Default: 2-Column Migii .box-kind Exercise Grid with Accuracy Progress Bars
+    body.innerHTML = `
+      <div class="grid-2">
+        ${filteredParts.map((part) => {
+          const st = store.state.partStats[part.id] || { correct: 0, total: 0 };
+          const pct = st.total > 0 ? Math.round((st.correct / st.total) * 100) : 0;
+          const barClass = st.total > 0 && pct < 50 ? "danger" : (st.total > 0 && pct < 75 ? "warn" : "");
+          return `
+            <div class="box-kind clickable" data-open-part="${part.id}">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px;">
+                <strong style="font-size:16.5px;color:var(--text-main);">${part.title}</strong>
+                <span style="font-size:12.5px;background:var(--primary-3);color:var(--primary-1);padding:3px 10px;border-radius:99px;font-weight:700;flex-shrink:0;">
+                  ${part.questions.length} câu
+                </span>
+              </div>
+              <div style="font-size:13.5px;color:var(--text-muted);margin-bottom:12px;">💡 ${part.tip}</div>
+              <div style="display:flex;justify-content:space-between;font-size:13.5px;margin-bottom:6px;">
+                <span>Trả lời đúng: <strong>${st.correct}/${st.total}</strong></span>
+                <span>Tỷ lệ đúng: <strong style="color:var(--primary-1);">${pct}%</strong></span>
+              </div>
+              <div class="progress-track">
+                <div class="progress-fill ${barClass}" style="width:${pct}%"></div>
+              </div>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    `;
+
+    body.querySelectorAll("[data-open-part]").forEach((card) => {
+      card.addEventListener("click", () => {
+        activePartId = card.dataset.openPart;
+        render();
+      });
+    });
+  }
+
+  function renderPartDrill(part) {
+    const pickedMap = {};
+    function drawDrill() {
+      root.innerHTML = `
+        <div class="container-web">
+          <div class="breadcrumb-bar">
+            <button id="bc-back-parts">← Quay lại danh sách dạng bài</button>
+            <span>▶</span>
+            <span>${part.title}</span>
+          </div>
+
+          <div class="prediction-banner" style="margin-bottom:20px;padding:16px 22px;">
+            <div>
+              <strong style="color:var(--primary-1);">🎯 Mẹo giải nhanh dạng này:</strong>
+              <span style="font-size:14.5px;margin-left:6px;">${part.tip}</span>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:18px;">
+            ${part.questions.map((q, qi) => {
+              const picked = pickedMap[q.id];
+              return `
+                <div class="box-kind">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:10px;">
+                    <strong style="color:var(--primary-1);">Câu ${qi + 1}: ${q.question}</strong>
+                    ${(q.audioText || q.audioSrc) ? `
+                      <button class="btn-primary" data-q-audio="${q.audioSrc || ""}" data-q-tts="${q.audioText || ""}" style="padding:6px 14px;font-size:13.5px;">
+                        🔊 Nghe hội thoại
+                      </button>
+                    ` : ""}
+                  </div>
+
+                  ${q.passage ? `
+                    <pre class="ko" style="white-space:pre-wrap;background:#F8FAFB;padding:14px;border-radius:10px;font-size:16px;margin:0 0 12px;border-left:3px solid var(--primary);">${q.passage}</pre>
+                  ` : ""}
+
+                  <div class="grid-2">
+                    ${q.options.map((opt, oi) => {
+                      let bg = "#FFFFFF";
+                      let border = "#E5E7EB";
+                      if (picked !== undefined) {
+                        if (oi === q.answer) { bg = "rgba(58,202,116,0.16)"; border = "var(--success)"; }
+                        else if (oi === picked) { bg = "rgba(255,90,96,0.14)"; border = "var(--danger)"; }
+                      }
+                      return `
+                        <button type="button" class="ko" data-qid="${q.id}" data-oi="${oi}" style="text-align:left;padding:11px 14px;border-radius:10px;border:1.5px solid ${border};background:${bg};cursor:pointer;font-size:15.5px;font-weight:500;">
+                          ${["①", "②", "③", "④"][oi] || `${oi + 1}.`} ${opt}
+                        </button>
+                      `;
+                    }).join("")}
+                  </div>
+
+                  ${picked !== undefined ? `
+                    <div style="margin-top:12px;background:var(--primary-3);padding:10px 14px;border-radius:10px;font-size:14px;color:var(--primary-4);">
+                      <strong>${picked === q.answer ? "✔ Chính xác!" : "✘ Sai (Đã tự động lưu vào Sổ tay câu sai)!"}</strong>
+                      ${q.audioText ? `<div class="ko" style="margin-top:4px;"><strong>Transcript:</strong> ${q.audioText}</div>` : ""}
+                      <div style="margin-top:4px;"><strong>Giải thích:</strong> ${q.explain}</div>
+                    </div>
+                  ` : ""}
+                </div>
+              `;
+            }).join("")}
+          </div>
+        </div>
+      `;
+
+      root.querySelector("#bc-back-parts").addEventListener("click", () => {
+        activePartId = null;
+        render();
+      });
+      root.querySelectorAll("[data-q-audio]").forEach((b) => {
+        b.addEventListener("click", () => {
+          if (b.dataset.qAudio) playAudio(b.dataset.qAudio);
+          else speakKoreanTTS(b.dataset.qTts, 0.95);
+        });
+      });
+      root.querySelectorAll("[data-qid]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const qObj = part.questions.find((x) => x.id === btn.dataset.qid);
+          const oi = Number(btn.dataset.oi);
+          pickedMap[qObj.id] = oi;
+          store.recordQuestionResult(part.id, part.title, qObj, oi);
+          drawDrill();
+        });
+      });
+    }
+    drawDrill();
+  }
+
+  // WONGOKJI (원고지) 20-Column Squared Manuscript Studio for Q53 & Q54
+  function renderWongokjiStudio(container) {
+    let promptIdx = 0;
+    let draft = "";
+    let showModel = false;
+    let feedbackHtml = "";
+
+    function formatIntoWongokjiCells(text, minTotalCells = 240) {
+      const cells = [];
+      const paragraphs = (text || "").split("\n");
+      paragraphs.forEach((p, pi) => {
+        if (pi > 0 && cells.length % 20 !== 0) {
+          while (cells.length % 20 !== 0) cells.push("");
+        }
+        if (p.length > 0) {
+          cells.push(" "); // Paragraph first-cell indent rule in Korean 원고지!
+          for (const ch of Array.from(p)) {
+            cells.push(ch);
+          }
+        }
+      });
+      const targetRows = Math.max(Math.ceil(minTotalCells / 20), Math.ceil((cells.length + 1) / 20));
+      const totalSlots = Math.min(720, targetRows * 20);
+      while (cells.length < totalSlots) cells.push("");
+      return cells.slice(0, 720);
+    }
+
+    function drawStudio() {
+      const pr = WONGOKJI_PROMPTS[promptIdx];
+      const cells = formatIntoWongokjiCells(draft, Math.min(300, pr.maxChars));
+      const usedCells = draft.trim() ? formatIntoWongokjiCells(draft, 20).findLastIndex((c) => c !== "") + 1 : 0;
+
+      container.innerHTML = `
+        <div class="outline-ai" style="margin-bottom:20px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:10px;">
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              ${WONGOKJI_PROMPTS.map((w, i) => `
+                <button class="btn-outline-teal" data-widx="${i}" style="${i === promptIdx ? "background:var(--primary);color:#FFF;" : ""}">
+                  ${w.badge}
+                </button>
+              `).join("")}
+            </div>
+            <span style="font-weight:700;color:${usedCells >= pr.minChars && usedCells <= pr.maxChars ? "var(--success)" : "var(--yellow-2)"};">
+              Số ô 원고지 đã chiếm: ${usedCells} / ${pr.minChars}~${pr.maxChars} ô
+            </span>
+          </div>
+
+          <h3 style="margin:0 0 6px;font-size:19px;">${pr.title}</h3>
+          <p style="margin:0 0 12px;font-size:14px;color:var(--text-muted);">${pr.promptDetails}</p>
+
+          <textarea id="wongokji-textarea" class="ko" rows="5" placeholder="Gõ bài viết tiếng Hàn vào đây (tự động thụt 1 ô đầu đoạn văn và dàn vào giấy kẻ ô vuông 원고지 bên dưới)..." style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--primary);font-size:16px;line-height:1.6;">${draft}</textarea>
+
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;">
+            <button class="btn-primary" id="btn-check-writing">✨ Check lỗi quy tắc 원고지 &amp; Chấm điểm</button>
+            <button class="btn-outline-teal" id="btn-fill-sample">📋 Điền bài mẫu điểm cao vào giấy ô vuông</button>
+            <button class="btn-outline-teal" id="btn-toggle-model">${showModel ? "Ẩn bài mẫu" : "Xem bài mẫu chuẩn NIIED"}</button>
+          </div>
+
+          ${feedbackHtml ? `<div style="margin-top:12px;background:#F8FAFB;padding:12px 16px;border-radius:10px;font-size:14px;">${feedbackHtml}</div>` : ""}
+          ${showModel ? `<pre class="ko" style="white-space:pre-wrap;margin-top:12px;background:var(--primary-3);padding:14px;border-radius:10px;font-size:15px;">${pr.modelAnswer}</pre>` : ""}
+        </div>
+
+        <div class="box-kind">
+          <strong style="font-size:15px;color:#C85A53;">📄 Bản xem trước Giấy kẻ ô vuông 원고지 (20 ô / hàng chuẩn thi thật TOPIK II)</strong>
+          <div class="wongokji-scroll-wrap">
+            <div class="wongokji-grid">
+              ${cells.map((ch) => `<div class="wongokji-cell">${ch === " " ? "&nbsp;" : ch}</div>`).join("")}
+            </div>
+          </div>
+        </div>
+      `;
+
+      container.querySelectorAll("[data-widx]").forEach((b) => {
+        b.addEventListener("click", () => { promptIdx = Number(b.dataset.widx); draft = ""; feedbackHtml = ""; drawStudio(); });
+      });
+
+      const ta = container.querySelector("#wongokji-textarea");
+      ta.addEventListener("input", (e) => {
+        draft = e.target.value;
+        const pos = ta.selectionStart;
+        drawStudio();
+        const newTa = container.querySelector("#wongokji-textarea");
+        newTa.focus();
+        newTa.setSelectionRange(pos, pos);
+      });
+
+      container.querySelector("#btn-fill-sample").addEventListener("click", () => {
+        draft = pr.modelAnswer;
+        drawStudio();
+      });
+      container.querySelector("#btn-toggle-model").addEventListener("click", () => {
+        showModel = !showModel;
+        drawStudio();
+      });
+
+      container.querySelector("#btn-check-writing").addEventListener("click", async () => {
+        const issues = [];
+        if (usedCells < pr.minChars) issues.push(`⚠️ Chưa đủ độ dài tối thiểu (${usedCells}/${pr.minChars} ô). Cần triển khai thêm dẫn chứng.`);
+        if (usedCells > pr.maxChars) issues.push(`⚠️ Vượt quá giới hạn ô cho phép (${usedCells}/${pr.maxChars} ô).`);
+        if (/(아요|어요|습니다|ㅂ니다)[.?!]/.test(draft)) {
+          issues.push("❌ Phát hiện đuôi câu hội thoại (-아/어요 hoặc -습니다)! Bài viết Câu 53–54 TOPIK II bắt buộc dùng văn phong viết trung lập (-다 / -는다 / -ㄴ다).");
+        } else if (draft.trim().length > 20) {
+          issues.push("✔ Văn phong viết (-다/는다) chuẩn quy định NIIED.");
+        }
+        if (/(따라서|그러나|반면에|한편|또한)/.test(draft)) {
+          issues.push("✔ Có sử dụng từ nối học thuật mạch lạc (따라서, 그러나, 한편, 또한...).");
+        } else {
+          issues.push("💡 Gợi ý: Bổ sung các phó từ liên kết học thuật như '한편', '반면에', '따라서' để ăn điểm mạch văn.");
+        }
+
+        feedbackHtml = `<strong>Kết quả Check quy chuẩn bài viết:</strong><ul style="margin:6px 0 0;padding-left:18px;">${issues.map((i) => `<li>${i}</li>`).join("")}</ul>`;
+        drawStudio();
+      });
+    }
+
+    drawStudio();
+  }
+
+  // TOPIK SPEAKING 6 TASKS ROOM
+  function renderTopikSpeakingRoom(container) {
+    let tIdx = 0;
+    let timerId = null;
+    let phase = "idle"; // idle | prep | speak
+    let secLeft = 0;
+    let showSample = false;
+
+    function stopTimer() {
+      if (timerId) clearInterval(timerId);
+      timerId = null;
+      phase = "idle";
+    }
+
+    function drawSpeaking() {
+      const task = TOPIK_SPEAKING_TASKS[tIdx];
+      container.innerHTML = `
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+          ${TOPIK_SPEAKING_TASKS.map((t, i) => `
+            <button class="btn-outline-teal" data-tidx="${i}" style="${i === tIdx ? "background:var(--primary);color:#FFF;" : ""}">
+              Câu ${t.num} (${t.level})
+            </button>
+          `).join("")}
+        </div>
+
+        <div class="box-kind">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
+            <h3 style="margin:0;color:var(--primary-1);">${task.title}</h3>
+            <span class="badge-orange" style="background:rgba(254,154,5,0.14);">
+              Chuẩn bị: ${task.prepSec}s · Trả lời: ${task.speakSec}s
+            </span>
+          </div>
+
+          <div style="background:var(--primary-3);padding:20px;border-radius:14px;margin-bottom:16px;">
+            <div class="ko" style="font-size:20px;font-weight:700;margin-bottom:6px;">${task.prompt}</div>
+            <div style="color:var(--text-muted);font-size:14.5px;">Dịch đề: ${task.vi}</div>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
+            <button class="btn-primary" id="btn-spk-start">
+              ${phase === "idle" ? "⏱️ Bắt đầu bấm giờ chuẩn thi thật" : "⏹ Dừng đồng hồ"}
+            </button>
+            <button class="btn-outline-teal" id="btn-spk-listen-q">🔊 Nghe đọc câu hỏi</button>
+            <button class="btn-outline-teal" id="btn-spk-sample">${showSample ? "Ẩn câu trả lời mẫu" : "💡 Xem câu trả lời mẫu điểm cao"}</button>
+            ${phase !== "idle" ? `
+              <span id="spk-timer-badge" style="font-size:18px;font-weight:800;color:${phase === "prep" ? "var(--yellow-2)" : "var(--danger)"};">
+                ${phase === "prep" ? "⏳ Thời gian chuẩn bị" : "🎙️ ĐANG TRẢ LỜI"}: ${secLeft}s
+              </span>
+            ` : ""}
+          </div>
+
+          ${showSample ? `
+            <div style="background:#F8FAFB;padding:14px;border-radius:10px;border-left:4px solid var(--primary);">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <strong>Bài nói mẫu tham khảo:</strong>
+                <button class="btn-audio" id="btn-spk-play-sample">🔊</button>
+              </div>
+              <p class="ko" style="margin:8px 0 0;font-size:16px;line-height:1.7;">${task.sample}</p>
+            </div>
+          ` : ""}
+        </div>
+      `;
+
+      container.querySelectorAll("[data-tidx]").forEach((b) => {
+        b.addEventListener("click", () => { stopTimer(); tIdx = Number(b.dataset.tidx); showSample = false; drawSpeaking(); });
+      });
+      container.querySelector("#btn-spk-listen-q").addEventListener("click", () => speakKoreanTTS(task.prompt));
+      container.querySelector("#btn-spk-sample").addEventListener("click", () => { showSample = !showSample; drawSpeaking(); });
+      const playSample = container.querySelector("#btn-spk-play-sample");
+      if (playSample) playSample.addEventListener("click", () => speakKoreanTTS(task.sample));
+
+      container.querySelector("#btn-spk-start").addEventListener("click", () => {
+        if (phase !== "idle") {
+          stopTimer();
+          drawSpeaking();
+          return;
+        }
+        phase = "prep";
+        secLeft = task.prepSec;
+        drawSpeaking();
+        timerId = setInterval(() => {
+          secLeft -= 1;
+          if (secLeft <= 0) {
+            if (phase === "prep") {
+              phase = "speak";
+              secLeft = task.speakSec;
+            } else {
+              stopTimer();
+            }
+            drawSpeaking();
+          } else {
+            const badge = container.querySelector("#spk-timer-badge");
+            if (badge) badge.textContent = `${phase === "prep" ? "⏳ Thời gian chuẩn bị" : "🎙️ ĐANG TRẢ LỜI"}: ${secLeft}s`;
+          }
+        }, 1000);
+      });
+    }
+
+    drawSpeaking();
+  }
+
+  render();
+}

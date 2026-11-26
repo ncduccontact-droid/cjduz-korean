@@ -1,0 +1,8 @@
+.DS_Store
+.env
+data/cjduz_users.db
+data/cjduz_users.db-journal
+data/mail_outbox.log
+data/custom_decks.json
+__pycache__/
+.wrangler/
