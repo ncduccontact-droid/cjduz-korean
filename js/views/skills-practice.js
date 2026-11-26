@@ -125,12 +125,11 @@ export function renderSkillsPracticeView(root, db, navigate, params = {}) {
       </div>
     `;
 
-    root.querySelector("#sw-to-topik1").addEventListener("click", () => navigate("practice", { sub: "topik1" }));
-    root.querySelector("#sw-to-topik2").addEventListener("click", () => navigate("practice", { sub: "topik2" }));
+    root.querySelector("#sw-to-topik1").addEventListener("click", () => navigate("mock-test", { sub: "topik1", viewMode: "segments", skill: "listening" }));
+    root.querySelector("#sw-to-topik2").addEventListener("click", () => navigate("mock-test", { sub: "topik2", viewMode: "segments", skill: "listening" }));
     root.querySelectorAll("[data-sk]").forEach((btn) => {
       btn.addEventListener("click", () => {
-        activeSkill = btn.dataset.sk;
-        renderHeaderAndTabs();
+        navigate("practice", { sub: "skills", skill: btn.dataset.sk, lesson: chLesson });
       });
     });
 
@@ -148,20 +147,17 @@ export function renderSkillsPracticeView(root, db, navigate, params = {}) {
         <div id="prac-ch-body"></div>
       `;
       stage.querySelector("#prac-ch-select").addEventListener("change", (e) => {
-        chLesson = Number(e.target.value);
-        renderHeaderAndTabs();
+        navigate("practice", { sub: "skills", skill: "translate", lesson: Number(e.target.value) });
       });
       renderChapterExercises(stage.querySelector("#prac-ch-body"), db, "sc1", chLesson);
     } else if (activeSkill === "shadowing") {
       renderShortsShadowingStudio(stage, db, () => {
-        activeSkill = "textbook-shadow";
-        renderHeaderAndTabs();
+        navigate("practice", { sub: "skills", skill: "textbook-shadow", lesson: chLesson });
       });
     } else if (activeSkill === "textbook-shadow") {
       stage.innerHTML = `<div style="margin-bottom:12px;"><button type="button" class="btn-outline-teal" id="back-to-yt-shorts">← Quay lại Shadowing Clip YouTube Shorts</button></div><div id="tb-shadow-slot"></div>`;
       stage.querySelector("#back-to-yt-shorts").addEventListener("click", () => {
-        activeSkill = "shadowing";
-        renderHeaderAndTabs();
+        navigate("practice", { sub: "skills", skill: "shadowing", lesson: chLesson });
       });
       renderShadowingModule(stage.querySelector("#tb-shadow-slot"), db, chLesson);
     } else if (activeSkill === "listening") {

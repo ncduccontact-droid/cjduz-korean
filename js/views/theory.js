@@ -337,8 +337,7 @@ function renderLessonDetail(root, db, navigate, bookKey, lessonNum, activeTab = 
     root.querySelector("#btn-shadow-lesson").addEventListener("click", () => navigate("practice", { sub: "skills", skill: "shadowing", lesson: lessonNum }));
     root.querySelectorAll("[data-tab]").forEach((b) => {
       b.addEventListener("click", () => {
-        activeTab = b.dataset.tab;
-        renderContent();
+        navigate("theory", { sub: "lesson-detail", book: bookKey, lesson: lessonNum, tab: b.dataset.tab });
       });
     });
 
@@ -563,12 +562,18 @@ function renderVocabReviewArena(root, db, navigate, params = {}) {
       </div>
     `;
 
-    root.querySelector("#bc-back").addEventListener("click", () => navigate("theory"));
+    root.querySelector("#bc-back").addEventListener("click", () => {
+      if (params.lesson && params.book) {
+        navigate("theory", { sub: "lesson-detail", book: params.book, lesson: params.lesson });
+      } else if (params.book) {
+        navigate("theory", { sub: "vocab-book", book: params.book });
+      } else {
+        navigate("theory");
+      }
+    });
     root.querySelectorAll("[data-mode]").forEach((b) => {
       b.addEventListener("click", () => {
-        mode = b.dataset.mode;
-        flipped = false;
-        renderArena();
+        navigate("theory", { sub: "vocab-review", book: params.book, lesson: params.lesson, mode: b.dataset.mode });
       });
     });
 
@@ -1070,7 +1075,7 @@ function renderGrammarList(root, db, navigate, mode = "sc1") {
     `;
 
     root.querySelector("#bc-theory").addEventListener("click", () => navigate("theory"));
-    root.querySelectorAll("[data-m]").forEach((b) => b.addEventListener("click", () => { mode = b.dataset.m; render(); }));
+    root.querySelectorAll("[data-m]").forEach((b) => b.addEventListener("click", () => navigate("theory", { sub: "grammar-list", mode: b.dataset.m })));
     const sInp = root.querySelector("#gram-search");
     if (sInp) {
       sInp.addEventListener("input", (e) => { searchQ = e.target.value.toLowerCase(); render(); root.querySelector("#gram-search").focus(); });

@@ -1,6 +1,7 @@
 import { store, playAudio, preloadAudioUrls, speakKoreanTTS } from "./store.js";
 import { conjugateKoreanPredicate } from "./korean-engine.js";
 import { openAuthModal, renderMandatoryAuthGate } from "./auth-modal.js";
+import { buildUrl, parseUrl, getAncestorChain } from "./router.js";
 import { renderHomeView } from "./views/home.js";
 import { renderTheoryView } from "./views/theory.js";
 import { renderRoadmapView } from "./views/roadmap.js";
@@ -18,13 +19,29 @@ const db = {
   sc1Grammar: [],
   sejongVocab: [],
   topik1Bank: [],
-  topik20Exams: { topik1: [], topik2: [] },
+  topikFullSystem: { taxonomy: { topik1: {}, topik2: {} }, itemPool: {}, exams: { topik1: [], topik2: [] } },
   customDecks: [],
   customVocab: []
 };
 
 let currentRoute = "home";
 let currentParams = {};
+let activeCleanups = [];
+
+function registerCleanup(fn) {
+  if (typeof fn === "function") activeCleanups.push(fn);
+}
+
+function runViewCleanups() {
+  while (activeCleanups.length > 0) {
+    const fn = activeCleanups.pop();
+    try { fn(); } catch {}
+  }
+  if (window._cjduzArenaKeyHandler) {
+    window.removeEventListener("keydown", window._cjduzArenaKeyHandler);
+    window._cjduzArenaKeyHandler = null;
+  }
+}
 
 function updateNavUI() {
   const authed = store.isAuthenticated();
@@ -48,19 +65,29 @@ function updateNavUI() {
   }
 }
 
-export function navigate(route, params = {}) {
+export function navigate(route, params = {}, opts = {}) {
+  runViewCleanups();
   currentRoute = route;
   currentParams = params;
+
+  const targetUrl = buildUrl(route, params);
+  if (!opts.fromPopState) {
+    if (opts.replace) {
+      window.history.replaceState({ cjduz: true, path: targetUrl }, "", targetUrl);
+    } else if (window.location.pathname !== targetUrl) {
+      window.history.pushState({ cjduz: true, path: targetUrl }, "", targetUrl);
+    }
+  }
+
   updateNavUI();
   window.scrollTo({ top: 0, behavior: "smooth" });
 
-  // MANDATORY EMAIL AUTH GATE: Users must register/sign in with Email or Google to use web features
+  // MANDATORY EMAIL AUTH GATE
   if (!store.isAuthenticated()) {
     return renderMandatoryAuthGate(appRoot, () => {
       updateNavUI();
-      // Warm preload first lesson audio right after login
       preloadAudioUrls(db.sc1Vocab.slice(0, 16).map((w) => w.wordAudio));
-      navigate(currentRoute, currentParams);
+      navigate(currentRoute, currentParams, { replace: true });
     });
   }
 
@@ -68,17 +95,43 @@ export function navigate(route, params = {}) {
   if (route === "theory") return renderTheoryView(appRoot, db, navigate, params);
   if (route === "roadmap") {
     return renderRoadmapView(appRoot, db, navigate, () => {
-      openAuthModal(modalRoot, "profile", () => navigate("roadmap"));
+      openAuthModal(modalRoot, "profile", () => navigate("roadmap", {}, { replace: true }));
     });
   }
   if (route === "practice") {
     if (params.sub === "topik1" || params.sub === "topik2") {
-      return renderTopikPracticeView(appRoot, db, navigate, params);
+      return renderTopikPracticeView(appRoot, db, navigate, params, registerCleanup);
     }
     return renderSkillsPracticeView(appRoot, db, navigate, params);
   }
-  if (route === "mock-test") return renderMockTestView(appRoot, db, navigate, params);
+  if (route === "mock-test") return renderMockTestView(appRoot, db, navigate, params, registerCleanup);
   if (route === "check-tools") return renderCheckAndToolsView(appRoot, db, navigate, params);
+}
+
+function initHierarchicalHistory() {
+  const initialPath = (window.location.pathname || "/").replace(/\/+$/, "") || "/";
+  if (!window.history.state?.cjduz) {
+    const chain = getAncestorChain(initialPath);
+    // Floor guard at "/" so pressing Back from sub-layers steps back layer by layer to "/" without exiting the site
+    window.history.replaceState({ cjduz: true, rootFloor: true, path: "/" }, "", "/");
+    for (const stepPath of chain) {
+      window.history.pushState({ cjduz: true, path: stepPath }, "", stepPath);
+    }
+  }
+
+  window.addEventListener("popstate", (ev) => {
+    if (modalRoot && modalRoot.innerHTML.trim() !== "") {
+      modalRoot.innerHTML = "";
+    }
+    if (ev.state?.rootFloor) {
+      // Re-anchor "/" so an accidental extra swipe-back on Home stays inside the app
+      window.history.pushState({ cjduz: true, path: "/" }, "", "/");
+      navigate("home", {}, { fromPopState: true });
+      return;
+    }
+    const parsed = parseUrl(window.location.pathname);
+    navigate(parsed.route, parsed.params, { fromPopState: true });
+  });
 }
 
 function openQuickLookupModal() {
@@ -163,14 +216,14 @@ function openQuickLookupModal() {
 }
 
 async function initApp() {
-  appRoot.innerHTML = `<div class="container-web"><div class="box-kind" style="text-align:center;padding:40px;">⏳ Đang tải hệ thống CJDUZ Korean &amp; 20 Đề thi TOPIK chính thức...</div></div>`;
+  appRoot.innerHTML = `<div class="container-web"><div class="box-kind" style="text-align:center;padding:40px;">⏳ Đang tải hệ thống CJDUZ Korean &amp; Kho 30 Full Đề TOPIK (70 &amp; 104 câu)...</div></div>`;
 
-  const [sc1V, sc1G, sjV, tp1, exams20, custom] = await Promise.all([
+  const [sc1V, sc1G, sjV, tp1, fullSys, custom] = await Promise.all([
     fetch("/data/sc1_vocab.json").then((r) => r.json()),
     fetch("/data/sc1_grammar.json").then((r) => r.json()),
     fetch("/data/sejong_vocab.json").then((r) => r.json()),
     fetch("/data/topik1_bank.json").then((r) => r.json()),
-    fetch("/data/topik_20_exams.json").then((r) => r.json()).catch(() => ({ topik1: [], topik2: [] })),
+    fetch("/data/topik_full_system.json").then((r) => r.json()).catch(() => ({ taxonomy: { topik1: {}, topik2: {} }, itemPool: {}, exams: { topik1: [], topik2: [] } })),
     fetch("/api/custom-decks").then((r) => r.json()).catch(() => [])
   ]);
 
@@ -178,7 +231,7 @@ async function initApp() {
   db.sc1Grammar = sc1G;
   db.sejongVocab = sjV;
   db.topik1Bank = tp1;
-  db.topik20Exams = exams20;
+  db.topikFullSystem = fullSys;
   db.customDecks = custom;
   db.customVocab = custom.flatMap((d) => d.items || []);
 
@@ -194,7 +247,7 @@ async function initApp() {
     btn.addEventListener("click", () => {
       const r = btn.dataset.route;
       if (r === "practice") navigate("practice", { sub: "skills", skill: "shadowing" });
-      else if (r === "mock-test") navigate("mock-test", { sub: "topik1", mode: "all" });
+      else if (r === "mock-test") navigate("mock-test", { sub: "topik1", viewMode: "exams", category: "all" });
       else navigate(r);
     });
   });
@@ -203,7 +256,7 @@ async function initApp() {
     btn.addEventListener("click", () => {
       const r = btn.dataset.mroute;
       if (r === "practice") navigate("practice", { sub: "skills", skill: "shadowing" });
-      else if (r === "mock-test") navigate("mock-test", { sub: "topik1", mode: "all" });
+      else if (r === "mock-test") navigate("mock-test", { sub: "topik1", viewMode: "exams", category: "all" });
       else navigate(r);
     });
   });
@@ -211,7 +264,10 @@ async function initApp() {
   document.querySelectorAll(".dropdown-link[data-route]").forEach((btn) => {
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
-      navigate(btn.dataset.route, { sub: btn.dataset.sub });
+      const params = { sub: btn.dataset.sub };
+      if (btn.dataset.vmode) params.viewMode = btn.dataset.vmode;
+      if (btn.dataset.cat) params.category = btn.dataset.cat;
+      navigate(btn.dataset.route, params);
     });
   });
 
@@ -223,11 +279,13 @@ async function initApp() {
     }
     openAuthModal(modalRoot, "profile", () => {
       updateNavUI();
-      navigate(currentRoute, currentParams);
+      navigate(currentRoute, currentParams, { replace: true });
     });
   });
 
-  navigate("home");
+  initHierarchicalHistory();
+  const initialRoute = parseUrl(window.location.pathname);
+  navigate(initialRoute.route, initialRoute.params, { fromPopState: true });
 }
 
 initApp();

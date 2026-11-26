@@ -114,7 +114,7 @@ export function renderCheckAndToolsView(root, db, navigate, params = {}) {
     `;
 
     root.querySelectorAll("[data-tb]").forEach((b) => {
-      b.addEventListener("click", () => { tab = b.dataset.tb; render(); });
+      b.addEventListener("click", () => { navigate("check-tools", { tab: b.dataset.tb }); });
     });
 
     const body = root.querySelector("#check-tools-body");

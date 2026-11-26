@@ -124,10 +124,10 @@ export function renderHomeView(root, db, navigate) {
 
         <div class="box-kind clickable" data-quick="exams-20">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <strong style="font-size:17px;color:var(--primary-1);">4. Kho 20 Đề Thi TOPIK Chính Thức</strong>
-            <span class="badge-orange" style="background:rgba(254,154,5,0.12);">Kỳ 37 → Kỳ 102</span>
+            <strong style="font-size:17px;color:var(--primary-1);">4. 30 Đề Thi Full (70 &amp; 104 Câu) + Luyện Từng Dạng</strong>
+            <span class="badge-orange" style="background:rgba(254,154,5,0.12);">⭐ Đề Tuyển Chọn</span>
           </div>
-          <p style="margin:0;font-size:14px;color:var(--text-muted);">Đầy đủ 10 đề TOPIK I &amp; 10 đề TOPIK II công bố chính thức với giọng đọc Hàn tự nhiên.</p>
+          <p style="margin:0;font-size:14px;color:var(--text-muted);">Làm Full đề chuẩn thi thật (TOPIK I 70 câu · TOPIK II 104 câu, ghi rõ nguồn NIIED/Sejong/IBT) hoặc rèn nhuần nhuyễn từng dạng 1 → 10.</p>
         </div>
       </div>
 
@@ -204,7 +204,7 @@ export function renderHomeView(root, db, navigate) {
       if (q === "vocab-review") navigate("theory", { sub: "vocab-review" });
       if (q === "chapter-translate") navigate("practice", { sub: "skills", skill: "translate", lesson: s.lastLesson.lesson || 1 });
       if (q === "shorts-shadowing") navigate("practice", { sub: "skills", skill: "shadowing" });
-      if (q === "exams-20") navigate("mock-test", { sub: "topik1", mode: "all" });
+      if (q === "exams-20") navigate("mock-test", { sub: "topik1", viewMode: "exams", category: "curated" });
     });
   });
 

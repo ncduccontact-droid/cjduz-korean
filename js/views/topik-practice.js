@@ -1,165 +1,174 @@
-import { store, playAudio, speakKoreanTTS } from "../store.js";
-import { TOPIK1_PARTS, TOPIK2_PARTS, WONGOKJI_PROMPTS, TOPIK_SPEAKING_TASKS } from "../topik-bank.js";
+import { store, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js";
+import { WONGOKJI_PROMPTS, TOPIK_SPEAKING_TASKS } from "../topik-bank.js";
 
-export function renderTopikPracticeView(root, db, navigate, params = {}) {
+export function renderTopikPracticeView(root, db, navigate, params = {}, registerCleanup = () => {}) {
+  const sys = db.topikFullSystem || { taxonomy: { topik1: {}, topik2: {} }, itemPool: {} };
   const levelKey = params.sub === "topik2" ? "topik2" : "topik1";
-  let skill = params.skill || "listening"; // listening | reading | writing | speaking
-  let activePartId = params.partId || null;
+  const skill = params.skill || "listening"; // listening | reading | writing | speaking
+  const activePartId = params.partId || null;
 
-  // Build dynamic Cloze part from real 440 extracted TOPIK I Anki cards!
-  const dynamicClozeQuestions = db.topik1Bank
-    .filter((c) => c.cloze && c.korean)
-    .slice(0, 20)
-    .map((c, idx, arr) => {
-      const others = arr.filter((o) => o.id !== c.id).sort(() => Math.random() - 0.5).slice(0, 3).map((o) => o.korean);
-      const opts = [c.korean, ...others].sort(() => Math.random() - 0.5);
-      return {
-        id: `dyn_cloze_${c.id}`,
-        passage: c.cloze,
-        audioSrc: c.exampleAudio,
-        question: `Chọn từ phù hợp điền vào chỗ trống (${c.vietnamese}):`,
-        options: opts,
-        answer: opts.indexOf(c.korean),
-        explain: `${c.exampleKo} — ${c.exampleVi}`
-      };
-    });
+  const lvTax = sys.taxonomy[levelKey] || { listening: [], reading: [], writing: [] };
 
-  const partsList = levelKey === "topik1"
-    ? [
-        ...TOPIK1_PARTS,
-        {
-          id: "t1_read_anki_cloze",
-          skill: "reading",
-          title: "Kho thực chiến · Điền từ vào câu TOPIK I (Trích từ gói Anki của bạn)",
-          tip: "Đọc ngữ cảnh câu và tiểu từ đứng ngay sau ô trống (에, 에서, 을/를, 이/가) để chọn từ loại chuẩn.",
-          questions: dynamicClozeQuestions
-        }
-      ]
-    : TOPIK2_PARTS;
+  // Build full parts list from official Dạng 1 -> Dạng N taxonomy + itemPool
+  const partsList = [
+    ...(lvTax.listening || []).map((t) => ({
+      ...t,
+      skill: "listening",
+      questions: Object.values(sys.itemPool).filter((q) => q.typeId === t.id)
+    })),
+    ...(lvTax.reading || []).map((t) => ({
+      ...t,
+      skill: "reading",
+      questions: Object.values(sys.itemPool).filter((q) => q.typeId === t.id)
+    }))
+  ];
 
-  function render() {
-    if (activePartId) {
-      const part = partsList.find((p) => p.id === activePartId);
-      if (part) return renderPartDrill(part);
-    }
-
-    const filteredParts = partsList.filter((p) => p.skill === skill);
-
-    root.innerHTML = `
-      <div class="container-web">
-        <div class="breadcrumb-bar">
-          <span>Luyện tập</span>
-          <span>▶</span>
-          <span>${levelKey === "topik1" ? "Ôn theo cấu trúc đề TOPIK I (Cấp 1–2)" : "Ôn theo cấu trúc đề TOPIK II & Speaking (Cấp 3–6)"}</span>
-        </div>
-
-        <!-- Level Switcher + Skill Filter Pill Row (#FE9A05 active like Migii) -->
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:8px;">
-          <div class="skill-pills-row" style="margin-bottom:0;">
-            <button class="btn-skill ${skill === "listening" ? "active" : ""}" data-sk="listening">Nghe (듣기)</button>
-            <button class="btn-skill ${skill === "reading" ? "active" : ""}" data-sk="reading">Đọc (읽기)</button>
-            ${levelKey === "topik2" ? `
-              <button class="btn-skill ${skill === "writing" ? "active" : ""}" data-sk="writing">
-                Viết 원고지 (쓰기)
-                <span class="badge-mia">CJDUZ</span>
-              </button>
-              <button class="btn-skill ${skill === "speaking" ? "active" : ""}" data-sk="speaking">
-                Nói 6 Câu (말하기)
-                <span class="badge-mia">MIC</span>
-              </button>
-            ` : ""}
-          </div>
-
-          <select id="switch-topik-lv" class="box-select">
-            <option value="topik1" ${levelKey === "topik1" ? "selected" : ""}>Cấu trúc đề TOPIK I</option>
-            <option value="topik2" ${levelKey === "topik2" ? "selected" : ""}>Cấu trúc đề TOPIK II &amp; Speaking</option>
-          </select>
-        </div>
-
-        <div id="topik-practice-body" style="margin-top:18px;"></div>
-      </div>
-    `;
-
-    root.querySelector("#switch-topik-lv").addEventListener("change", (e) => {
-      navigate("practice", { sub: e.target.value, skill: "listening" });
-    });
-    root.querySelectorAll("[data-sk]").forEach((b) => {
-      b.addEventListener("click", () => {
-        skill = b.dataset.sk;
-        activePartId = null;
-        render();
-      });
-    });
-
-    const body = root.querySelector("#topik-practice-body");
-    if (skill === "writing") return renderWongokjiStudio(body);
-    if (skill === "speaking") return renderTopikSpeakingRoom(body);
-
-    // Default: 2-Column Migii .box-kind Exercise Grid with Accuracy Progress Bars
-    body.innerHTML = `
-      <div class="grid-2">
-        ${filteredParts.map((part) => {
-          const st = store.state.partStats[part.id] || { correct: 0, total: 0 };
-          const pct = st.total > 0 ? Math.round((st.correct / st.total) * 100) : 0;
-          const barClass = st.total > 0 && pct < 50 ? "danger" : (st.total > 0 && pct < 75 ? "warn" : "");
-          return `
-            <div class="box-kind clickable" data-open-part="${part.id}">
-              <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px;">
-                <strong style="font-size:16.5px;color:var(--text-main);">${part.title}</strong>
-                <span style="font-size:12.5px;background:var(--primary-3);color:var(--primary-1);padding:3px 10px;border-radius:99px;font-weight:700;flex-shrink:0;">
-                  ${part.questions.length} câu
-                </span>
-              </div>
-              <div style="font-size:13.5px;color:var(--text-muted);margin-bottom:12px;">💡 ${part.tip}</div>
-              <div style="display:flex;justify-content:space-between;font-size:13.5px;margin-bottom:6px;">
-                <span>Trả lời đúng: <strong>${st.correct}/${st.total}</strong></span>
-                <span>Tỷ lệ đúng: <strong style="color:var(--primary-1);">${pct}%</strong></span>
-              </div>
-              <div class="progress-track">
-                <div class="progress-fill ${barClass}" style="width:${pct}%"></div>
-              </div>
-            </div>
-          `;
-        }).join("")}
-      </div>
-    `;
-
-    body.querySelectorAll("[data-open-part]").forEach((card) => {
-      card.addEventListener("click", () => {
-        activePartId = card.dataset.openPart;
-        render();
-      });
-    });
+  if (activePartId && (skill === "listening" || skill === "reading")) {
+    const part = partsList.find((p) => p.id === activePartId);
+    if (part) return renderPartMasteryDrill(part);
   }
 
-  function renderPartDrill(part) {
+  const filteredParts = partsList.filter((p) => p.skill === skill);
+
+  root.innerHTML = `
+    <div class="container-web">
+      <div class="breadcrumb-bar">
+        <button type="button" id="bc-prac-home">Luyện tập</button>
+        <span>▶</span>
+        <span>${levelKey === "topik1" ? "Luyện nhuần nhuyễn từng dạng TOPIK I (Dạng 1 → Dạng 8)" : "Luyện nhuần nhuyễn từng dạng TOPIK II & Speaking (Dạng 1 → Dạng 10)"}</span>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:10px;">
+        <div class="skill-pills-row" style="margin-bottom:0;">
+          <button class="btn-skill ${skill === "listening" ? "active" : ""}" data-sk="listening">🎧 Nghe · 듣기 (${(lvTax.listening || []).length} Dạng)</button>
+          <button class="btn-skill ${skill === "reading" ? "active" : ""}" data-sk="reading">📖 Đọc · 읽기 (${(lvTax.reading || []).length} Dạng)</button>
+          ${levelKey === "topik2" ? `
+            <button class="btn-skill ${skill === "writing" ? "active" : ""}" data-sk="writing">
+              ✍️ Viết 원고지 (쓰기)
+              <span class="badge-mia">51~54</span>
+            </button>
+            <button class="btn-skill ${skill === "speaking" ? "active" : ""}" data-sk="speaking">
+              🎙️ Nói 6 Câu (말하기)
+              <span class="badge-mia">MIC</span>
+            </button>
+          ` : ""}
+        </div>
+
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <select id="switch-topik-lv" class="box-select">
+            <option value="topik1" ${levelKey === "topik1" ? "selected" : ""}>Cấu trúc TOPIK I (Dạng 1–8)</option>
+            <option value="topik2" ${levelKey === "topik2" ? "selected" : ""}>Cấu trúc TOPIK II (Dạng 1–10)</option>
+          </select>
+          <button type="button" class="btn-outline-teal" id="btn-jump-full-exams" style="padding:7px 14px;font-size:13px;">
+            📝 Vào làm Full Đề ${levelKey === "topik1" ? "70 câu" : "104 câu"} →
+          </button>
+        </div>
+      </div>
+
+      <div id="topik-practice-body" style="margin-top:18px;"></div>
+    </div>
+  `;
+
+  root.querySelector("#bc-prac-home").addEventListener("click", () => navigate("practice", { sub: "skills", skill: "shadowing" }));
+  root.querySelector("#switch-topik-lv").addEventListener("change", (e) => {
+    navigate("practice", { sub: e.target.value, skill: "listening" });
+  });
+  root.querySelector("#btn-jump-full-exams").addEventListener("click", () => {
+    navigate("mock-test", { sub: levelKey, viewMode: "exams", category: "all" });
+  });
+  root.querySelectorAll("[data-sk]").forEach((b) => {
+    b.addEventListener("click", () => {
+      navigate("practice", { sub: levelKey, skill: b.dataset.sk });
+    });
+  });
+
+  const body = root.querySelector("#topik-practice-body");
+  if (skill === "writing") return renderWongokjiStudio(body);
+  if (skill === "speaking") return renderTopikSpeakingRoom(body);
+
+  body.innerHTML = `
+    <div class="grid-2">
+      ${filteredParts.map((part) => {
+        const st = store.state.partStats[part.id] || { correct: 0, total: 0 };
+        const pct = st.total > 0 ? Math.round((st.correct / st.total) * 100) : 0;
+        const barClass = st.total > 0 && pct < 50 ? "danger" : (st.total > 0 && pct < 75 ? "warn" : "");
+        return `
+          <div class="box-kind clickable" data-open-part="${part.id}">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:6px;">
+              <span class="badge-orange" style="background:rgba(254,154,5,0.14);">${part.code} · ${part.range}</span>
+              <span style="font-size:12.5px;background:var(--primary-3);color:var(--primary-1);padding:3px 10px;border-radius:99px;font-weight:700;flex-shrink:0;">
+                ${part.questions.length} câu luyện · ${part.ptsDesc}
+              </span>
+            </div>
+            <strong style="font-size:16.5px;color:var(--text-main);display:block;margin-bottom:4px;">${part.title}</strong>
+            <div class="ko" style="font-size:13px;color:var(--primary-1);font-weight:600;margin-bottom:8px;">유형: ${part.koTitle}</div>
+            <div style="font-size:13.5px;color:var(--text-muted);margin-bottom:12px;">💡 ${part.tip}</div>
+            <div style="display:flex;justify-content:space-between;font-size:13.5px;margin-bottom:6px;">
+              <span>Trả lời đúng: <strong>${st.correct}/${st.total}</strong></span>
+              <span>Độ nhuần nhuyễn: <strong style="color:var(--primary-1);">${pct}%</strong></span>
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill ${barClass}" style="width:${pct}%"></div>
+            </div>
+          </div>
+        `;
+      }).join("")}
+    </div>
+  `;
+
+  body.querySelectorAll("[data-open-part]").forEach((card) => {
+    card.addEventListener("click", () => {
+      navigate("practice", { sub: levelKey, skill, partId: card.dataset.openPart });
+    });
+  });
+
+  function renderPartMasteryDrill(part) {
+    let queue = [...part.questions];
+    let loopRound = 0;
     const pickedMap = {};
+    preloadAudioUrls(queue.slice(0, 12).map((q) => q.audioSrc).filter(Boolean));
+
     function drawDrill() {
+      const wrongList = queue.filter((q) => pickedMap[q.id] !== undefined && pickedMap[q.id] !== q.answer);
+      const correctCnt = queue.filter((q) => pickedMap[q.id] === q.answer).length;
+      const doneCnt = queue.filter((q) => pickedMap[q.id] !== undefined).length;
+
       root.innerHTML = `
         <div class="container-web">
           <div class="breadcrumb-bar">
-            <button id="bc-back-parts">← Quay lại danh sách dạng bài</button>
+            <button type="button" id="bc-back-parts">← Quay lại danh sách ${skill === "listening" ? "Dạng Nghe" : "Dạng Đọc"}</button>
             <span>▶</span>
             <span>${part.title}</span>
           </div>
 
           <div class="prediction-banner" style="margin-bottom:20px;padding:16px 22px;">
             <div>
-              <strong style="color:var(--primary-1);">🎯 Mẹo giải nhanh dạng này:</strong>
-              <span style="font-size:14.5px;margin-left:6px;">${part.tip}</span>
+              <span class="badge-orange" style="margin-bottom:6px;">${part.code} · ${part.range} ${loopRound > 0 ? `· Vòng ôn câu sai #${loopRound}` : ""}</span>
+              <div style="margin-top:4px;">
+                <strong style="color:var(--primary-1);">🎯 Mẹo giải nhanh dạng này:</strong>
+                <span style="font-size:14.5px;margin-left:6px;">${part.tip}</span>
+              </div>
+            </div>
+            <div>
+              <div style="font-weight:800;color:var(--primary-1);margin-bottom:6px;text-align:right;">Đúng ${correctCnt}/${queue.length} câu</div>
+              ${wrongList.length > 0 ? `
+                <button type="button" class="btn-orange" id="btn-loop-wrong">🔁 Luyện lại ${wrongList.length} câu sai đến khi thuộc</button>
+              ` : (doneCnt === queue.length && queue.length > 0 ? `
+                <span style="background:rgba(58,202,116,0.18);color:#15803D;padding:6px 14px;border-radius:99px;font-weight:800;">🎉 Đã nhuần nhuyễn 100%!</span>
+              ` : "")}
             </div>
           </div>
 
           <div style="display:flex;flex-direction:column;gap:18px;">
-            ${part.questions.map((q, qi) => {
+            ${queue.map((q, qi) => {
               const picked = pickedMap[q.id];
               return `
                 <div class="box-kind">
-                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:10px;">
-                    <strong style="color:var(--primary-1);">Câu ${qi + 1}: ${q.question}</strong>
-                    ${(q.audioText || q.audioSrc) ? `
-                      <button class="btn-primary" data-q-audio="${q.audioSrc || ""}" data-q-tts="${q.audioText || ""}" style="padding:6px 14px;font-size:13.5px;">
-                        🔊 Nghe hội thoại
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:10px;flex-wrap:wrap;">
+                    <strong class="ko" style="color:var(--primary-1);">Câu ${qi + 1}/${queue.length}: ${q.question}</strong>
+                    ${(q.audioSrc || q.audioText) ? `
+                      <button type="button" class="btn-primary" data-q-audio="${q.audioSrc || ""}" data-q-tts="${q.audioText || ""}" style="padding:6px 14px;font-size:13.5px;">
+                        🔊 Phát Audio giọng Hàn chuẩn
                       </button>
                     ` : ""}
                   </div>
@@ -186,7 +195,7 @@ export function renderTopikPracticeView(root, db, navigate, params = {}) {
 
                   ${picked !== undefined ? `
                     <div style="margin-top:12px;background:var(--primary-3);padding:10px 14px;border-radius:10px;font-size:14px;color:var(--primary-4);">
-                      <strong>${picked === q.answer ? "✔ Chính xác!" : "✘ Sai (Đã tự động lưu vào Sổ tay câu sai)!"}</strong>
+                      <strong>${picked === q.answer ? "✔ Chính xác!" : "✘ Sai (Đã lưu vào Sổ tay câu sai)!"}</strong>
                       ${q.audioText ? `<div class="ko" style="margin-top:4px;"><strong>Transcript:</strong> ${q.audioText}</div>` : ""}
                       <div style="margin-top:4px;"><strong>Giải thích:</strong> ${q.explain}</div>
                     </div>
@@ -199,18 +208,27 @@ export function renderTopikPracticeView(root, db, navigate, params = {}) {
       `;
 
       root.querySelector("#bc-back-parts").addEventListener("click", () => {
-        activePartId = null;
-        render();
+        navigate("practice", { sub: levelKey, skill });
       });
+      const loopBtn = root.querySelector("#btn-loop-wrong");
+      if (loopBtn) {
+        loopBtn.addEventListener("click", () => {
+          queue = [...wrongList];
+          queue.forEach((w) => { delete pickedMap[w.id]; });
+          loopRound += 1;
+          window.scrollTo({ top: 0, behavior: "smooth" });
+          drawDrill();
+        });
+      }
       root.querySelectorAll("[data-q-audio]").forEach((b) => {
-        b.addEventListener("click", () => {
+        b.addEventListener("pointerdown", () => {
           if (b.dataset.qAudio) playAudio(b.dataset.qAudio);
           else speakKoreanTTS(b.dataset.qTts, 0.95);
         });
       });
       root.querySelectorAll("[data-qid]").forEach((btn) => {
         btn.addEventListener("click", () => {
-          const qObj = part.questions.find((x) => x.id === btn.dataset.qid);
+          const qObj = queue.find((x) => x.id === btn.dataset.qid);
           const oi = Number(btn.dataset.oi);
           pickedMap[qObj.id] = oi;
           store.recordQuestionResult(part.id, part.title, qObj, oi);
@@ -221,7 +239,6 @@ export function renderTopikPracticeView(root, db, navigate, params = {}) {
     drawDrill();
   }
 
-  // WONGOKJI (원고지) 20-Column Squared Manuscript Studio for Q53 & Q54
   function renderWongokjiStudio(container) {
     let promptIdx = 0;
     let draft = "";
@@ -236,10 +253,8 @@ export function renderTopikPracticeView(root, db, navigate, params = {}) {
           while (cells.length % 20 !== 0) cells.push("");
         }
         if (p.length > 0) {
-          cells.push(" "); // Paragraph first-cell indent rule in Korean 원고지!
-          for (const ch of Array.from(p)) {
-            cells.push(ch);
-          }
+          cells.push(" ");
+          for (const ch of Array.from(p)) cells.push(ch);
         }
       });
       const targetRows = Math.max(Math.ceil(minTotalCells / 20), Math.ceil((cells.length + 1) / 20));
@@ -307,30 +322,22 @@ export function renderTopikPracticeView(root, db, navigate, params = {}) {
         newTa.setSelectionRange(pos, pos);
       });
 
-      container.querySelector("#btn-fill-sample").addEventListener("click", () => {
-        draft = pr.modelAnswer;
-        drawStudio();
-      });
-      container.querySelector("#btn-toggle-model").addEventListener("click", () => {
-        showModel = !showModel;
-        drawStudio();
-      });
-
-      container.querySelector("#btn-check-writing").addEventListener("click", async () => {
+      container.querySelector("#btn-fill-sample").addEventListener("click", () => { draft = pr.modelAnswer; drawStudio(); });
+      container.querySelector("#btn-toggle-model").addEventListener("click", () => { showModel = !showModel; drawStudio(); });
+      container.querySelector("#btn-check-writing").addEventListener("click", () => {
         const issues = [];
-        if (usedCells < pr.minChars) issues.push(`⚠️ Chưa đủ độ dài tối thiểu (${usedCells}/${pr.minChars} ô). Cần triển khai thêm dẫn chứng.`);
+        if (usedCells < pr.minChars) issues.push(`⚠️ Chưa đủ độ dài tối thiểu (${usedCells}/${pr.minChars} ô).`);
         if (usedCells > pr.maxChars) issues.push(`⚠️ Vượt quá giới hạn ô cho phép (${usedCells}/${pr.maxChars} ô).`);
         if (/(아요|어요|습니다|ㅂ니다)[.?!]/.test(draft)) {
-          issues.push("❌ Phát hiện đuôi câu hội thoại (-아/어요 hoặc -습니다)! Bài viết Câu 53–54 TOPIK II bắt buộc dùng văn phong viết trung lập (-다 / -는다 / -ㄴ다).");
+          issues.push("❌ Phát hiện đuôi hội thoại (-아/어요 hoặc -습니다)! Câu 53–54 bắt buộc dùng văn phong viết (-다/는다).");
         } else if (draft.trim().length > 20) {
           issues.push("✔ Văn phong viết (-다/는다) chuẩn quy định NIIED.");
         }
         if (/(따라서|그러나|반면에|한편|또한)/.test(draft)) {
-          issues.push("✔ Có sử dụng từ nối học thuật mạch lạc (따라서, 그러나, 한편, 또한...).");
+          issues.push("✔ Có sử dụng từ nối học thuật mạch lạc.");
         } else {
-          issues.push("💡 Gợi ý: Bổ sung các phó từ liên kết học thuật như '한편', '반면에', '따라서' để ăn điểm mạch văn.");
+          issues.push("💡 Gợi ý: Bổ sung các phó từ liên kết như '한편', '반면에', '따라서'.");
         }
-
         feedbackHtml = `<strong>Kết quả Check quy chuẩn bài viết:</strong><ul style="margin:6px 0 0;padding-left:18px;">${issues.map((i) => `<li>${i}</li>`).join("")}</ul>`;
         drawStudio();
       });
@@ -339,11 +346,10 @@ export function renderTopikPracticeView(root, db, navigate, params = {}) {
     drawStudio();
   }
 
-  // TOPIK SPEAKING 6 TASKS ROOM
   function renderTopikSpeakingRoom(container) {
     let tIdx = 0;
     let timerId = null;
-    let phase = "idle"; // idle | prep | speak
+    let phase = "idle";
     let secLeft = 0;
     let showSample = false;
 
@@ -352,6 +358,7 @@ export function renderTopikPracticeView(root, db, navigate, params = {}) {
       timerId = null;
       phase = "idle";
     }
+    registerCleanup(stopTimer);
 
     function drawSpeaking() {
       const task = TOPIK_SPEAKING_TASKS[tIdx];
@@ -411,23 +418,15 @@ export function renderTopikPracticeView(root, db, navigate, params = {}) {
       if (playSample) playSample.addEventListener("click", () => speakKoreanTTS(task.sample));
 
       container.querySelector("#btn-spk-start").addEventListener("click", () => {
-        if (phase !== "idle") {
-          stopTimer();
-          drawSpeaking();
-          return;
-        }
+        if (phase !== "idle") { stopTimer(); drawSpeaking(); return; }
         phase = "prep";
         secLeft = task.prepSec;
         drawSpeaking();
         timerId = setInterval(() => {
           secLeft -= 1;
           if (secLeft <= 0) {
-            if (phase === "prep") {
-              phase = "speak";
-              secLeft = task.speakSec;
-            } else {
-              stopTimer();
-            }
+            if (phase === "prep") { phase = "speak"; secLeft = task.speakSec; }
+            else stopTimer();
             drawSpeaking();
           } else {
             const badge = container.querySelector("#spk-timer-badge");
@@ -439,6 +438,4 @@ export function renderTopikPracticeView(root, db, navigate, params = {}) {
 
     drawSpeaking();
   }
-
-  render();
 }
