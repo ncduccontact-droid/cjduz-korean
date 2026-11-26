@@ -1,6 +1,6 @@
-import { store, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261127-05";
-import { WONGOKJI_PROMPTS, TOPIK_SPEAKING_TASKS } from "../topik-bank.js?v=20261127-05";
-import { ico } from "../icons.js?v=20261127-05";
+import { store, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261127-06";
+import { WONGOKJI_PROMPTS, TOPIK_SPEAKING_TASKS } from "../topik-bank.js?v=20261127-06";
+import { ico } from "../icons.js?v=20261127-06";
 
 export function renderTopikPracticeView(root, db, navigate, params = {}, registerCleanup = () => {}) {
   const sys = db.topikFullSystem || { taxonomy: { topik1: {}, topik2: {} }, itemPool: {} };
@@ -39,8 +39,8 @@ export function renderTopikPracticeView(root, db, navigate, params = {}, registe
         <span>${levelKey === "topik1" ? "Luyện nhuần nhuyễn từng dạng TOPIK I (Dạng 1 → Dạng 8)" : "Luyện nhuần nhuyễn từng dạng TOPIK II & Speaking (Dạng 1 → Dạng 10)"}</span>
       </div>
 
-      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:10px;">
-        <div class="skill-pills-row" style="margin-bottom:0;">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:10px;max-width:100%;min-width:0;">
+        <div class="skill-pills-row" style="margin-bottom:0;min-width:0;max-width:100%;">
           <button class="btn-skill ${skill === "listening" ? "active" : ""}" data-sk="listening">${ico("headphones", 17)} Nghe · 듣기 (${(lvTax.listening || []).length} Dạng)</button>
           <button class="btn-skill ${skill === "reading" ? "active" : ""}" data-sk="reading">${ico("book", 17)} Đọc · 읽기 (${(lvTax.reading || []).length} Dạng)</button>
           ${levelKey === "topik2" ? `

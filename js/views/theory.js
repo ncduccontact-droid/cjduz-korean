@@ -1,8 +1,8 @@
-import { store, normalizeBookId, getBookWords, getBookCurriculum, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261127-05";
-import { ico } from "../icons.js?v=20261127-05";
-import { analyzePronunciationRules, appendJamoToText } from "../korean-engine.js?v=20261127-05";
-import { HANGEUL_DATA, GRAMMAR_COMPARISONS, HANJA_ROOTS, FREQUENT_TOPIK_EXPRESSIONS } from "../curated-content.js?v=20261127-05";
-import { renderChapterExercises } from "../chapter-exercises.js?v=20261127-05";
+import { store, normalizeBookId, getBookWords, getBookCurriculum, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261127-06";
+import { ico } from "../icons.js?v=20261127-06";
+import { analyzePronunciationRules, appendJamoToText } from "../korean-engine.js?v=20261127-06";
+import { HANGEUL_DATA, GRAMMAR_COMPARISONS, HANJA_ROOTS, FREQUENT_TOPIK_EXPRESSIONS } from "../curated-content.js?v=20261127-06";
+import { renderChapterExercises } from "../chapter-exercises.js?v=20261127-06";
 
 function buildSubPartsForLesson(db, bookKey, lessonNum, lessonWords) {
   const bookCur = getBookCurriculum(db, bookKey);
@@ -679,8 +679,8 @@ function renderVocabReviewArena(root, db, navigate, params = {}) {
           <span>${scopeLabel} (${sortedDeck.length} từ)</span>
         </div>
 
-        <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:12px;">
-          <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;max-width:100%;">
+        <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:12px;width:100%;max-width:100%;min-width:0;">
+          <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;width:100%;max-width:100%;min-width:0;">
             <select id="arena-sel-book" class="box-select">
               ${(db.books6 || []).map((b) => `<option value="${b.bookId}" ${b.bookId === bookKey ? "selected" : ""}>${b.shortTitle}</option>`).join("")}
               <option value="sejong1" ${bookKey === "sejong1" ? "selected" : ""}>Giao tiếp Sejong</option>

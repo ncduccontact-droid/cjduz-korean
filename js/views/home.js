@@ -1,8 +1,8 @@
-import { store, getBookWords, evaluateRoadmapScore } from "../store.js?v=20261127-05";
-import { ico, daisyLogoSVG } from "../icons.js?v=20261127-05";
-import { getGuidedStudyPlan, STAGE_LABELS } from "./roadmap.js?v=20261127-05";
+import { store, getBookWords, evaluateRoadmapScore } from "../store.js?v=20261127-06";
+import { ico, daisyLogoSVG } from "../icons.js?v=20261127-06";
+import { getGuidedStudyPlan, STAGE_LABELS } from "./roadmap.js?v=20261127-06";
 
-export const ADMIN_QR_IMG_SRC = "/media/vietqr_admin_v2.jpg?v=20261127-05";
+export const ADMIN_QR_IMG_SRC = "/media/vietqr_admin_v2.jpg?v=20261127-06";
 
 export function renderAdminSupportCardHTML(extraStyle = "") {
   return `

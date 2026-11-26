@@ -1,6 +1,6 @@
-import { store, playAudio, speakKoreanTTS } from "./store.js?v=20261127-05";
-import { analyzePronunciationRules } from "./korean-engine.js?v=20261127-05";
-import { ico } from "./icons.js?v=20261127-05";
+import { store, playAudio, speakKoreanTTS } from "./store.js?v=20261127-06";
+import { analyzePronunciationRules } from "./korean-engine.js?v=20261127-06";
+import { ico } from "./icons.js?v=20261127-06";
 
 // Curated Real YouTube Shorts Shadowing Library (from 6F0uUJgeJQI, @Tienghanvoihailey & @hongtuoissem)
 export const YOUTUBE_SHORTS_CLIPS = [
@@ -493,16 +493,16 @@ export function renderShortsShadowingStudio(stage, db, onSwitchToTextbookShadowi
     const clip = clips[clipIdx % clips.length];
 
     stage.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
-        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;width:100%;max-width:100%;min-width:0;">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;min-width:0;max-width:100%;flex:1 1 260px;">
           <strong style="display:inline-flex;align-items:center;gap:6px;">${ico("video", 19)} Chọn Clip YouTube Shorts:</strong>
-          <select id="shorts-clip-select" class="box-select">
+          <select id="shorts-clip-select" class="box-select" style="flex:1 1 220px;min-width:0;max-width:100%;">
             ${clips.map((c, i) => `<option value="${i}" ${i === clipIdx ? "selected" : ""}>[${c.channel}] ${c.title}</option>`).join("")}
           </select>
         </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;max-width:100%;">
           <button type="button" class="btn-outline-teal" id="btn-add-yt-clip" style="padding:6px 13px;font-size:13px;">${ico("plus", 15)} Thêm Clip YouTube</button>
-          <button type="button" class="btn-outline-teal" id="btn-switch-kyuri-shadow" style="padding:6px 13px;font-size:13px;">${ico("book", 15)} Chuyển sang Shadowing Sơ cấp 1 (Kyuri)</button>
+          <button type="button" class="btn-outline-teal" id="btn-switch-kyuri-shadow" style="padding:6px 13px;font-size:13px;">${ico("book", 15)} Shadowing Sơ cấp 1 (Kyuri)</button>
         </div>
       </div>
 

@@ -160,6 +160,11 @@ html[data-theme="lagoon_jade"] {
 html, body {
   margin: 0;
   padding: 0;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
+  -webkit-text-size-adjust: 100%;
   background-color: var(--bg-body);
   background-image: var(--bg-body-grad);
   background-repeat: no-repeat;
@@ -171,6 +176,25 @@ html, body {
   letter-spacing: -0.006em;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+}
+
+body {
+  position: relative;
+}
+
+#app-root,
+#trial-banner-slot,
+#bottom-support-slot,
+.migii-footer {
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+pre {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-wrap: anywhere;
 }
 
 h1, h2, h3, h4 {
@@ -488,15 +512,19 @@ html[data-theme="jade_aurora"] .user-auth-pill {
 
 /* ===== CONTAINERS & STRUCTURAL RHYTHM ===== */
 .container-web {
+  width: 100%;
   max-width: 1140px;
   margin: 0 auto;
   padding: 24px 20px 64px;
+  overflow-x: hidden;
 }
 
 .container-narrow {
+  width: 100%;
   max-width: 940px;
   margin: 0 auto;
   padding: 24px 20px 64px;
+  overflow-x: hidden;
 }
 
 .breadcrumb-bar {
@@ -652,7 +680,11 @@ html[data-theme="jade_aurora"] .user-auth-pill {
   border: 1px solid var(--border-card);
   border-radius: 10px;
   padding: 8px 12px;
+  min-width: 0;
   max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: 13.5px;
   font-weight: 600;
   cursor: pointer;
@@ -800,6 +832,19 @@ html[data-theme="jade_aurora"] .user-auth-pill {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 12px;
+}
+
+.grid-2 > *,
+.grid-3 > *,
+.home-books-grid > *,
+.pillar-grid-4 > *,
+.grid-books-6 > *,
+.today-plan-grid > *,
+.shorts-studio-grid > *,
+.exam-room-grid > *,
+.roadmap-hero-grid > * {
+  min-width: 0;
+  max-width: 100%;
 }
 
 .theory-card {
@@ -1654,13 +1699,24 @@ html[data-theme="jade_aurora"] .user-auth-pill {
 @media (max-width: 960px) {
   .today-plan-grid { grid-template-columns: 1fr; }
   .nav-links { display: none; }
-  .migii-navbar { height: 58px; }
+  .migii-navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 58px;
+    z-index: 3500;
+  }
   .exam-room-grid { grid-template-columns: minmax(0, 1fr); }
   .shorts-studio-grid { grid-template-columns: minmax(0, 1fr); }
   .shorts-player-frame { max-width: 280px; margin: 0 auto; width: 100%; }
   .grid-books-6 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  body { padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px)); }
+  body {
+    padding-top: 58px;
+    padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px));
+  }
   .migii-footer { padding-bottom: calc(86px + env(safe-area-inset-bottom, 0px)); }
 
   .mobile-bottom-nav {
@@ -1746,17 +1802,28 @@ html[data-theme="jade_aurora"] .user-auth-pill {
   .section-head { margin: 22px 0 10px; }
   .section-head h2 { font-size: 17px; }
 
+  .box-select {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
   /* Horizontal swipeable filter/book strips on mobile so content stays above the fold */
   .skill-pills-row,
   .book-tabs-bar,
   .exam-nav {
     display: flex;
     flex-wrap: nowrap;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
     overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
-    margin-left: -2px;
-    margin-right: -2px;
+    margin-left: 0;
+    margin-right: 0;
     padding-bottom: 2px;
   }
   .skill-pills-row::-webkit-scrollbar,
