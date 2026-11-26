@@ -128,23 +128,21 @@ function buildPersonalizedDays(profile, navigate) {
     const effectiveDay = stage === "zero" ? day - 4 : day;
     const lessonNum = Math.min(15, Math.ceil(effectiveDay / 2));
     const tasks = [
-      { label: `Học ${wordQuota} từ & Ngữ pháp Bài ${String(lessonNum).padStart(2, "0")} Sơ cấp 1 (Kyuri)`, go: () => navigate("theory", { sub: "lesson-detail", book: "sc1", lesson: lessonNum }) }
+      { label: `Bước 1 · Học ${wordQuota} từ & Ngữ pháp Bài ${String(lessonNum).padStart(2, "0")} (Kyuri)`, go: () => navigate("theory", { sub: "lesson-detail", book: "sc1", lesson: lessonNum, tab: "vocab" }) },
+      { label: `Bước 2 · Luyện Dịch câu Việt → Hàn & Bài tập TOPIK Bài ${String(lessonNum).padStart(2, "0")}`, go: () => navigate("theory", { sub: "lesson-detail", book: "sc1", lesson: lessonNum, tab: "exercises" }) }
     ];
 
     if (track === "speaking_first") {
       tasks.push(
-        { label: `Shadowing thu âm Micro các câu Bài ${lessonNum} & Check nối âm`, go: () => navigate("practice", { sub: "skills", skill: "shadowing", lesson: lessonNum }) },
-        { label: "Đóng vai hội thoại thực tế & Đổi 3 cấp kính ngữ", go: () => navigate("practice", { sub: "skills", skill: "roleplay" }) }
+        { label: "Bước 3 · Shadowing qua Clip YouTube Shorts (Phụ đề tự chạy & Tra từ)", go: () => navigate("practice", { sub: "skills", skill: "shadowing" }) }
       );
     } else if (track === "topik_intensive") {
       tasks.push(
-        { label: `Ôn Quiz & Gõ Hangeul từ vựng Bài ${lessonNum} (Phím tắt 1–4)`, go: () => navigate("theory", { sub: "vocab-review", book: "sc1", lesson: lessonNum }) },
-        { label: "Luyện cấu trúc đề TOPIK I + Câu thường gặp", go: () => navigate("practice", { sub: "topik1" }) }
+        { label: "Bước 3 · Luyện cấu trúc đề & Giải 20 Đề thi TOPIK chính thức", go: () => navigate("mock-test", { sub: "topik1", mode: "all" }) }
       );
     } else {
       tasks.push(
-        { label: `Tập nói Shadowing 5 câu Bài ${lessonNum}`, go: () => navigate("practice", { sub: "skills", skill: "shadowing", lesson: lessonNum }) },
-        { label: day % 2 === 0 ? "Đọc hiểu chạm-tra-từ & Check câu hỏi" : "Luyện 1 dạng câu theo cấu trúc đề TOPIK I", go: () => day % 2 === 0 ? navigate("practice", { sub: "skills", skill: "reading" }) : navigate("practice", { sub: "topik1" }) }
+        { label: day % 2 === 1 ? "Bước 3 · Shadowing Clip YouTube Shorts phản xạ nghe nói" : "Bước 3 · Luyện đề chính thức TOPIK (Kỳ 37 → 102)", go: () => day % 2 === 1 ? navigate("practice", { sub: "skills", skill: "shadowing" }) : navigate("mock-test", { sub: "topik1", mode: "all" }) }
       );
     }
 

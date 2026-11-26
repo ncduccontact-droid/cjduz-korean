@@ -1,6 +1,7 @@
-import { store, playAudio, speakKoreanTTS } from "../store.js";
+import { store, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js";
 import { analyzePronunciationRules, appendJamoToText } from "../korean-engine.js";
 import { HANGEUL_DATA, GRAMMAR_COMPARISONS, HANJA_ROOTS, FREQUENT_TOPIK_EXPRESSIONS, TEXTBOOK_SERIES } from "../curated-content.js";
+import { renderChapterExercises } from "../chapter-exercises.js";
 
 export function renderTheoryView(root, db, navigate, params = {}) {
   const sub = params.sub || "index";
@@ -281,6 +282,13 @@ function renderLessonDetail(root, db, navigate, bookKey, lessonNum, activeTab = 
   const lessonTitle = words[0]?.lessonTitle || `Bài ${lessonNum}`;
   const textbookMeta = TEXTBOOK_SERIES[0].lessons.find((l) => l.num === lessonNum);
 
+  // Preload chapter audio into LRU RAM cache immediately so play button responds in 0ms
+  preloadAudioUrls([
+    ...words.slice(0, 36).map((w) => w.wordAudio),
+    ...words.slice(0, 18).map((w) => w.exampleAudio),
+    ...grammars.map((g) => g.example1Audio)
+  ]);
+
   store.state.lastLesson = {
     book: bookKey,
     lesson: lessonNum,
@@ -310,8 +318,12 @@ function renderLessonDetail(root, db, navigate, bookKey, lessonNum, activeTab = 
         </div>
 
         <div class="skill-pills-row">
-          <button class="btn-skill ${activeTab === "vocab" ? "active" : ""}" data-tab="vocab">Từ vựng (${words.length})</button>
-          ${grammars.length ? `<button class="btn-skill ${activeTab === "grammar" ? "active" : ""}" data-tab="grammar">Ngữ pháp (${grammars.length})</button>` : ""}
+          <button class="btn-skill ${activeTab === "vocab" ? "active" : ""}" data-tab="vocab">1. Từ vựng (${words.length})</button>
+          ${grammars.length ? `<button class="btn-skill ${activeTab === "grammar" ? "active" : ""}" data-tab="grammar">2. Ngữ pháp (${grammars.length})</button>` : ""}
+          <button class="btn-skill ${activeTab === "exercises" ? "active" : ""}" data-tab="exercises">
+            ✍️ Bài tập chương (Dịch câu &amp; TOPIK)
+            <span class="badge-mia">MỚI</span>
+          </button>
           ${textbookMeta ? `<button class="btn-skill ${activeTab === "dialogue" ? "active" : ""}" data-tab="dialogue">Hội thoại &amp; Văn hóa</button>` : ""}
         </div>
 
@@ -387,9 +399,20 @@ function renderLessonDetail(root, db, navigate, bookKey, lessonNum, activeTab = 
       });
 
       body.querySelectorAll("[data-play]").forEach((btn) => {
-        btn.addEventListener("click", () => {
+        btn.addEventListener("mouseenter", () => {
+          if (btn.dataset.play) preloadAudioUrls([btn.dataset.play]);
+        });
+        btn.addEventListener("pointerdown", (e) => {
+          e.preventDefault();
           if (btn.dataset.play) playAudio(btn.dataset.play);
           else speakKoreanTTS(btn.dataset.tts);
+        });
+        btn.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            if (btn.dataset.play) playAudio(btn.dataset.play);
+            else speakKoreanTTS(btn.dataset.tts);
+          }
         });
       });
 
@@ -407,6 +430,8 @@ function renderLessonDetail(root, db, navigate, bookKey, lessonNum, activeTab = 
           renderContent();
         });
       });
+    } else if (activeTab === "exercises") {
+      renderChapterExercises(body, db, bookKey, lessonNum);
     } else if (activeTab === "grammar") {
       body.innerHTML = `
         <div style="display:flex;flex-direction:column;gap:16px;">
@@ -550,6 +575,15 @@ function renderVocabReviewArena(root, db, navigate, params = {}) {
     const stage = root.querySelector("#arena-stage");
 
     if (mode === "flashcard") {
+      // Preload current + next 8 cards into RAM audio cache for instant 0ms playback!
+      const upcomingAudio = [];
+      for (let k = 0; k < 9; k++) {
+        const c = sortedDeck[(idx + k) % sortedDeck.length];
+        if (c?.wordAudio) upcomingAudio.push(c.wordAudio);
+        if (c?.exampleAudio) upcomingAudio.push(c.exampleAudio);
+      }
+      preloadAudioUrls(upcomingAudio);
+
       const pron = analyzePronunciationRules(card.korean);
       const playCardAudio = () => {
         if (card.wordAudio) playAudio(card.wordAudio);
@@ -562,25 +596,50 @@ function renderVocabReviewArena(root, db, navigate, params = {}) {
         flipped = false;
         renderArena();
       };
+      const toggleFlip3D = () => {
+        flipped = !flipped;
+        const inner = stage.querySelector("#fc-3d-inner");
+        if (inner) inner.classList.toggle("is-flipped", flipped);
+      };
 
       stage.innerHTML = `
-        <div class="flashcard-stage">
+        <div class="flashcard-stage card-pop">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:14px;color:var(--text-muted);flex-wrap:wrap;gap:6px;">
             <span>Thẻ ${(idx % sortedDeck.length) + 1} / ${sortedDeck.length}</span>
             <span>Mức ghi nhớ SRS: Cấp ${store.state.srs[card.id]?.level || 0}/6</span>
           </div>
-          <div class="flashcard-box" id="fc-box">
-            <div class="ko" style="font-size:40px;font-weight:800;color:var(--primary-1);margin-bottom:6px;">${card.korean}</div>
-            ${pron.hasChange ? `<div class="ko" style="font-size:15px;color:var(--yellow-2);font-weight:600;margin-bottom:8px;">Phát âm: [${pron.pronounced}]</div>` : ""}
-            <button type="button" class="btn-outline-teal" id="fc-audio-btn" style="margin-bottom:14px;">
-              🔊 Nghe giọng Kyuri <kbd class="keycap">R</kbd>
-            </button>
-            ${flipped ? `
-              <div style="border-top:1px dashed #DDD;padding-top:14px;width:100%;">
-                <div style="font-size:22px;font-weight:700;color:var(--text-main);margin-bottom:8px;">${card.vietnamese}</div>
-                ${card.exampleKo ? `<div class="ko" style="font-size:16px;font-weight:600;">${card.exampleKo}</div><div style="font-size:14px;color:var(--text-muted);">${card.exampleVi}</div>` : ""}
+
+          <div class="flashcard-3d-scene">
+            <div class="flashcard-3d-inner ${flipped ? "is-flipped" : ""}" id="fc-3d-inner">
+              <!-- FRONT FACE -->
+              <div class="flashcard-face">
+                <span style="font-size:11.5px;font-weight:700;color:var(--primary);letter-spacing:0.06em;margin-bottom:8px;">MẶT TRƯỚC · TỪ VỰNG</span>
+                <div class="ko" style="font-size:44px;font-weight:800;color:var(--primary-1);margin-bottom:6px;">${card.korean}</div>
+                ${pron.hasChange ? `<div class="ko" style="font-size:15.5px;color:var(--yellow-2);font-weight:700;margin-bottom:10px;">Phát âm: [${pron.pronounced}]</div>` : ""}
+                <button type="button" class="btn-outline-teal fc-play-trigger" style="margin-bottom:16px;">
+                  🔊 Nghe giọng Kyuri <kbd class="keycap">R</kbd>
+                </button>
+                <div style="color:var(--text-muted);font-size:13.5px;">
+                  👆 Chạm thẻ hoặc bấm <kbd class="keycap">Space</kbd> để lật 3D · Phím <kbd class="keycap">1</kbd>–<kbd class="keycap">4</kbd> chọn Quên → Dễ
+                </div>
               </div>
-            ` : `<div style="color:var(--text-muted);font-size:14px;">👆 Nhấn vào thẻ hoặc bấm <kbd class="keycap">Space</kbd> để lật · Phím <kbd class="keycap">1</kbd>–<kbd class="keycap">4</kbd> chọn Quên → Dễ</div>`}
+
+              <!-- BACK FACE -->
+              <div class="flashcard-face flashcard-face-back">
+                <span style="font-size:11.5px;font-weight:700;color:var(--yellow-2);letter-spacing:0.06em;margin-bottom:6px;">MẶT SAU · NGHĨA &amp; VÍ DỤ</span>
+                <div class="ko" style="font-size:26px;font-weight:800;color:var(--primary-1);">${card.korean}</div>
+                <div style="font-size:23px;font-weight:800;color:var(--text-main);margin:6px 0 10px;">${card.vietnamese}</div>
+                ${card.exampleKo ? `
+                  <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;padding:10px 14px;width:100%;max-width:500px;margin-bottom:10px;">
+                    <div class="ko" style="font-size:16.5px;font-weight:700;color:var(--text-main);">${card.exampleKo}</div>
+                    <div style="font-size:13.5px;color:var(--text-muted);margin-top:2px;">${card.exampleVi}</div>
+                  </div>
+                ` : ""}
+                <button type="button" class="btn-outline-teal fc-ex-trigger" style="padding:6px 14px;font-size:13px;">
+                  🔊 Nghe câu ví dụ Kyuri
+                </button>
+              </div>
+            </div>
           </div>
 
           <div class="srs-rating-grid">
@@ -604,14 +663,23 @@ function renderVocabReviewArena(root, db, navigate, params = {}) {
         </div>
       `;
 
-      stage.querySelector("#fc-audio-btn").addEventListener("click", (e) => {
+      stage.querySelector(".fc-play-trigger").addEventListener("pointerdown", (e) => {
         e.stopPropagation();
         playCardAudio();
       });
-      stage.querySelector("#fc-box").addEventListener("click", () => {
-        flipped = !flipped;
-        renderArena();
-      });
+      stage.querySelector(".fc-play-trigger").addEventListener("click", (e) => e.stopPropagation());
+
+      const exTrig = stage.querySelector(".fc-ex-trigger");
+      if (exTrig) {
+        exTrig.addEventListener("pointerdown", (e) => {
+          e.stopPropagation();
+          if (card.exampleAudio) playAudio(card.exampleAudio);
+          else playCardAudio();
+        });
+        exTrig.addEventListener("click", (e) => e.stopPropagation());
+      }
+
+      stage.querySelector("#fc-3d-inner").addEventListener("click", toggleFlip3D);
       stage.querySelectorAll("[data-rate]").forEach((btn) => {
         btn.addEventListener("click", () => triggerRate(Number(btn.dataset.rate)));
       });
@@ -635,8 +703,7 @@ function renderVocabReviewArena(root, db, navigate, params = {}) {
           setTimeout(() => triggerRate(Number(ev.key) - 1), 65);
         } else if (ev.code === "Space" || ev.key === "Enter") {
           ev.preventDefault();
-          flipped = !flipped;
-          renderArena();
+          toggleFlip3D();
         } else if (ev.key === "r" || ev.key === "R") {
           ev.preventDefault();
           playCardAudio();

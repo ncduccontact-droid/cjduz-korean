@@ -93,33 +93,41 @@ export function renderHomeView(root, db, navigate) {
         </div>
       </section>
 
-      <!-- Quick Shortcut Strip for User's Core Pillars -->
+      <!-- Quick 4-Pillar Mastery Loop -->
       <div class="section-head">
-        <h2>Truy cập nhanh các khu luyện tập trọng tâm</h2>
+        <h2>Chu trình 4 bước học &amp; luyện thi trọng tâm</h2>
       </div>
-      <div class="grid-3" style="margin-bottom: 12px;">
+      <div class="grid-2" style="margin-bottom: 12px;">
         <div class="box-kind clickable" data-quick="vocab-review">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-            <strong style="font-size:17px;color:var(--primary-1);">📚 Học &amp; Ôn Từ Vựng Kyuri</strong>
-            <span class="badge-orange" style="background:rgba(254,154,5,0.12);">1.106 mục</span>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <strong style="font-size:17px;color:var(--primary-1);">1. Học &amp; Lật Thẻ 3D Từ Vựng Kyuri</strong>
+            <span class="badge-orange" style="background:rgba(254,154,5,0.12);">Phím tắt 1–4</span>
           </div>
-          <p style="margin:0;font-size:14px;color:var(--text-muted);">537 từ Sơ cấp 1 + 129 từ Sejong + 440 câu TOPIK I kèm 4 chế độ Quiz &amp; SRS.</p>
+          <p style="margin:0;font-size:14px;color:var(--text-muted);">Cache âm thanh phản hồi 0ms, lật thẻ 3D bằng phím Space và chấm SRS phím 1–4.</p>
         </div>
 
-        <div class="box-kind clickable" data-quick="frequent">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-            <strong style="font-size:17px;color:var(--primary-1);">⚡ Câu Thường Gặp TOPIK 1 &amp; 2</strong>
-            <span class="badge-orange" style="background:rgba(254,154,5,0.12);">Tủ thực chiến</span>
+        <div class="box-kind clickable" data-quick="chapter-translate">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <strong style="font-size:17px;color:var(--primary-1);">2. Bài Tập Chương &amp; Luyện Dịch Câu</strong>
+            <span class="badge-orange" style="background:rgba(254,154,5,0.12);">Việt ↔ Hàn</span>
           </div>
-          <p style="margin:0;font-size:14px;color:var(--text-muted);">Mẫu câu phản xạ hội thoại, phó từ nối câu, từ đồng nghĩa &amp; quán dụng ngữ.</p>
+          <p style="margin:0;font-size:14px;color:var(--text-muted);">Ghép câu / tự gõ dịch câu theo từng bài Giáo trình Tổng Hợp &amp; bài tập chuẩn đề TOPIK.</p>
         </div>
 
-        <div class="box-kind clickable" data-quick="topik-matrix">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-            <strong style="font-size:17px;color:var(--primary-1);">🎯 Ôn Theo Cấu Trúc Đề TOPIK</strong>
-            <span class="badge-orange" style="background:rgba(254,154,5,0.12);">Check % đúng</span>
+        <div class="box-kind clickable" data-quick="shorts-shadowing">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <strong style="font-size:17px;color:var(--primary-1);">3. Shadowing Clip YouTube Shorts</strong>
+            <span class="badge-orange" style="background:rgba(254,154,5,0.12);">Auto-Sub &amp; Từ điển</span>
           </div>
-          <p style="margin:0;font-size:14px;color:var(--text-muted);">Luyện xoáy sâu từng dạng câu Nghe, Đọc, Viết 원고지 &amp; Sổ tay câu sai tự động.</p>
+          <p style="margin:0;font-size:14px;color:var(--text-muted);">Phụ đề Hàn–Việt chạy karaoke theo giây, bấm từ tự dừng clip tra nghĩa ngay tại chỗ.</p>
+        </div>
+
+        <div class="box-kind clickable" data-quick="exams-20">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <strong style="font-size:17px;color:var(--primary-1);">4. Kho 20 Đề Thi TOPIK Chính Thức</strong>
+            <span class="badge-orange" style="background:rgba(254,154,5,0.12);">Kỳ 37 → Kỳ 102</span>
+          </div>
+          <p style="margin:0;font-size:14px;color:var(--text-muted);">Đầy đủ 10 đề TOPIK I &amp; 10 đề TOPIK II công bố chính thức với giọng đọc Hàn tự nhiên.</p>
         </div>
       </div>
 
@@ -194,8 +202,9 @@ export function renderHomeView(root, db, navigate) {
     el.addEventListener("click", () => {
       const q = el.dataset.quick;
       if (q === "vocab-review") navigate("theory", { sub: "vocab-review" });
-      if (q === "frequent") navigate("theory", { sub: "frequent" });
-      if (q === "topik-matrix") navigate("practice", { sub: "topik1" });
+      if (q === "chapter-translate") navigate("practice", { sub: "skills", skill: "translate", lesson: s.lastLesson.lesson || 1 });
+      if (q === "shorts-shadowing") navigate("practice", { sub: "skills", skill: "shadowing" });
+      if (q === "exams-20") navigate("mock-test", { sub: "topik1", mode: "all" });
     });
   });
 

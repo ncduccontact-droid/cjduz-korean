@@ -1,5 +1,7 @@
-import { store, playAudio, speakKoreanTTS } from "../store.js";
+import { store, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js";
 import { analyzePronunciationRules, conjugateKoreanPredicate } from "../korean-engine.js";
+import { renderChapterExercises } from "../chapter-exercises.js";
+import { renderShortsShadowingStudio } from "../shorts-shadowing.js";
 
 const READING_PASSAGES = [
   {
@@ -88,32 +90,34 @@ const ROLEPLAY_SCENARIOS = [
 ];
 
 export function renderSkillsPracticeView(root, db, navigate, params = {}) {
-  let activeSkill = params.skill || "listening"; // listening | reading | shadowing | speaking- politeness
-  const lessonFilter = Number(params.lesson || 1);
+  let activeSkill = params.skill || "shadowing"; // translate | listening | reading | shadowing | textbook-shadow | roleplay
+  let chLesson = Number(params.lesson || 1);
 
   function renderHeaderAndTabs() {
     root.innerHTML = `
       <div class="container-web">
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
           <div class="breadcrumb-bar" style="margin-bottom:0;">
-            <span>Luyện tập</span><span>▶</span><span>Kỹ năng Nghe · Đọc · Shadowing · Giao tiếp</span>
+            <span>Luyện tập</span><span>▶</span><span>Dịch câu · Shadowing YouTube Shorts · Nghe · Đọc</span>
           </div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;">
-            <button type="button" class="btn-outline-teal" id="sw-to-topik1" style="padding:5px 12px;font-size:13px;">Chuyển sang Cấu trúc TOPIK I →</button>
+            <button type="button" class="btn-outline-teal" id="sw-to-topik1" style="padding:5px 12px;font-size:13px;">Ôn cấu trúc TOPIK I →</button>
             <button type="button" class="btn-outline-teal" id="sw-to-topik2" style="padding:5px 12px;font-size:13px;">Cấu trúc TOPIK II →</button>
           </div>
         </div>
 
         <div class="skill-pills-row">
+          <button class="btn-skill ${activeSkill === "translate" ? "active" : ""}" data-sk="translate">
+            ✍️ Dịch câu &amp; Bài tập chương
+          </button>
+          <button class="btn-skill ${activeSkill === "shadowing" || activeSkill === "textbook-shadow" ? "active" : ""}" data-sk="shadowing">
+            🎬 Shadowing Clip YouTube Shorts
+            <span class="badge-mia">HOT</span>
+          </button>
           <button class="btn-skill ${activeSkill === "listening" ? "active" : ""}" data-sk="listening">🎧 Nghe &amp; Chép chính tả</button>
           <button class="btn-skill ${activeSkill === "reading" ? "active" : ""}" data-sk="reading">📖 Đọc (Chạm từ tra nghĩa)</button>
-          <button class="btn-skill ${activeSkill === "shadowing" ? "active" : ""}" data-sk="shadowing">
-            🎙️ Shadowing &amp; Check phát âm
-            <span class="badge-mia">MIC</span>
-          </button>
           <button class="btn-skill ${activeSkill === "roleplay" ? "active" : ""}" data-sk="roleplay">
             💬 Giao tiếp &amp; 3 Cấp Kính ngữ
-            <span class="badge-mia">CJDUZ</span>
           </button>
         </div>
 
@@ -131,10 +135,42 @@ export function renderSkillsPracticeView(root, db, navigate, params = {}) {
     });
 
     const stage = root.querySelector("#skill-stage");
-    if (activeSkill === "listening") renderListeningModule(stage, db);
-    else if (activeSkill === "reading") renderReadingModule(stage, db);
-    else if (activeSkill === "shadowing") renderShadowingModule(stage, db, lessonFilter);
-    else renderRoleplayAndPoliteness(stage);
+    if (activeSkill === "translate") {
+      stage.innerHTML = `
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
+          <strong>Chọn Chương để Luyện dịch câu &amp; Bài tập TOPIK:</strong>
+          <select id="prac-ch-select" class="box-select">
+            ${Array.from({ length: 15 }, (_, i) => i + 1).map((n) => `
+              <option value="${n}" ${n === chLesson ? "selected" : ""}>Sơ cấp 1 · Chương ${String(n).padStart(2, "0")}</option>
+            `).join("")}
+          </select>
+        </div>
+        <div id="prac-ch-body"></div>
+      `;
+      stage.querySelector("#prac-ch-select").addEventListener("change", (e) => {
+        chLesson = Number(e.target.value);
+        renderHeaderAndTabs();
+      });
+      renderChapterExercises(stage.querySelector("#prac-ch-body"), db, "sc1", chLesson);
+    } else if (activeSkill === "shadowing") {
+      renderShortsShadowingStudio(stage, db, () => {
+        activeSkill = "textbook-shadow";
+        renderHeaderAndTabs();
+      });
+    } else if (activeSkill === "textbook-shadow") {
+      stage.innerHTML = `<div style="margin-bottom:12px;"><button type="button" class="btn-outline-teal" id="back-to-yt-shorts">← Quay lại Shadowing Clip YouTube Shorts</button></div><div id="tb-shadow-slot"></div>`;
+      stage.querySelector("#back-to-yt-shorts").addEventListener("click", () => {
+        activeSkill = "shadowing";
+        renderHeaderAndTabs();
+      });
+      renderShadowingModule(stage.querySelector("#tb-shadow-slot"), db, chLesson);
+    } else if (activeSkill === "listening") {
+      renderListeningModule(stage, db);
+    } else if (activeSkill === "reading") {
+      renderReadingModule(stage, db);
+    } else {
+      renderRoleplayAndPoliteness(stage);
+    }
   }
 
   renderHeaderAndTabs();

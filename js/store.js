@@ -1,5 +1,4 @@
-const GUEST_STORAGE_KEY = "hanmastery_migii_state_v1";
-const AUTH_SESSION_KEY = "cjduz_auth_session_v1";
+const AUTH_SESSION_KEY = "cjduz_auth_session_v2";
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
@@ -27,10 +26,12 @@ function createFreshState(roadmapProfile = DEFAULT_ROADMAP_PROFILE) {
     lastActiveDate: todayISO(),
     srs: {},
     completedLessons: {},
+    chapterHomeworkDone: {},
     roadmapDone: {},
     partStats: {},
     mistakes: [],
     examHistory: [],
+    customYoutubeClips: [],
     geminiApiKey: ""
   };
 }
@@ -38,10 +39,12 @@ function createFreshState(roadmapProfile = DEFAULT_ROADMAP_PROFILE) {
 function loadSessionMeta() {
   try {
     const raw = localStorage.getItem(AUTH_SESSION_KEY);
-    if (!raw) return { mode: "trial", token: "", user: null, trialStartedAt: Date.now() };
-    return JSON.parse(raw);
+    if (!raw) return { mode: "guest", token: "", user: null };
+    const parsed = JSON.parse(raw);
+    if (parsed?.mode === "user" && parsed?.user && parsed?.token) return parsed;
+    return { mode: "guest", token: "", user: null };
   } catch {
-    return { mode: "trial", token: "", user: null, trialStartedAt: Date.now() };
+    return { mode: "guest", token: "", user: null };
   }
 }
 
@@ -49,7 +52,7 @@ function stateKeyForSession(sess) {
   if (sess?.mode === "user" && sess?.user?.id) {
     return `cjduz_user_state_${sess.user.id}`;
   }
-  return GUEST_STORAGE_KEY;
+  return "cjduz_guest_temp";
 }
 
 let syncTimer = null;
@@ -61,8 +64,11 @@ export const store = {
 
   init() {
     this.state = this.loadStateForCurrentSession();
-    // Save initial trial timestamp if first visit
     localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(this.session));
+  },
+
+  isAuthenticated() {
+    return this.session?.mode === "user" && Boolean(this.session?.user?.email) && Boolean(this.session?.token);
   },
 
   loadStateForCurrentSession() {
@@ -85,7 +91,7 @@ export const store = {
     localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(this.session));
     this.listeners.forEach((fn) => fn(this.state, this.session));
 
-    if (!skipCloud && this.session.mode === "user" && this.session.token) {
+    if (!skipCloud && this.isAuthenticated()) {
       clearTimeout(syncTimer);
       syncTimer = setTimeout(() => {
         fetch("/api/user/sync", {
@@ -96,7 +102,7 @@ export const store = {
           },
           body: JSON.stringify({ state: this.state })
         }).catch(() => {});
-      }, 450);
+      }, 400);
     }
   },
 
@@ -114,8 +120,7 @@ export const store = {
         name: userObj.name,
         avatar: userObj.avatar || "",
         authProvider: userObj.authProvider || "email"
-      },
-      trialStartedAt: this.session.trialStartedAt || Date.now()
+      }
     };
 
     this.state = {
@@ -130,10 +135,11 @@ export const store = {
     this.save(false);
   },
 
-  logoutToTrial() {
-    this.session = { mode: "trial", token: "", user: null, trialStartedAt: Date.now() };
-    this.state = this.loadStateForCurrentSession();
-    this.save(true);
+  logout() {
+    this.session = { mode: "guest", token: "", user: null };
+    this.state = createFreshState();
+    localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(this.session));
+    this.listeners.forEach((fn) => fn(this.state, this.session));
   },
 
   updateRoadmapProfile(newProfile, resetCheckedDays = false) {
@@ -149,13 +155,13 @@ export const store = {
   },
 
   async restoreCloudSession() {
-    if (this.session.mode !== "user" || !this.session.token) return;
+    if (!this.isAuthenticated()) return;
     try {
       const res = await fetch("/api/user/me", {
         headers: { "Authorization": `Bearer ${this.session.token}` }
       });
       if (!res.ok) {
-        this.logoutToTrial();
+        this.logout();
         return;
       }
       const data = await res.json();
@@ -163,7 +169,7 @@ export const store = {
         this.applyAuthenticatedUser(this.session.token, data.user);
       }
     } catch {
-      // Offline graceful fallback keeps local user cache
+      // Keep cached user state when offline
     }
   },
 
@@ -250,6 +256,7 @@ export const store = {
         partTitle,
         question: qObj.question,
         passage: qObj.passage || "",
+        audioSrc: qObj.audioSrc || "",
         audioText: qObj.audioText || "",
         options: qObj.options,
         userChoice,
@@ -287,25 +294,68 @@ export const store = {
 
 store.init();
 
+// ===== ZERO-LATENCY PRELOAD AUDIO ENGINE (LRU Cache) =====
+const audioCache = new Map();
+const MAX_AUDIO_CACHE = 90;
 let currentAudio = null;
+
+function normalizeAudioPath(src) {
+  if (!src) return "";
+  return src.startsWith("/") || src.startsWith("http") ? src : `/${src}`;
+}
+
+export function preloadAudioUrls(urls = []) {
+  urls.forEach((raw) => {
+    const clean = normalizeAudioPath(raw);
+    if (!clean || audioCache.has(clean)) return;
+    if (audioCache.size >= MAX_AUDIO_CACHE) {
+      const oldestKey = audioCache.keys().next().value;
+      audioCache.delete(oldestKey);
+    }
+    const a = new Audio();
+    a.preload = "auto";
+    a.src = clean;
+    a.load();
+    audioCache.set(clean, a);
+  });
+}
+
 export function playAudio(src, rate = 1.0) {
-  if (!src) return null;
-  if (currentAudio) {
+  const cleanSrc = normalizeAudioPath(src);
+  if (!cleanSrc) return null;
+
+  if (currentAudio && currentAudio.src !== cleanSrc) {
     currentAudio.pause();
+    currentAudio.currentTime = 0;
   }
-  const cleanSrc = src.startsWith("/") ? src : `/${src}`;
-  const audio = new Audio(cleanSrc);
+
+  let audio = audioCache.get(cleanSrc);
+  if (!audio) {
+    audio = new Audio(cleanSrc);
+    audio.preload = "auto";
+    if (audioCache.size >= MAX_AUDIO_CACHE) {
+      audioCache.delete(audioCache.keys().next().value);
+    }
+    audioCache.set(cleanSrc, audio);
+  }
+
+  audio.pause();
+  audio.currentTime = 0;
   audio.playbackRate = rate;
   currentAudio = audio;
   audio.play().catch(() => {});
   return audio;
 }
 
-export function speakKoreanTTS(text, rate = 0.95) {
+export function speakKoreanTTS(text, rate = 0.96) {
   if (!("speechSynthesis" in window) || !text) return;
   window.speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
   u.lang = "ko-KR";
   u.rate = rate;
+  const voices = window.speechSynthesis.getVoices?.() || [];
+  const bestKo = voices.find((v) => v.lang.startsWith("ko") && (v.name.includes("Natural") || v.name.includes("Google") || v.name.includes("Siri")))
+    || voices.find((v) => v.lang.startsWith("ko"));
+  if (bestKo) u.voice = bestKo;
   window.speechSynthesis.speak(u);
 }

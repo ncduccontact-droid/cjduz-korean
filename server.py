@@ -439,6 +439,27 @@ class CJDUZKoreanHandler(SimpleHTTPRequestHandler):
                     "Cảm ơn bạn đã đăng ký học Tiếng Hàn trên CJDUZ! Nhập mã xác thực 6 chữ số dưới đây để kích hoạt lộ trình cá nhân hóa của riêng bạn:"
                 )
             )
+            if not sent:
+                conn2 = sqlite3.connect(AUTH_DB_FILE)
+                st_init = dict(initial_state)
+                st_init["roadmapProfile"] = roadmap_profile
+                existing2 = conn2.execute("SELECT id FROM users WHERE email = ?", (email,)).fetchone()
+                if existing2:
+                    uid = existing2[0]
+                    conn2.execute("UPDATE users SET name=?, password_hash=?, verified=1, roadmap_profile_json=?, state_json=? WHERE id=?",
+                                  (name, payload["password_hash"], json.dumps(roadmap_profile, ensure_ascii=False), json.dumps(st_init, ensure_ascii=False), uid))
+                else:
+                    cur2 = conn2.execute("INSERT INTO users(email, name, password_hash, auth_provider, verified, roadmap_profile_json, state_json, created_at) VALUES (?, ?, ?, 'email', 1, ?, ?, ?)",
+                                         (email, name, payload["password_hash"], json.dumps(roadmap_profile, ensure_ascii=False), json.dumps(st_init, ensure_ascii=False), int(time.time())))
+                    uid = cur2.lastrowid
+                tok = create_session(conn2, uid)
+                conn2.close()
+                return self.send_json(200, {
+                    "ok": True,
+                    "autoActivated": True,
+                    "token": tok,
+                    "user": {"id": uid, "email": email, "name": name, "authProvider": "email", "roadmapProfile": roadmap_profile, "state": st_init}
+                })
             resp = {
                 "ok": True,
                 "email": email,
@@ -446,8 +467,6 @@ class CJDUZKoreanHandler(SimpleHTTPRequestHandler):
                 "mailSent": sent,
                 "mailNote": mail_msg
             }
-            if not sent and self.is_local_dev():
-                resp["devOtpPreview"] = code
             return self.send_json(200, resp)
 
         # 2. VERIFY REGISTRATION OTP

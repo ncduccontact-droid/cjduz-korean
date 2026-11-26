@@ -7,9 +7,9 @@ export const TOPIK1_PARTS = [
     title: "Phần 1 · Chọn câu trả lời tiếp theo hợp lý (Câu 1~4)",
     tip: "Xác định từ để hỏi (어디, 언제, 무슨, 왜, 몇) và thì của câu hỏi (quá khứ -았/었- hay tương lai -(으)ㄹ 거예요).",
     questions: [
-      { id: "t1_lp1_1", audioText: "여: 오늘 저녁에 뭐 할 거예요?", question: "Nghe câu hỏi và chọn câu đáp lời tự nhiên nhất:", options: ["어제 영화를 봤어요.", "친구하고 밥을 먹을 거예요.", "저녁 일곱 시예요.", "식당에 사람이 많아요."], answer: 1, explain: "Câu hỏi dùng '뭐 할 거예요?' (tối nay sẽ làm gì - tương lai) → đáp án phải chia tương lai '친구하고 밥을 먹을 거예요'." },
-      { id: "t1_lp1_2", audioText: "남: 가방이 아주 예쁘네요. 어디에서 샀어요?", question: "Chọn câu trả lời phù hợp với câu hỏi của người nam:", options: ["백화점에서 샀어요.", "가방이 비싸요.", "동생한테 선물했어요.", "주말에 사러 갈 거예요."], answer: 0, explain: "'어디에서 샀어요?' hỏi mua ở đâu (quá khứ) → '백화점에서 샀어요' (Đã mua ở trung tâm thương mại)." },
-      { id: "t1_lp1_3", audioText: "여: 주말 잘 보냈어요?", question: "Chọn câu đáp lại lời hỏi thăm cuối tuần:", options: ["네, 내일 만나요.", "네, 집에서 푹 쉬었어요.", "아니요, 주말이 아니에요.", "네, 늦어서 미안해요."], answer: 1, explain: "'주말 잘 보냈어요?' (Cuối tuần nghỉ khỏe chứ?) → '네, 집에서 푹 쉬었어요' (Vâng, tôi đã nghỉ ngơi thoải mái ở nhà)." }
+      { id: "t1_lp1_1", audioSrc: "media/exam_t1L_01.mp3", audioText: "여: 오늘 저녁에 뭐 할 거예요?", question: "Nghe câu hỏi và chọn câu đáp lời tự nhiên nhất:", options: ["어제 영화를 봤어요.", "친구하고 밥을 먹을 거예요.", "저녁 일곱 시예요.", "식당에 사람이 많아요."], answer: 1, explain: "Câu hỏi dùng '뭐 할 거예요?' (tối nay sẽ làm gì - tương lai) → đáp án phải chia tương lai '친구하고 밥을 먹을 거예요'." },
+      { id: "t1_lp1_2", audioSrc: "media/exam_t1L_02.mp3", audioText: "남: 가방이 아주 예쁘네요. 어디에서 샀어요?", question: "Chọn câu trả lời phù hợp với câu hỏi của người nam:", options: ["백화점에서 샀어요.", "가방이 비싸요.", "동생한테 선물했어요.", "주말에 사러 갈 거예요."], answer: 0, explain: "'어디에서 샀어요?' hỏi mua ở đâu (quá khứ) → '백화점에서 샀어요' (Đã mua ở trung tâm thương mại)." },
+      { id: "t1_lp1_3", audioSrc: "media/exam_t1L_03.mp3", audioText: "여: 주말 잘 보냈어요?", question: "Chọn câu đáp lại lời hỏi thăm cuối tuần:", options: ["네, 내일 만나요.", "네, 집에서 푹 쉬었어요.", "아니요, 주말이 아니에요.", "네, 늦어서 미안해요."], answer: 1, explain: "'주말 잘 보냈어요?' (Cuối tuần nghỉ khỏe chứ?) → '네, 집에서 푹 쉬었어요' (Vâng, tôi đã nghỉ ngơi thoải mái ở nhà)." }
     ]
   },
   {
@@ -18,8 +18,8 @@ export const TOPIK1_PARTS = [
     title: "Phần 2 · Tìm Địa điểm & Chủ đề hội thoại (Câu 7~10)",
     tip: "Bắt các từ khóa đặc trưng cho địa điểm: 메뉴/주문 (식당), 약/아프다 (약국/병원), 소포/우표 (우체국), 머리 자르다 (미용실).",
     questions: [
-      { id: "t1_lp2_1", audioText: "남: 어서 오세요. 어떻게 오셨어요? / 여: 목이 아프고 열이 좀 나요.", question: "여기는 어디입니까? (Đây là đâu?)", options: ["병원", "서점", "은행", "우체국"], answer: 0, explain: "'목이 아프고 열이 나요' (Đau họng và hơi sốt) → Bệnh viện (병원)." },
-      { id: "t1_lp2_2", audioText: "여: 이 소포를 베트남으로 보내고 싶은데요. 얼마나 걸려요? / 남: 비행기로 보내면 사흘쯤 걸립니다.", question: "여기는 어디입니까?", options: ["공항", "여행사", "우체국", "편의점"], answer: 2, explain: "'소포를 보내다' (gửi bưu kiện) → Bưu điện (우체국)." }
+      { id: "t1_lp2_1", audioSrc: "media/exam_t1L_07.mp3", audioText: "남: 어서 오세요. 어떻게 오셨어요? / 여: 목이 아프고 열이 좀 나요.", question: "여기는 어디입니까? (Đây là đâu?)", options: ["병원", "서점", "은행", "우체국"], answer: 0, explain: "'목이 아프고 열이 나요' (Đau họng và hơi sốt) → Bệnh viện (병원)." },
+      { id: "t1_lp2_2", audioSrc: "media/exam_t1L_08.mp3", audioText: "여: 이 소포를 베트남으로 보내고 싶은데요. 얼마나 걸려요? / 남: 비행기로 보내면 사흘쯤 걸립니다.", question: "여기는 어디입니까?", options: ["공항", "여행사", "우체국", "편의점"], answer: 2, explain: "'소포를 보내다' (gửi bưu kiện) → Bưu điện (우체국)." }
     ]
   },
   {
@@ -69,6 +69,7 @@ export const TOPIK2_PARTS = [
     questions: [
       {
         id: "t2_lp1_1",
+        audioSrc: "media/exam_t2L_02.mp3",
         audioText: "여: 김 대리님, 오후 세 시 회의실 예약은 확인하셨죠?\n남: 네, 예약은 끝났는데 발표 자료 인쇄가 아직 안 됐어요.\n여: 아, 그래요? 그럼 제가 지금 출력해 올게요. 대리님은 노트북 먼저 연결해 주세요.",
         question: "여자가 이어서 할 행동으로 알맞은 것을 고르십시오 (Việc người nữ sẽ làm ngay tiếp theo):",
         options: ["회의실을 예약한다.", "노트북을 연결한다.", "발표 자료를 인쇄한다.", "회의 시간을 변경한다."],

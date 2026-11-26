@@ -105,7 +105,7 @@ print("   D1 tables verified/migrated!")
 print("3. Scanning static files & Kyuri MP3 assets...")
 manifest = {}
 hash_to_file = {}
-allowed_Top = {"index.html", "css", "js", "data", "media"}
+allowed_Top = {"index.html", "_headers", "css", "js", "data", "media"}
 skip_files = {"cjduz_users.db", "cjduz_users.db-journal", "mail_outbox.log", "custom_decks.json"}
 
 for entry in os.listdir(WEB_DIR):

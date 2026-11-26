@@ -1,6 +1,6 @@
-import { store, playAudio, speakKoreanTTS } from "./store.js";
+import { store, playAudio, preloadAudioUrls, speakKoreanTTS } from "./store.js";
 import { conjugateKoreanPredicate } from "./korean-engine.js";
-import { openAuthModal } from "./auth-modal.js";
+import { openAuthModal, renderMandatoryAuthGate } from "./auth-modal.js";
 import { renderHomeView } from "./views/home.js";
 import { renderTheoryView } from "./views/theory.js";
 import { renderRoadmapView } from "./views/roadmap.js";
@@ -18,6 +18,7 @@ const db = {
   sc1Grammar: [],
   sejongVocab: [],
   topik1Bank: [],
+  topik20Exams: { topik1: [], topik2: [] },
   customDecks: [],
   customVocab: []
 };
@@ -25,38 +26,15 @@ const db = {
 let currentRoute = "home";
 let currentParams = {};
 
-function renderTrialBanner() {
-  if (!trialSlot) return;
-  if (store.session.mode === "user" && store.session.user) {
-    trialSlot.innerHTML = "";
-    return;
-  }
-  trialSlot.innerHTML = `
-    <div class="trial-banner">
-      <div class="trial-banner-inner">
-        <span>🌼 <strong>Chế độ Dùng thử miễn phí:</strong> Bạn đang trải nghiệm đầy đủ tính năng. Đăng ký tài khoản (Google / Email) để lưu <strong>Lộ trình cá nhân hóa riêng</strong> trên mọi thiết bị!</span>
-        <div style="display:flex;gap:8px;">
-          <button type="button" id="banner-reg-btn" style="background:var(--yellow-2);color:#FFF;border:none;border-radius:99px;padding:5px 14px;font-size:13px;font-weight:700;cursor:pointer;">
-            Đăng ký &amp; Tạo lộ trình riêng
-          </button>
-        </div>
-      </div>
-    </div>
-  `;
-  trialSlot.querySelector("#banner-reg-btn")?.addEventListener("click", () => {
-    openAuthModal(modalRoot, "register", () => {
-      updateNavUI();
-      navigate(currentRoute, currentParams);
-    });
-  });
-}
-
 function updateNavUI() {
+  const authed = store.isAuthenticated();
+  if (trialSlot) trialSlot.innerHTML = "";
+
   document.querySelectorAll(".nav-pill").forEach((pill) => {
-    pill.classList.toggle("active", pill.dataset.route === currentRoute);
+    pill.classList.toggle("active", authed && pill.dataset.route === currentRoute);
   });
   document.querySelectorAll(".mobile-tab-btn").forEach((btn) => {
-    btn.classList.toggle("active", btn.dataset.mroute === currentRoute);
+    btn.classList.toggle("active", authed && btn.dataset.mroute === currentRoute);
   });
 
   const streakEl = document.getElementById("streak-count");
@@ -66,13 +44,8 @@ function updateNavUI() {
 
   const userLabel = document.getElementById("nav-user-label");
   if (userLabel) {
-    if (store.session.mode === "user" && store.session.user) {
-      userLabel.textContent = store.session.user.name;
-    } else {
-      userLabel.textContent = "Đăng ký / Dùng thử";
-    }
+    userLabel.textContent = authed ? store.session.user.name : "Đăng ký / Đăng nhập";
   }
-  renderTrialBanner();
 }
 
 export function navigate(route, params = {}) {
@@ -80,6 +53,16 @@ export function navigate(route, params = {}) {
   currentParams = params;
   updateNavUI();
   window.scrollTo({ top: 0, behavior: "smooth" });
+
+  // MANDATORY EMAIL AUTH GATE: Users must register/sign in with Email or Google to use web features
+  if (!store.isAuthenticated()) {
+    return renderMandatoryAuthGate(appRoot, () => {
+      updateNavUI();
+      // Warm preload first lesson audio right after login
+      preloadAudioUrls(db.sc1Vocab.slice(0, 16).map((w) => w.wordAudio));
+      navigate(currentRoute, currentParams);
+    });
+  }
 
   if (route === "home") return renderHomeView(appRoot, db, navigate);
   if (route === "theory") return renderTheoryView(appRoot, db, navigate, params);
@@ -99,6 +82,10 @@ export function navigate(route, params = {}) {
 }
 
 function openQuickLookupModal() {
+  if (!store.isAuthenticated()) {
+    navigate("home");
+    return;
+  }
   const allItems = [...db.sc1Vocab, ...db.sejongVocab, ...db.topik1Bank, ...db.customVocab];
   let q = "";
 
@@ -112,6 +99,7 @@ function openQuickLookupModal() {
         ).slice(0, 12)
       : allItems.slice(0, 6);
 
+    preloadAudioUrls(matches.map((m) => m.wordAudio || m.exampleAudio).filter(Boolean));
     const conj = cleanQ.endsWith("다") ? conjugateKoreanPredicate(cleanQ) : null;
 
     modalRoot.innerHTML = `
@@ -164,7 +152,7 @@ function openQuickLookupModal() {
       if (e.target.id === "quick-modal-bg") modalRoot.innerHTML = "";
     });
     modalRoot.querySelectorAll("[data-mplay]").forEach((b) => {
-      b.addEventListener("click", () => {
+      b.addEventListener("pointerdown", () => {
         if (b.dataset.mplay) playAudio(b.dataset.mplay);
         else speakKoreanTTS(b.dataset.mtts);
       });
@@ -175,13 +163,14 @@ function openQuickLookupModal() {
 }
 
 async function initApp() {
-  appRoot.innerHTML = `<div class="container-web"><div class="box-kind" style="text-align:center;padding:40px;">⏳ Đang tải kho dữ liệu Tiếng Hàn Tổng Hợp &amp; Âm thanh giọng Kyuri...</div></div>`;
+  appRoot.innerHTML = `<div class="container-web"><div class="box-kind" style="text-align:center;padding:40px;">⏳ Đang tải hệ thống CJDUZ Korean &amp; 20 Đề thi TOPIK chính thức...</div></div>`;
 
-  const [sc1V, sc1G, sjV, tp1, custom] = await Promise.all([
+  const [sc1V, sc1G, sjV, tp1, exams20, custom] = await Promise.all([
     fetch("/data/sc1_vocab.json").then((r) => r.json()),
     fetch("/data/sc1_grammar.json").then((r) => r.json()),
     fetch("/data/sejong_vocab.json").then((r) => r.json()),
     fetch("/data/topik1_bank.json").then((r) => r.json()),
+    fetch("/data/topik_20_exams.json").then((r) => r.json()).catch(() => ({ topik1: [], topik2: [] })),
     fetch("/api/custom-decks").then((r) => r.json()).catch(() => [])
   ]);
 
@@ -189,19 +178,23 @@ async function initApp() {
   db.sc1Grammar = sc1G;
   db.sejongVocab = sjV;
   db.topik1Bank = tp1;
+  db.topik20Exams = exams20;
   db.customDecks = custom;
   db.customVocab = custom.flatMap((d) => d.items || []);
 
   await store.restoreCloudSession();
-  store.touchStreak();
+  if (store.isAuthenticated()) {
+    store.touchStreak();
+    preloadAudioUrls(db.sc1Vocab.slice(0, 16).map((w) => w.wordAudio));
+  }
   store.subscribe(updateNavUI);
 
   document.getElementById("brand-home-btn").addEventListener("click", () => navigate("home"));
   document.querySelectorAll(".nav-pill[data-route]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const r = btn.dataset.route;
-      if (r === "practice") navigate("practice", { sub: "skills", skill: "listening" });
-      else if (r === "mock-test") navigate("mock-test", { sub: "topik1", mode: "full" });
+      if (r === "practice") navigate("practice", { sub: "skills", skill: "shadowing" });
+      else if (r === "mock-test") navigate("mock-test", { sub: "topik1", mode: "all" });
       else navigate(r);
     });
   });
@@ -209,8 +202,8 @@ async function initApp() {
   document.querySelectorAll(".mobile-tab-btn[data-mroute]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const r = btn.dataset.mroute;
-      if (r === "practice") navigate("practice", { sub: "skills", skill: "listening" });
-      else if (r === "mock-test") navigate("mock-test", { sub: "topik1", mode: "full" });
+      if (r === "practice") navigate("practice", { sub: "skills", skill: "shadowing" });
+      else if (r === "mock-test") navigate("mock-test", { sub: "topik1", mode: "all" });
       else navigate(r);
     });
   });
@@ -224,7 +217,11 @@ async function initApp() {
 
   document.getElementById("open-quick-tool-btn").addEventListener("click", openQuickLookupModal);
   document.getElementById("open-auth-btn").addEventListener("click", () => {
-    openAuthModal(modalRoot, null, () => {
+    if (!store.isAuthenticated()) {
+      navigate("home");
+      return;
+    }
+    openAuthModal(modalRoot, "profile", () => {
       updateNavUI();
       navigate(currentRoute, currentParams);
     });
