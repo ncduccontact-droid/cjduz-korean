@@ -197,6 +197,14 @@ for host in [DOMAIN, f"www.{DOMAIN}"]:
     except Exception as e:
         print(f"   Domain attach note ({host}): {e}")
 
+# 6. Purge Cloudflare Edge Cache so browsers get latest HTML/CSS/JS immediately
+print(f"6. Purging Cloudflare Edge Cache for {DOMAIN}...")
+try:
+    cf_req("POST", f"/zones/{zone['id']}/purge_cache", {"purge_everything": True})
+    print("   Edge cache purged!")
+except Exception as e:
+    print(f"   Cache purge note: {e}")
+
 print("\n🎉 DEPLOYMENT COMPLETE!")
 print(f"👉 Update Nameservers of {DOMAIN} on https://portal.inet.vn/ to:")
 for ns in zone.get("name_servers", []):
