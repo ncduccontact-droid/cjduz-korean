@@ -1,4 +1,4 @@
-import { store, DEFAULT_ROADMAP_PROFILE } from "./store.js";
+import { store, DEFAULT_ROADMAP_PROFILE } from "./store.js?v=20261126-5";
 
 let authConfigCache = null;
 

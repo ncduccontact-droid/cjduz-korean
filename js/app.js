@@ -1,14 +1,14 @@
-import { store, playAudio, preloadAudioUrls, speakKoreanTTS } from "./store.js";
-import { conjugateKoreanPredicate } from "./korean-engine.js";
-import { openAuthModal, renderMandatoryAuthGate } from "./auth-modal.js";
-import { buildUrl, parseUrl, getAncestorChain } from "./router.js";
-import { renderHomeView } from "./views/home.js";
-import { renderTheoryView } from "./views/theory.js";
-import { renderRoadmapView } from "./views/roadmap.js";
-import { renderSkillsPracticeView } from "./views/skills-practice.js";
-import { renderTopikPracticeView } from "./views/topik-practice.js";
-import { renderMockTestView } from "./views/mocktest.js";
-import { renderCheckAndToolsView } from "./views/check-tools.js";
+import { store, playAudio, preloadAudioUrls, speakKoreanTTS } from "./store.js?v=20261126-5";
+import { conjugateKoreanPredicate } from "./korean-engine.js?v=20261126-5";
+import { openAuthModal, renderMandatoryAuthGate } from "./auth-modal.js?v=20261126-5";
+import { buildUrl, parseUrl, getAncestorChain } from "./router.js?v=20261126-5";
+import { renderHomeView } from "./views/home.js?v=20261126-5";
+import { renderTheoryView } from "./views/theory.js?v=20261126-5";
+import { renderRoadmapView } from "./views/roadmap.js?v=20261126-5";
+import { renderSkillsPracticeView } from "./views/skills-practice.js?v=20261126-5";
+import { renderTopikPracticeView } from "./views/topik-practice.js?v=20261126-5";
+import { renderMockTestView } from "./views/mocktest.js?v=20261126-5";
+import { renderCheckAndToolsView } from "./views/check-tools.js?v=20261126-5";
 
 const appRoot = document.getElementById("app-root");
 const modalRoot = document.getElementById("modal-root");

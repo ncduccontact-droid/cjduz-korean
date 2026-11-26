@@ -1,4 +1,4 @@
-import { store } from "../store.js";
+import { store } from "../store.js?v=20261126-5";
 
 export function renderHomeView(root, db, navigate) {
   const s = store.state;

@@ -1,5 +1,5 @@
-import { store, speakKoreanTTS } from "../store.js";
-import { analyzePronunciationRules, conjugateKoreanPredicate } from "../korean-engine.js";
+import { store, speakKoreanTTS } from "../store.js?v=20261126-5";
+import { analyzePronunciationRules, conjugateKoreanPredicate } from "../korean-engine.js?v=20261126-5";
 
 const PARTICLE_NOTES = [
   { suffix: "에서는", role: "Tiểu từ Nơi diễn ra hành động + Nhấn mạnh chủ đề" },

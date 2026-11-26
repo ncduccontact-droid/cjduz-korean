@@ -1,7 +1,7 @@
-import { store, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js";
-import { analyzePronunciationRules, appendJamoToText } from "../korean-engine.js";
-import { HANGEUL_DATA, GRAMMAR_COMPARISONS, HANJA_ROOTS, FREQUENT_TOPIK_EXPRESSIONS, TEXTBOOK_SERIES } from "../curated-content.js";
-import { renderChapterExercises } from "../chapter-exercises.js";
+import { store, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261126-5";
+import { analyzePronunciationRules, appendJamoToText } from "../korean-engine.js?v=20261126-5";
+import { HANGEUL_DATA, GRAMMAR_COMPARISONS, HANJA_ROOTS, FREQUENT_TOPIK_EXPRESSIONS, TEXTBOOK_SERIES } from "../curated-content.js?v=20261126-5";
+import { renderChapterExercises } from "../chapter-exercises.js?v=20261126-5";
 
 export function renderTheoryView(root, db, navigate, params = {}) {
   const sub = params.sub || "index";

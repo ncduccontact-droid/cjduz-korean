@@ -1,4 +1,4 @@
-import { store, DEFAULT_ROADMAP_PROFILE } from "../store.js";
+import { store, DEFAULT_ROADMAP_PROFILE } from "../store.js?v=20261126-5";
 
 const PLACEMENT_QUESTIONS = [
   { q: "1. Chọn câu chào lịch sự khi mới gặp lần đầu:", opts: ["안녕히 가세요.", "만나서 반갑습니다.", "잘 먹겠습니다.", "주말 잘 보내세요."], ans: 1 },

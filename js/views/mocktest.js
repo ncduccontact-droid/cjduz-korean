@@ -1,4 +1,4 @@
-import { store, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js";
+import { store, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261126-5";
 
 /**
  * Hydrates a 70-question TOPIK I or 104-question TOPIK II exam from normalized slots + itemPool.

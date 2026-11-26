@@ -1,7 +1,7 @@
-import { store, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js";
-import { analyzePronunciationRules, conjugateKoreanPredicate } from "../korean-engine.js";
-import { renderChapterExercises } from "../chapter-exercises.js";
-import { renderShortsShadowingStudio } from "../shorts-shadowing.js";
+import { store, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261126-5";
+import { analyzePronunciationRules, conjugateKoreanPredicate } from "../korean-engine.js?v=20261126-5";
+import { renderChapterExercises } from "../chapter-exercises.js?v=20261126-5";
+import { renderShortsShadowingStudio } from "../shorts-shadowing.js?v=20261126-5";
 
 const READING_PASSAGES = [
   {
