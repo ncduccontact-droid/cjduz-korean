@@ -12,7 +12,18 @@ export const UI_THEMES = [
   { id: "lavender", name: "Taro Milk", desc: "Tím khoai môn sữa & Cam quýt", swatch: "#6E62D6", accent: "#F59E0B" }
 ];
 
+export const BOOK_SURVEY_OPTIONS = [
+  { id: "hangeul", badge: "Nhập môn", title: "Bảng chữ Hangeul & Biến âm", sub: "Bắt đầu từ số 0 → Vào Quyển 1", defaultTarget: "TOPIK I - Cấp 1", legacyStage: "zero" },
+  { id: "q1", badge: "Quyển 1", title: "Tiếng Hàn Tổng Hợp · Quyển 1", sub: "Sơ cấp 1 (Bài 1–15) · Từ vựng & Dịch câu", defaultTarget: "TOPIK I - Cấp 1", legacyStage: "sc1" },
+  { id: "q2", badge: "Quyển 2", title: "Tiếng Hàn Tổng Hợp · Quyển 2", sub: "Sơ cấp 2 · Tăng tốc đỗ TOPIK I (Cấp 2)", defaultTarget: "TOPIK I - Cấp 2", legacyStage: "sc2" },
+  { id: "q3", badge: "Quyển 3", title: "Tiếng Hàn Tổng Hợp · Quyển 3", sub: "Trung cấp 1 · Âm Hán–Hàn & Câu 1–20", defaultTarget: "TOPIK II - Cấp 3", legacyStage: "tc3" },
+  { id: "q4", badge: "Quyển 4", title: "Tiếng Hàn Tổng Hợp · Quyển 4", sub: "Trung cấp 2 · Đồng nghĩa & Viết Câu 51–53", defaultTarget: "TOPIK II - Cấp 4", legacyStage: "tc3" },
+  { id: "q5", badge: "Quyển 5", title: "Tiếng Hàn Tổng Hợp · Quyển 5", sub: "Cao cấp 1 · Báo chí, xã hội & Nghị luận 54", defaultTarget: "TOPIK II - Cấp 5", legacyStage: "tc3" },
+  { id: "q6", badge: "Quyển 6", title: "Tiếng Hàn Tổng Hợp · Quyển 6", sub: "Cao cấp 2 · Học thuật & Full 104 câu TOPIK II", defaultTarget: "TOPIK II - Cấp 6", legacyStage: "tc3" }
+];
+
 export const DEFAULT_ROADMAP_PROFILE = {
+  startBook: "q1",          // hangeul | q1 | q2 | q3 | q4 | q5 | q6
   startStage: "sc1",        // zero | sc1 | sc2 | tc3
   focusTrack: "balanced",   // balanced | topik_intensive | speaking_first
   dailyMinutes: 30,         // 15 | 30 | 60
@@ -23,6 +34,7 @@ export const DEFAULT_ROADMAP_PROFILE = {
 function createFreshState(roadmapProfile = DEFAULT_ROADMAP_PROFILE) {
   return {
     uiTheme: "mint",
+    onboardingCompleted: false,
     targetLevel: roadmapProfile.targetLevel || "TOPIK II - Cấp 4",
     examDate: roadmapProfile.examDate || "2027-04-18",
     roadmapProfile: { ...DEFAULT_ROADMAP_PROFILE, ...roadmapProfile },
@@ -252,12 +264,18 @@ export const store = {
   },
 
   updateRoadmapProfile(newProfile, resetCheckedDays = false) {
+    const pickedOpt = BOOK_SURVEY_OPTIONS.find((b) => b.id === newProfile.startBook);
+    const syncedStage = pickedOpt ? pickedOpt.legacyStage : (newProfile.startStage || this.state.roadmapProfile?.startStage || "sc1");
+
     this.state.roadmapProfile = {
       ...DEFAULT_ROADMAP_PROFILE,
       ...(this.state.roadmapProfile || {}),
-      ...newProfile
+      ...newProfile,
+      startStage: syncedStage
     };
+    this.state.onboardingCompleted = true;
     if (newProfile.targetLevel) this.state.targetLevel = newProfile.targetLevel;
+    else if (pickedOpt) this.state.targetLevel = pickedOpt.defaultTarget;
     if (newProfile.examDate) this.state.examDate = newProfile.examDate;
     if (resetCheckedDays) {
       this.state.roadmapDone = {};

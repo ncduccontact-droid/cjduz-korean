@@ -1,8 +1,8 @@
-import { store, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261126-7";
-import { ico } from "../icons.js?v=20261126-7";
-import { analyzePronunciationRules, appendJamoToText } from "../korean-engine.js?v=20261126-7";
-import { HANGEUL_DATA, GRAMMAR_COMPARISONS, HANJA_ROOTS, FREQUENT_TOPIK_EXPRESSIONS, TEXTBOOK_SERIES } from "../curated-content.js?v=20261126-7";
-import { renderChapterExercises } from "../chapter-exercises.js?v=20261126-7";
+import { store, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261126-8";
+import { ico } from "../icons.js?v=20261126-8";
+import { analyzePronunciationRules, appendJamoToText } from "../korean-engine.js?v=20261126-8";
+import { HANGEUL_DATA, GRAMMAR_COMPARISONS, HANJA_ROOTS, FREQUENT_TOPIK_EXPRESSIONS, TEXTBOOK_SERIES } from "../curated-content.js?v=20261126-8";
+import { renderChapterExercises } from "../chapter-exercises.js?v=20261126-8";
 
 export function renderTheoryView(root, db, navigate, params = {}) {
   const sub = params.sub || "index";
@@ -600,6 +600,7 @@ function renderVocabReviewArena(root, db, navigate, params = {}) {
         flipped = !flipped;
         const inner = stage.querySelector("#fc-3d-inner");
         if (inner) inner.classList.toggle("is-flipped", flipped);
+        playCardAudio();
       };
 
       stage.innerHTML = `

@@ -1,6 +1,6 @@
-import { store, playAudio, preloadAudioUrls, speakKoreanTTS } from "./store.js?v=20261126-7";
-import { appendJamoToText } from "./korean-engine.js?v=20261126-7";
-import { HANGEUL_DATA } from "./curated-content.js?v=20261126-7";
+import { store, playAudio, preloadAudioUrls, speakKoreanTTS } from "./store.js?v=20261126-8";
+import { appendJamoToText } from "./korean-engine.js?v=20261126-8";
+import { HANGEUL_DATA } from "./curated-content.js?v=20261126-8";
 
 // Build translation + TOPIK-structured chapter exercises for any book & lesson
 export function renderChapterExercises(container, db, bookKey, lessonNum) {

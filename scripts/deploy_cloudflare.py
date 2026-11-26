@@ -41,8 +41,12 @@ if not API_TOKEN:
 
 
 def cf_req(method, path, body=None, token=None, content_type="application/json"):
+    import time as _time
     url = f"https://api.cloudflare.com/client/v4{path}"
-    headers = {"Authorization": f"Bearer {token or API_TOKEN}"}
+    headers = {
+        "Authorization": f"Bearer {token or API_TOKEN}",
+        "User-Agent": "cjduz-deployer/1.0"
+    }
     data = None
     if body is not None:
         if isinstance(body, (bytes, bytearray)):
@@ -51,13 +55,19 @@ def cf_req(method, path, body=None, token=None, content_type="application/json")
         else:
             data = json.dumps(body).encode("utf-8")
             headers["Content-Type"] = "application/json"
-    req = urllib.request.Request(url, data=data, headers=headers, method=method)
-    try:
-        with urllib.request.urlopen(req, timeout=90) as resp:
-            return json.loads(resp.read().decode("utf-8"))
-    except urllib.error.HTTPError as e:
-        raw = e.read().decode("utf-8", errors="replace")
-        raise RuntimeError(f"HTTP {e.code} {method} {path}: {raw}")
+    for attempt in range(5):
+        req = urllib.request.Request(url, data=data, headers=headers, method=method)
+        try:
+            with urllib.request.urlopen(req, timeout=90) as resp:
+                return json.loads(resp.read().decode("utf-8"))
+        except urllib.error.HTTPError as e:
+            raw = e.read().decode("utf-8", errors="replace")
+            if e.code in (429, 500, 502, 503, 504) and attempt < 4:
+                wait_s = 2.0 * (attempt + 1)
+                print(f"   [Retry {attempt+1}/4 after HTTP {e.code} on {path} in {wait_s:.0f}s...]")
+                _time.sleep(wait_s)
+                continue
+            raise RuntimeError(f"HTTP {e.code} {method} {path}: {raw}")
 
 
 def build_multipart(parts):

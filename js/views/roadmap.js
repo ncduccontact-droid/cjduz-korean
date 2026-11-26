@@ -1,5 +1,5 @@
-import { store, DEFAULT_ROADMAP_PROFILE } from "../store.js?v=20261126-7";
-import { ico, daisyLogoSVG } from "../icons.js?v=20261126-7";
+import { store, DEFAULT_ROADMAP_PROFILE } from "../store.js?v=20261126-8";
+import { ico, daisyLogoSVG } from "../icons.js?v=20261126-8";
 
 const PLACEMENT_QUESTIONS = [
   { q: "1. Chọn câu chào lịch sự khi mới gặp lần đầu:", opts: ["안녕히 가세요.", "만나서 반갑습니다.", "잘 먹겠습니다.", "주말 잘 보내세요."], ans: 1 },
@@ -11,10 +11,17 @@ const PLACEMENT_QUESTIONS = [
 ];
 
 export const STAGE_LABELS = {
+  hangeul: "Nhập môn Hangeul",
+  q1: "Quyển 1 · Sơ cấp 1",
+  q2: "Quyển 2 · Sơ cấp 2",
+  q3: "Quyển 3 · Trung cấp 1",
+  q4: "Quyển 4 · Trung cấp 2",
+  q5: "Quyển 5 · Cao cấp 1",
+  q6: "Quyển 6 · Cao cấp 2",
   zero: "Nhập môn Hangeul",
-  sc1: "Sơ cấp 1 · Tổng Hợp",
-  sc2: "Tăng tốc TOPIK I",
-  tc3: "Trung cấp TOPIK II"
+  sc1: "Quyển 1 · Sơ cấp 1",
+  sc2: "Quyển 2 · Sơ cấp 2",
+  tc3: "Quyển 3–4 · Trung cấp"
 };
 
 export const TRACK_LABELS = {
@@ -38,7 +45,8 @@ function countLessonMastered(db, bookKey, lessonNum) {
  */
 export function getGuidedStudyPlan(db, navigate, startGuidedStep = null) {
   const profile = store.state.roadmapProfile || DEFAULT_ROADMAP_PROFILE;
-  const stage = profile.startStage || "sc1";
+  const book = profile.startBook || (profile.startStage === "zero" ? "hangeul" : (profile.startStage === "sc2" ? "q2" : (profile.startStage === "tc3" ? "q4" : "q1")));
+  const stage = book === "hangeul" ? "zero" : (book === "q2" ? "sc2" : (["q3", "q4", "q5", "q6"].includes(book) ? "tc3" : "sc1"));
   const track = profile.focusTrack || "balanced";
   const mins = Number(profile.dailyMinutes || 30);
   const wordQuota = mins <= 15 ? 10 : (mins >= 60 ? 30 : 18);
@@ -72,7 +80,7 @@ export function getGuidedStudyPlan(db, navigate, startGuidedStep = null) {
         {
           tag: "Bước 2 · Làm đề",
           icon: "exam",
-          label: isTopik2 ? "Làm 1 đề tuyển chọn TOPIK II" : "Làm 1 đề tuyển chọn TOPIK I",
+          label: book === "q6" ? "Thi Full 104 câu TOPIK II bấm giờ" : (isTopik2 ? "Làm 1 đề tuyển chọn TOPIK II" : "Làm 1 đề tuyển chọn TOPIK I"),
           route: "mock-test",
           params: { sub: isTopik2 ? "topik2" : "topik1", viewMode: "exams", category: "curated" },
           autoDone: (store.state.examHistory?.length || 0) >= milestoneIdx,
@@ -124,18 +132,30 @@ export function getGuidedStudyPlan(db, navigate, startGuidedStep = null) {
         }
       ];
     } else if (stage === "tc3") {
-      const cycle = ((day - 1) % 10) + 1;
+      // Tailored by exact Book: q3 (Dạng 1–4), q4 (Dạng 4–7 + Câu 51–53), q5 (Dạng 7–10 + Câu 54), q6 (Dạng 9–10 + Full 104 câu)
+      const bookLabelMap = { q3: "Quyển 3 · Trung cấp 1", q4: "Quyển 4 · Trung cấp 2", q5: "Quyển 5 · Cao cấp 1", q6: "Quyển 6 · Cao cấp 2" };
+      const bookIdMap = { q3: "tc3", q4: "tc4", q5: "cc5", q6: "cc6" };
+      const typePoolByBook = {
+        q3: [1, 2, 3, 4, 5],
+        q4: [4, 5, 6, 7, 8],
+        q5: [7, 8, 9, 10],
+        q6: [8, 9, 10]
+      };
+      const tArr = typePoolByBook[book] || [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+      const cycle = tArr[(day - 1) % tArr.length];
       const dListen = `t2_l_d${cycle}`;
       const dRead = `t2_r_d${cycle}`;
-      shortTopic = `TOPIK II · Chuyên đề Dạng ${cycle}`;
+      shortTopic = `${bookLabelMap[book] || "TOPIK II"} · Bài ${(day % 15) + 1}`;
       rawTasks = [
         {
-          tag: "Bước 1 · Hệ thống từ",
+          tag: "Bước 1 · Giáo trình & Từ",
           icon: "book",
-          label: day % 2 === 1 ? "Biểu hiện & Đồng nghĩa TOPIK II" : "Sơ đồ gốc từ Âm Hán – Hàn",
+          label: day % 3 === 0
+            ? `Chủ điểm ${bookLabelMap[book] || "Trung cấp"}`
+            : (day % 2 === 1 ? "Biểu hiện & Đồng nghĩa TOPIK II" : "Sơ đồ gốc từ Âm Hán – Hàn"),
           route: "theory",
-          params: { sub: day % 2 === 1 ? "frequent" : "hanja" },
-          hint: "Mở rộng vốn từ Cấp 3–6"
+          params: day % 3 === 0 ? { sub: "textbook-detail", bookId: bookIdMap[book] || "tc3" } : { sub: day % 2 === 1 ? "frequent" : "hanja" },
+          hint: bookLabelMap[book] || "Mở rộng vốn từ Cấp 3–6"
         },
         {
           tag: "Bước 2 · Luyện dạng",
@@ -147,12 +167,14 @@ export function getGuidedStudyPlan(db, navigate, startGuidedStep = null) {
           hint: `Đã giải ${store.state.partStats?.[day % 2 === 1 ? dListen : dRead]?.total || 0} câu`
         },
         {
-          tag: "Bước 3 · Viết / Nói",
+          tag: "Bước 3 · Viết / Đề",
           icon: "pen",
-          label: track === "speaking_first" ? "Luyện bấm giờ 6 câu TOPIK Speaking" : "Tập viết giấy kẻ ô 원고지 (Câu 51–54)",
-          route: "practice",
-          params: { sub: "topik2", skill: track === "speaking_first" ? "speaking" : "writing" },
-          hint: track === "speaking_first" ? "Phản xạ nói theo đề" : "Chuẩn văn phong -다/는다"
+          label: book === "q6"
+            ? "Giải phần Viết 51–54 hoặc Đề tuyển chọn TOPIK II"
+            : (track === "speaking_first" ? "Luyện bấm giờ 6 câu TOPIK Speaking" : `Viết 원고지 (${book === "q3" ? "Câu 51–52" : (book === "q4" ? "Biểu đồ Câu 53" : "Nghị luận Câu 54")})`),
+          route: book === "q6" ? "mock-test" : "practice",
+          params: book === "q6" ? { sub: "topik2", viewMode: "segments", skill: "writing" } : { sub: "topik2", skill: track === "speaking_first" ? "speaking" : "writing" },
+          hint: "Chuẩn thang điểm NIIED"
         }
       ];
     } else if (stage === "sc2") {
@@ -310,7 +332,7 @@ export function renderRoadmapView(root, db, navigate, openAccountCustomizer) {
 
             <div>
               <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
-                <span class="badge-orange">${STAGE_LABELS[profile.startStage] || STAGE_LABELS.sc1}</span>
+                <span class="badge-orange">${STAGE_LABELS[profile.startBook] || STAGE_LABELS[profile.startStage] || STAGE_LABELS.q1}</span>
                 <span class="meta-chip" style="color:var(--primary-1);">${TRACK_LABELS[profile.focusTrack] || TRACK_LABELS.balanced}</span>
                 <span class="meta-chip">${profile.dailyMinutes || 30} phút/ngày</span>
               </div>
