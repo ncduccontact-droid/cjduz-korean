@@ -43,7 +43,7 @@ export function buildUrl(route, params = {}) {
       if (params.partId) return `/luyen-tap/cau-truc/${lvSlug}/${sk}/${encodeURIComponent(params.partId)}`;
       return `/luyen-tap/cau-truc/${lvSlug}/${sk}`;
     }
-    const sk = params.skill || "shadowing";
+    const sk = params.skill || "translate";
     if (sk === "translate") return `/luyen-tap/dich-cau/bai-${Number(params.lesson || 1)}`;
     return `/luyen-tap/ky-nang/${encodeURIComponent(sk)}`;
   }
@@ -123,7 +123,7 @@ export function parseUrl(pathname = "/") {
   }
 
   if (segs[0] === "luyen-tap") {
-    if (segs.length === 1) return { route: "practice", params: { sub: "skills", skill: "shadowing" } };
+    if (segs.length === 1) return { route: "practice", params: { sub: "skills", skill: "translate" } };
     if (segs[1] === "cau-truc") {
       const sub = segs[2] === "topik-2" ? "topik2" : "topik1";
       const skill = segs[3] || "listening";
@@ -135,9 +135,9 @@ export function parseUrl(pathname = "/") {
       return { route: "practice", params: { sub: "skills", skill: "translate", lesson: m ? Number(m[1]) : 1 } };
     }
     if (segs[1] === "ky-nang") {
-      return { route: "practice", params: { sub: "skills", skill: segs[2] || "shadowing" } };
+      return { route: "practice", params: { sub: "skills", skill: segs[2] || "translate" } };
     }
-    return { route: "practice", params: { sub: "skills", skill: "shadowing" } };
+    return { route: "practice", params: { sub: "skills", skill: "translate" } };
   }
 
   if (segs[0] === "de-thi") {
@@ -199,7 +199,7 @@ export function getParentUrl(pathname = "/") {
     if (segs.length <= 2) return "/";
     if (segs[1] === "cau-truc") {
       if (segs.length >= 5) return `/luyen-tap/cau-truc/${segs[2]}/${segs[3]}`;
-      return "/luyen-tap/ky-nang/shadowing";
+      return "/luyen-tap/dich-cau/bai-1";
     }
     if (segs[1] === "ky-nang" && segs[2] === "textbook-shadow") {
       return "/luyen-tap/ky-nang/shadowing";

@@ -400,6 +400,16 @@ const COLOR_ICONS = {
     <rect x="3.5" y="4.5" width="17" height="17" rx="4.5" fill="#0D9488"/>
     <rect x="3.5" y="3" width="17" height="16.8" rx="4.5" fill="#2DD4BF"/>
     <path d="M12 7.5v8M8 11.5h8" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round"/>
+  `,
+
+  // Honey-Gold & Teal 3D Puff Padlock
+  lock: `
+    <path d="M8 10.5V7.6a4 4 0 0 1 8 0v2.9" stroke="#0D9488" stroke-width="2.6" stroke-linecap="round"/>
+    <rect x="4.5" y="10.8" width="15" height="10.8" rx="4" fill="#D97706"/>
+    <rect x="4.5" y="9.5" width="15" height="10.6" rx="4" fill="#FBBF24"/>
+    <circle cx="12" cy="14.2" r="1.7" fill="#0B253C"/>
+    <path d="M12 15.4v2" stroke="#0B253C" stroke-width="2.1" stroke-linecap="round"/>
+    <circle cx="8" cy="12.2" r="1" fill="#FFFFFF" fill-opacity="0.85"/>
   `
 };
 

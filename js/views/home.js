@@ -1,8 +1,8 @@
-import { store, getBookWords, evaluateRoadmapScore } from "../store.js?v=20261127-08";
-import { ico, daisyLogoSVG } from "../icons.js?v=20261127-08";
-import { getGuidedStudyPlan, STAGE_LABELS } from "./roadmap.js?v=20261127-08";
+import { store, getBookWords, evaluateRoadmapScore } from "../store.js?v=20261127-09";
+import { ico, daisyLogoSVG } from "../icons.js?v=20261127-09";
+import { getGuidedStudyPlan, STAGE_LABELS } from "./roadmap.js?v=20261127-09";
 
-export const ADMIN_QR_IMG_SRC = "/media/vietqr_admin_v2.jpg?v=20261127-08";
+export const ADMIN_QR_IMG_SRC = "/media/vietqr_admin_v2.jpg?v=20261127-09";
 
 export function renderAdminSupportCardHTML(extraStyle = "") {
   return `
@@ -277,12 +277,12 @@ export function renderHomeView(root, db, navigate, startGuidedStep = null, openP
           <span class="card-chevron">›</span>
         </div>
 
-        <div class="theory-card" data-quick="shorts-shadowing">
+        <div class="theory-card" data-quick="shorts-shadowing" style="opacity:0.9;">
           <div style="display:flex;align-items:center;gap:13px;min-width:0;">
-            <div class="icon-vocab-badge">${ico("video", 25)}</div>
+            <div class="icon-vocab-badge">${ico("lock", 24)}</div>
             <div style="min-width:0;">
-              <strong style="font-size:15.5px;display:block;">Shadowing YouTube Shorts</strong>
-              <span style="font-size:13px;color:var(--text-muted);">Nhại giọng theo phụ đề chạy, chạm từ tra nghĩa</span>
+              <strong style="font-size:15.5px;display:block;">Shadowing</strong>
+              <span style="font-size:13px;color:var(--primary-1);font-weight:600;">Đang nâng cấp, đợi tớ nhé</span>
             </div>
           </div>
           <span class="card-chevron">›</span>

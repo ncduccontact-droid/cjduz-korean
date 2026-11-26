@@ -1,6 +1,6 @@
-import { store, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261127-08";
-import { WONGOKJI_PROMPTS, TOPIK_SPEAKING_TASKS } from "../topik-bank.js?v=20261127-08";
-import { ico } from "../icons.js?v=20261127-08";
+import { store, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261127-09";
+import { WONGOKJI_PROMPTS, TOPIK_SPEAKING_TASKS } from "../topik-bank.js?v=20261127-09";
+import { ico } from "../icons.js?v=20261127-09";
 
 export function renderTopikPracticeView(root, db, navigate, params = {}, registerCleanup = () => {}) {
   const sys = db.topikFullSystem || { taxonomy: { topik1: {}, topik2: {} }, itemPool: {} };
@@ -70,7 +70,7 @@ export function renderTopikPracticeView(root, db, navigate, params = {}, registe
     </div>
   `;
 
-  root.querySelector("#bc-prac-home").addEventListener("click", () => navigate("practice", { sub: "skills", skill: "shadowing" }));
+  root.querySelector("#bc-prac-home").addEventListener("click", () => navigate("practice", { sub: "skills", skill: "translate" }));
   root.querySelector("#switch-topik-lv").addEventListener("change", (e) => {
     navigate("practice", { sub: e.target.value, skill: "listening" });
   });

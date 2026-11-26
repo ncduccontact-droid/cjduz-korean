@@ -1,16 +1,16 @@
-import { store, UI_THEMES, isLocalPreviewHost, playAudio, preloadAudioUrls, speakKoreanTTS } from "./store.js?v=20261127-08";
-import { ico, daisyLogoSVG } from "./icons.js?v=20261127-08";
-import { conjugateKoreanPredicate } from "./korean-engine.js?v=20261127-08";
-import { openAuthModal, renderMandatoryAuthGate, renderOnboardingSurvey } from "./auth-modal.js?v=20261127-08";
-import { playSakuraPageIntro } from "./sakura-intro.js?v=20261127-08";
-import { buildUrl, parseUrl, getAncestorChain } from "./router.js?v=20261127-08";
-import { renderHomeView, renderAdminSupportCardHTML, bindAdminSupportCardEvents } from "./views/home.js?v=20261127-08";
-import { renderTheoryView } from "./views/theory.js?v=20261127-08";
-import { renderRoadmapView, getGuidedStudyPlan } from "./views/roadmap.js?v=20261127-08";
-import { renderSkillsPracticeView } from "./views/skills-practice.js?v=20261127-08";
-import { renderTopikPracticeView } from "./views/topik-practice.js?v=20261127-08";
-import { renderMockTestView } from "./views/mocktest.js?v=20261127-08";
-import { renderCheckAndToolsView } from "./views/check-tools.js?v=20261127-08";
+import { store, UI_THEMES, isLocalPreviewHost, playAudio, preloadAudioUrls, speakKoreanTTS } from "./store.js?v=20261127-09";
+import { ico, daisyLogoSVG } from "./icons.js?v=20261127-09";
+import { conjugateKoreanPredicate } from "./korean-engine.js?v=20261127-09";
+import { openAuthModal, renderMandatoryAuthGate, renderOnboardingSurvey } from "./auth-modal.js?v=20261127-09";
+import { playSakuraPageIntro } from "./sakura-intro.js?v=20261127-09";
+import { buildUrl, parseUrl, getAncestorChain } from "./router.js?v=20261127-09";
+import { renderHomeView, renderAdminSupportCardHTML, bindAdminSupportCardEvents } from "./views/home.js?v=20261127-09";
+import { renderTheoryView } from "./views/theory.js?v=20261127-09";
+import { renderRoadmapView, getGuidedStudyPlan } from "./views/roadmap.js?v=20261127-09";
+import { renderSkillsPracticeView } from "./views/skills-practice.js?v=20261127-09";
+import { renderTopikPracticeView } from "./views/topik-practice.js?v=20261127-09";
+import { renderMockTestView } from "./views/mocktest.js?v=20261127-09";
+import { renderCheckAndToolsView } from "./views/check-tools.js?v=20261127-09";
 
 const appRoot = document.getElementById("app-root");
 const modalRoot = document.getElementById("modal-root");
@@ -38,7 +38,7 @@ let navWired = false;
 const ROUTE_LABELS = {
   home: "Trang chủ",
   theory: "Lý thuyết & Sách 1–6",
-  practice: "Luyện tập & Shadowing",
+  practice: "Luyện tập kỹ năng",
   "mock-test": "Đề thi TOPIK",
   roadmap: "Lộ trình 30 ngày",
   "check-tools": "Công cụ tiếng Hàn"
@@ -427,7 +427,7 @@ function wireNavigationEventsOnce() {
 
   const triggerRouteFromNav = (r) => {
     activeGuidedSession = null;
-    if (r === "practice") navigate("practice", { sub: "skills", skill: "shadowing" });
+    if (r === "practice") navigate("practice", { sub: "skills", skill: "translate" });
     else if (r === "mock-test") navigate("mock-test", { sub: "topik1", viewMode: "exams", category: "all" });
     else navigate(r);
   };

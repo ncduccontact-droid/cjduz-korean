@@ -1,8 +1,8 @@
-import { store, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261127-08";
-import { ico } from "../icons.js?v=20261127-08";
-import { analyzePronunciationRules, conjugateKoreanPredicate } from "../korean-engine.js?v=20261127-08";
-import { renderChapterExercises } from "../chapter-exercises.js?v=20261127-08";
-import { renderShortsShadowingStudio } from "../shorts-shadowing.js?v=20261127-08";
+import { store, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261127-09";
+import { ico } from "../icons.js?v=20261127-09";
+import { analyzePronunciationRules, conjugateKoreanPredicate } from "../korean-engine.js?v=20261127-09";
+import { renderChapterExercises } from "../chapter-exercises.js?v=20261127-09";
+import { renderShortsShadowingStudio } from "../shorts-shadowing.js?v=20261127-09";
 
 const READING_PASSAGES = [
   {
@@ -91,7 +91,7 @@ const ROLEPLAY_SCENARIOS = [
 ];
 
 export function renderSkillsPracticeView(root, db, navigate, params = {}) {
-  let activeSkill = params.skill || "shadowing"; // translate | listening | reading | shadowing | textbook-shadow | roleplay
+  let activeSkill = params.skill || "translate"; // translate | listening | reading | shadowing | textbook-shadow | roleplay
   let chLesson = Number(params.lesson || 1);
 
   function renderHeaderAndTabs() {
@@ -99,7 +99,7 @@ export function renderSkillsPracticeView(root, db, navigate, params = {}) {
       <div class="container-web">
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
           <div class="breadcrumb-bar" style="margin-bottom:0;">
-            <span>Luyện tập</span><span>/</span><span>Kỹ năng &amp; Shorts</span>
+            <span>Luyện tập</span><span>/</span><span>Kỹ năng tổng hợp</span>
           </div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;">
             <button type="button" class="btn-outline-teal" id="sw-to-topik1" style="padding:5px 12px;font-size:13px;">Luyện dạng TOPIK I</button>
@@ -112,8 +112,7 @@ export function renderSkillsPracticeView(root, db, navigate, params = {}) {
             ${ico("pen", 16)} Dịch câu &amp; Bài tập chương
           </button>
           <button class="btn-skill ${activeSkill === "shadowing" || activeSkill === "textbook-shadow" ? "active" : ""}" data-sk="shadowing">
-            ${ico("video", 16)} Shadowing Shorts
-            <span class="badge-mia">HOT</span>
+            ${ico("lock", 15)} Shadowing
           </button>
           <button class="btn-skill ${activeSkill === "listening" ? "active" : ""}" data-sk="listening">${ico("headphones", 16)} Nghe chép</button>
           <button class="btn-skill ${activeSkill === "reading" ? "active" : ""}" data-sk="reading">${ico("book", 16)} Đọc hiểu</button>
@@ -149,16 +148,10 @@ export function renderSkillsPracticeView(root, db, navigate, params = {}) {
         navigate("practice", { sub: "skills", skill: "translate", lesson: Number(e.target.value) });
       });
       renderChapterExercises(stage.querySelector("#prac-ch-body"), db, "sc1", chLesson);
-    } else if (activeSkill === "shadowing") {
-      renderShortsShadowingStudio(stage, db, () => {
-        navigate("practice", { sub: "skills", skill: "textbook-shadow", lesson: chLesson });
+    } else if (activeSkill === "shadowing" || activeSkill === "textbook-shadow") {
+      renderShortsShadowingStudio(stage, db, (nextSkill) => {
+        navigate("practice", { sub: "skills", skill: nextSkill || "translate", lesson: chLesson });
       });
-    } else if (activeSkill === "textbook-shadow") {
-      stage.innerHTML = `<div style="margin-bottom:12px;"><button type="button" class="btn-outline-teal" id="back-to-yt-shorts">← Quay lại Shadowing Clip YouTube Shorts</button></div><div id="tb-shadow-slot"></div>`;
-      stage.querySelector("#back-to-yt-shorts").addEventListener("click", () => {
-        navigate("practice", { sub: "skills", skill: "shadowing", lesson: chLesson });
-      });
-      renderShadowingModule(stage.querySelector("#tb-shadow-slot"), db, chLesson);
     } else if (activeSkill === "listening") {
       renderListeningModule(stage, db);
     } else if (activeSkill === "reading") {

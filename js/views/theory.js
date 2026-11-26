@@ -1,8 +1,8 @@
-import { store, normalizeBookId, getBookWords, getBookCurriculum, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261127-08";
-import { ico } from "../icons.js?v=20261127-08";
-import { analyzePronunciationRules, appendJamoToText } from "../korean-engine.js?v=20261127-08";
-import { HANGEUL_DATA, GRAMMAR_COMPARISONS, HANJA_ROOTS, FREQUENT_TOPIK_EXPRESSIONS } from "../curated-content.js?v=20261127-08";
-import { renderChapterExercises } from "../chapter-exercises.js?v=20261127-08";
+import { store, normalizeBookId, getBookWords, getBookCurriculum, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261127-09";
+import { ico } from "../icons.js?v=20261127-09";
+import { analyzePronunciationRules, appendJamoToText } from "../korean-engine.js?v=20261127-09";
+import { HANGEUL_DATA, GRAMMAR_COMPARISONS, HANJA_ROOTS, FREQUENT_TOPIK_EXPRESSIONS } from "../curated-content.js?v=20261127-09";
+import { renderChapterExercises } from "../chapter-exercises.js?v=20261127-09";
 
 function buildSubPartsForLesson(db, bookKey, lessonNum, lessonWords) {
   const bookCur = getBookCurriculum(db, bookKey);

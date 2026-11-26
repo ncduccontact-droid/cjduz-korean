@@ -1,5 +1,5 @@
-import { store, ROADMAP_SCORE_SCALES, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261127-08";
-import { ico } from "../icons.js?v=20261127-08";
+import { store, ROADMAP_SCORE_SCALES, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261127-09";
+import { ico } from "../icons.js?v=20261127-09";
 
 /**
  * Hydrates a 70-question TOPIK I or 104-question TOPIK II exam from normalized slots + itemPool.

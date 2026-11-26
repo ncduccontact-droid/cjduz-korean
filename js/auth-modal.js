@@ -1,5 +1,5 @@
-import { store, isLocalPreviewHost, BOOK_SURVEY_OPTIONS, DEFAULT_ROADMAP_PROFILE } from "./store.js?v=20261127-08";
-import { ico, daisyLogoSVG } from "./icons.js?v=20261127-08";
+import { store, isLocalPreviewHost, BOOK_SURVEY_OPTIONS, DEFAULT_ROADMAP_PROFILE } from "./store.js?v=20261127-09";
+import { ico, daisyLogoSVG } from "./icons.js?v=20261127-09";
 
 let authConfigCache = null;
 
@@ -44,7 +44,7 @@ function roadmapSelectorHTML(prefix, current) {
           <select id="${prefix}-track" class="box-select" style="width:100%;">
             <option value="balanced" ${current.focusTrack === "balanced" ? "selected" : ""}>Song hành TOPIK × Giao tiếp</option>
             <option value="topik_intensive" ${current.focusTrack === "topik_intensive" ? "selected" : ""}>Chuyên sâu luyện đề TOPIK</option>
-            <option value="speaking_first" ${current.focusTrack === "speaking_first" ? "selected" : ""}>Ưu tiên Shadowing Shorts &amp; Phản xạ nói</option>
+            <option value="speaking_first" ${current.focusTrack === "speaking_first" ? "selected" : ""}>Ưu tiên Nghe – Nói &amp; Phản xạ</option>
           </select>
         </div>
         <div class="grid-2" style="gap:8px;">
@@ -132,7 +132,7 @@ export function renderOnboardingSurvey(appRoot, onFinished) {
                 ${[
                   ["balanced", "Song hành TOPIK × Giao tiếp"],
                   ["topik_intensive", "Chuyên sâu giải đề TOPIK"],
-                  ["speaking_first", "Ưu tiên Shadowing Shorts & Nói"]
+                  ["speaking_first", "Ưu tiên Nghe – Nói & Phản xạ"]
                 ].map(([val, label]) => `
                   <button type="button" class="btn-skill ${pickedTrack === val ? "active" : ""}" data-strack="${val}" style="justify-content:flex-start;padding:8px 14px;font-size:13.5px;">
                     ${label}
@@ -294,13 +294,13 @@ export async function renderMandatoryAuthGate(appRoot, onAuthenticated) {
               <span class="badge-orange">${ico("cloud", 14)} Đồng bộ 100% theo tài khoản</span>
             </div>
             <h1 style="margin:6px 0 4px;font-size:24px;line-height:1.32;font-weight:800;">
-              Tiếng Hàn Tổng Hợp (Quyển 1–6), Shadowing Shorts &amp; 30 Đề Full TOPIK
+              Tiếng Hàn Tổng Hợp (Quyển 1–6), Luyện Dịch Câu &amp; 30 Đề Full TOPIK
             </h1>
             <ul class="achieve-list" style="font-size:14px;gap:8px;">
               <li><span style="color:var(--primary);font-weight:800;">•</span><span><strong>Khảo sát xếp lộ trình riêng:</strong> Tự chọn học từ Quyển 1 → Quyển 6.</span></li>
-              <li><span style="color:var(--primary);font-weight:800;">•</span><span><strong>Lật thẻ 3D tự phát âm Kyuri:</strong> Âm thanh 0ms, chấm SRS phím 1–4.</span></li>
-              <li><span style="color:var(--primary);font-weight:800;">•</span><span><strong>30 Full Đề NIIED / Sejong / IBT:</strong> Đủ 70 câu TOPIK I &amp; 104 câu TOPIK II.</span></li>
-              <li><span style="color:var(--primary);font-weight:800;">•</span><span><strong>Shadowing YouTube Shorts:</strong> Phụ đề tự chạy, chạm từ tra nghĩa.</span></li>
+              <li><span style="color:var(--primary);font-weight:800;">•</span><span><strong>Lật thẻ 3D tự phát âm chuẩn:</strong> Âm thanh tức thì, chấm SRS phím 1–4.</span></li>
+              <li><span style="color:var(--primary);font-weight:800;">•</span><span><strong>30 Full Đề chuẩn cấu trúc:</strong> Đủ 70 câu TOPIK I &amp; 104 câu TOPIK II.</span></li>
+              <li><span style="color:var(--primary);font-weight:800;">•</span><span><strong>Sách bài tập &amp; Dịch câu:</strong> Thực hành ngữ pháp theo từng bài học.</span></li>
             </ul>
           </div>
 
@@ -377,7 +377,7 @@ export async function openAuthModal(modalRoot, initialView = "profile", onComple
                 <select id="sv-track" class="box-select" style="width:100%;">
                   <option value="balanced" ${pickedTrack === "balanced" ? "selected" : ""}>Song hành TOPIK × Giao tiếp</option>
                   <option value="topik_intensive" ${pickedTrack === "topik_intensive" ? "selected" : ""}>Chuyên sâu giải đề TOPIK</option>
-                  <option value="speaking_first" ${pickedTrack === "speaking_first" ? "selected" : ""}>Ưu tiên Shadowing Shorts &amp; Nói</option>
+                  <option value="speaking_first" ${pickedTrack === "speaking_first" ? "selected" : ""}>Ưu tiên Nghe – Nói &amp; Phản xạ</option>
                 </select>
               </div>
               <div>
