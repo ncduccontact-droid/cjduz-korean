@@ -1,8 +1,8 @@
-import { store, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261127-06";
-import { ico } from "../icons.js?v=20261127-06";
-import { analyzePronunciationRules, conjugateKoreanPredicate } from "../korean-engine.js?v=20261127-06";
-import { renderChapterExercises } from "../chapter-exercises.js?v=20261127-06";
-import { renderShortsShadowingStudio } from "../shorts-shadowing.js?v=20261127-06";
+import { store, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261127-07";
+import { ico } from "../icons.js?v=20261127-07";
+import { analyzePronunciationRules, conjugateKoreanPredicate } from "../korean-engine.js?v=20261127-07";
+import { renderChapterExercises } from "../chapter-exercises.js?v=20261127-07";
+import { renderShortsShadowingStudio } from "../shorts-shadowing.js?v=20261127-07";
 
 const READING_PASSAGES = [
   {
@@ -706,7 +706,7 @@ function renderRoleplayAndPoliteness(stage) {
       <div class="grid-2" style="align-items:start;">
         <!-- Situational Roleplay -->
         <div class="outline-ai">
-          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
             <strong style="display:inline-flex;align-items:center;gap:7px;">${ico("chat", 19)} Nhập vai Giao tiếp thực tế</strong>
             <select id="rp-sel" class="box-select">
               ${ROLEPLAY_SCENARIOS.map((s, i) => `<option value="${i}" ${i === scIdx ? "selected" : ""}>${s.title}</option>`).join("")}

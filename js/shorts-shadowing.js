@@ -1,6 +1,6 @@
-import { store, playAudio, speakKoreanTTS } from "./store.js?v=20261127-06";
-import { analyzePronunciationRules } from "./korean-engine.js?v=20261127-06";
-import { ico } from "./icons.js?v=20261127-06";
+import { store, playAudio, speakKoreanTTS } from "./store.js?v=20261127-07";
+import { analyzePronunciationRules } from "./korean-engine.js?v=20261127-07";
+import { ico } from "./icons.js?v=20261127-07";
 
 // Curated Real YouTube Shorts Shadowing Library (from 6F0uUJgeJQI, @Tienghanvoihailey & @hongtuoissem)
 export const YOUTUBE_SHORTS_CLIPS = [
@@ -312,7 +312,7 @@ export function renderShortsShadowingStudio(stage, db, onSwitchToTextbookShadowi
           </div>
           <div style="font-size:14.5px;color:#FFFFFF;font-weight:600;margin-top:3px;">Nghĩa: ${dictPopup.meaning}</div>
         </div>
-        <div style="display:flex;gap:8px;align-items:center;">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
           <button type="button" class="btn-outline-teal" id="dict-speak-word" style="padding:5px 12px;font-size:13px;">${ico("speaker", 16)} Phát âm từ</button>
           ${dictPopup.matchCard ? `<button type="button" class="btn-orange" id="dict-save-word" style="padding:5px 12px;font-size:13px;">${ico("star", 15)} Lưu từ</button>` : ""}
           <button type="button" class="btn-primary" id="dict-resume-vid" style="padding:6px 14px;font-size:13px;">${ico("play", 15)} Xem tiếp clip</button>
@@ -457,7 +457,7 @@ export function renderShortsShadowingStudio(stage, db, onSwitchToTextbookShadowi
           <div class="shorts-line-card" data-line-idx="${li}">
             <div style="font-size:12px;color:#38BDF8;margin-bottom:4px;">${fmtSec(ln.start)} · ${ln.vi}</div>
             <div class="ko" style="font-size:17.5px;font-weight:700;color:#FFF;margin-bottom:8px;">${blanked}</div>
-            <div style="display:flex;gap:8px;align-items:center;">
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
               <input class="ko" data-cloze-ans="${kw}" placeholder="Điền từ bị ẩn..." style="padding:6px 12px;border-radius:8px;border:1px solid #475569;background:#0F172A;color:#FFF;font-size:15px;" />
               <button type="button" data-reveal="${kw}" style="background:rgba(255,255,255,0.12);color:#FFD769;border:none;border-radius:8px;padding:6px 10px;font-size:12.5px;cursor:pointer;">Xem từ</button>
             </div>

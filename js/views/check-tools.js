@@ -1,7 +1,7 @@
-import { store, evaluateRoadmapScore, speakKoreanTTS } from "../store.js?v=20261127-06";
-import { ico } from "../icons.js?v=20261127-06";
-import { analyzePronunciationRules, conjugateKoreanPredicate } from "../korean-engine.js?v=20261127-06";
-import { renderRoadmapScoreCardHTML } from "./roadmap.js?v=20261127-06";
+import { store, evaluateRoadmapScore, speakKoreanTTS } from "../store.js?v=20261127-07";
+import { ico } from "../icons.js?v=20261127-07";
+import { analyzePronunciationRules, conjugateKoreanPredicate } from "../korean-engine.js?v=20261127-07";
+import { renderRoadmapScoreCardHTML } from "./roadmap.js?v=20261127-07";
 
 const PARTICLE_NOTES = [
   { suffix: "에서는", role: "Tiểu từ Nơi diễn ra hành động + Nhấn mạnh chủ đề" },
@@ -125,18 +125,18 @@ export function renderCheckAndToolsView(root, db, navigate, params = {}) {
         <div style="margin-bottom:20px;">
           ${renderRoadmapScoreCardHTML(evalObj)}
         </div>
-        <div class="grid-3" style="margin-bottom:22px;">
+        <div class="stats-grid-3" style="margin-bottom:20px;">
           <div class="box-kind">
-            <div style="font-size:13.5px;color:var(--text-muted);">Tổng từ vựng đã thuộc (SRS >= 2)</div>
-            <div style="font-size:28px;font-weight:800;color:var(--primary-1);margin-top:4px;">${masteredCount} / ${allVocab.length}</div>
+            <div style="font-size:12px;color:var(--text-muted);">Từ đã thuộc</div>
+            <div class="stat-num" style="color:var(--primary-1);margin-top:4px;">${masteredCount}<span style="font-size:13px;font-weight:600;color:var(--text-muted);">/${allVocab.length}</span></div>
           </div>
           <div class="box-kind">
-            <div style="font-size:13.5px;color:var(--text-muted);">Số đề thi thử đã hoàn thành</div>
-            <div style="font-size:28px;font-weight:800;color:var(--primary-1);margin-top:4px;">${store.state.examHistory.length} đề</div>
+            <div style="font-size:12px;color:var(--text-muted);">Đề đã làm</div>
+            <div class="stat-num" style="color:var(--primary-1);margin-top:4px;">${store.state.examHistory.length} <span style="font-size:13px;font-weight:600;color:var(--text-muted);">đề</span></div>
           </div>
           <div class="box-kind">
-            <div style="font-size:13.5px;color:var(--text-muted);">Câu sai cần xử lý lại</div>
-            <div style="font-size:28px;font-weight:800;color:${mistakes.length > 0 ? "var(--danger)" : "var(--success)"};margin-top:4px;">${mistakes.length} câu</div>
+            <div style="font-size:12px;color:var(--text-muted);">Câu sai</div>
+            <div class="stat-num" style="color:${mistakes.length > 0 ? "var(--danger)" : "var(--success)"};margin-top:4px;">${mistakes.length} <span style="font-size:13px;font-weight:600;color:var(--text-muted);">câu</span></div>
           </div>
         </div>
 
@@ -223,9 +223,9 @@ export function renderCheckAndToolsView(root, db, navigate, params = {}) {
         <div style="display:flex;flex-direction:column;gap:16px;">
           ${mistakes.map((m, mi) => `
             <div class="box-kind">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-                <span class="badge-orange" style="background:rgba(254,154,5,0.14);">${m.partTitle}</span>
-                <span style="font-size:12.5px;color:var(--danger);font-weight:700;">Bạn đã chọn sai → Hãy chọn lại đáp án đúng để xóa khỏi sổ!</span>
+              <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:8px;">
+                <span class="badge-orange">${m.partTitle}</span>
+                <span style="font-size:12px;color:var(--danger);font-weight:650;">Chọn lại đáp án đúng để xóa khỏi sổ</span>
               </div>
               <strong style="display:block;margin-bottom:8px;">${m.question}</strong>
               ${m.passage ? `<pre class="ko" style="white-space:pre-wrap;background:#F8FAFB;padding:12px;border-radius:8px;margin:0 0 10px;">${m.passage}</pre>` : ""}

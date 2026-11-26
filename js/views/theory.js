@@ -1,8 +1,8 @@
-import { store, normalizeBookId, getBookWords, getBookCurriculum, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261127-06";
-import { ico } from "../icons.js?v=20261127-06";
-import { analyzePronunciationRules, appendJamoToText } from "../korean-engine.js?v=20261127-06";
-import { HANGEUL_DATA, GRAMMAR_COMPARISONS, HANJA_ROOTS, FREQUENT_TOPIK_EXPRESSIONS } from "../curated-content.js?v=20261127-06";
-import { renderChapterExercises } from "../chapter-exercises.js?v=20261127-06";
+import { store, normalizeBookId, getBookWords, getBookCurriculum, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261127-07";
+import { ico } from "../icons.js?v=20261127-07";
+import { analyzePronunciationRules, appendJamoToText } from "../korean-engine.js?v=20261127-07";
+import { HANGEUL_DATA, GRAMMAR_COMPARISONS, HANJA_ROOTS, FREQUENT_TOPIK_EXPRESSIONS } from "../curated-content.js?v=20261127-07";
+import { renderChapterExercises } from "../chapter-exercises.js?v=20261127-07";
 
 function buildSubPartsForLesson(db, bookKey, lessonNum, lessonWords) {
   const bookCur = getBookCurriculum(db, bookKey);
@@ -90,16 +90,16 @@ export function renderTheoryView(root, db, navigate, params = {}) {
   root.innerHTML = `
     <div class="container-web">
       <!-- COMPACT HEADER + HORIZONTAL SWIPEABLE BOOK TABS (Chapters immediately visible above the fold!) -->
-      <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px;margin-bottom:14px;">
-        <div>
-          <h1 style="margin:0 0 3px;font-size:21px;font-weight:750;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+        <div style="min-width:0;flex:1 1 220px;">
+          <h1 class="title-hero" style="margin-bottom:3px;">
             ${selectedBookKey === "sejong1" ? "Từ vựng Giao tiếp Sejong" : activeCur?.title || "Tiếng Hàn Tổng Hợp · Quyển 1"}
           </h1>
-          <span style="font-size:13px;color:var(--text-muted);">
-            Đã thuộc <strong style="color:var(--primary-1);">${bookMastered}/${activePool.length} từ</strong> · Chọn phần nhỏ 8–15 từ bên dưới để vào học ngay
+          <span style="font-size:12.5px;color:var(--text-muted);">
+            Đã thuộc <strong class="nw" style="color:var(--primary-1);">${bookMastered}/${activePool.length} từ</strong> · Chọn phần nhỏ 8–15 từ bên dưới
           </span>
         </div>
-        <button type="button" class="btn-primary" id="btn-srs-current-part" style="padding:8px 15px;font-size:13.5px;">
+        <button type="button" class="btn-primary nw" id="btn-srs-current-part" style="padding:8px 14px;font-size:13px;">
           ${ico("cards", 15)} Lật thẻ nhanh
         </button>
       </div>
@@ -799,17 +799,17 @@ function renderVocabReviewArena(root, db, navigate, params = {}) {
           <div class="flashcard-3d-scene">
             <div class="flashcard-3d-inner ${flipped ? "is-flipped" : ""}" id="fc-3d-inner">
               <div class="flashcard-face">
-                <span style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:8px;">Chạm thẻ để lật và nghe phát âm</span>
-                <div class="ko" style="font-size:42px;font-weight:800;color:var(--text-main);margin-bottom:6px;">${card.korean}</div>
-                ${pron.hasChange ? `<div class="ko" style="font-size:14.5px;color:var(--primary-1);font-weight:650;margin-bottom:10px;">[${pron.pronounced}]</div>` : ""}
+                <span style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:6px;">Chạm thẻ để lật và nghe phát âm</span>
+                <div class="ko fc-ko-word" style="color:var(--text-main);margin-bottom:6px;">${card.korean}</div>
+                ${pron.hasChange ? `<div class="ko" style="font-size:14px;color:var(--primary-1);font-weight:650;margin-bottom:8px;">[${pron.pronounced}]</div>` : ""}
                 <button type="button" class="btn-soft-jade fc-play-trigger" style="margin-top:6px;">
                   ${ico("speaker", 15)} Nghe phát âm <kbd class="keycap">R</kbd>
                 </button>
               </div>
 
               <div class="flashcard-face flashcard-face-back">
-                <div class="ko" style="font-size:24px;font-weight:750;color:var(--primary-1);">${card.korean}</div>
-                <div style="font-size:22px;font-weight:750;color:var(--text-main);margin:4px 0 12px;">${card.vietnamese}</div>
+                <div class="ko" style="font-size:clamp(19px,5vw,24px);font-weight:750;color:var(--primary-1);">${card.korean}</div>
+                <div style="font-size:clamp(17.5px,4.6vw,22px);font-weight:750;color:var(--text-main);margin:4px 0 10px;">${card.vietnamese}</div>
                 ${card.exampleKo ? `
                   <div style="background:#F8FAFC;border-radius:12px;padding:10px 14px;width:100%;max-width:480px;margin-bottom:10px;">
                     <div class="ko" style="font-size:15.5px;font-weight:650;color:var(--text-main);">${card.exampleKo}</div>
@@ -1026,13 +1026,13 @@ function renderVocabReviewArena(root, db, navigate, params = {}) {
 
       stage.innerHTML = `
         <div class="box-kind">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-            <strong>Chọn 1 từ tiếng Hàn ghép với nghĩa tiếng Việt tương ứng (${activePartObj.title}):</strong>
-            <button class="btn-outline-teal" id="match-reload" style="padding:5px 14px;">${ico("refresh", 16)} Đổi ván mới</button>
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+            <strong style="font-size:14px;">Ghép từ tiếng Hàn với nghĩa tương ứng (${activePartObj.title}):</strong>
+            <button class="btn-outline-teal nw" id="match-reload" style="padding:5px 12px;font-size:12.5px;">${ico("refresh", 15)} Đổi ván</button>
           </div>
-          <div class="grid-3" id="match-grid">
+          <div class="match-board-grid" id="match-grid">
             ${tiles.map((t) => `
-              <button type="button" class="box-kind clickable ${t.isKo ? "ko" : ""}" data-uid="${t.uid}" data-pair="${t.pairId}" style="text-align:center;font-weight:${t.isKo ? "800" : "600"};font-size:${t.isKo ? "19px" : "14.5px"};min-height:76px;">
+              <button type="button" class="box-kind clickable ${t.isKo ? "ko" : ""}" data-uid="${t.uid}" data-pair="${t.pairId}" style="text-align:center;font-weight:${t.isKo ? "750" : "600"};font-size:${t.isKo ? "clamp(16px,4.3vw,19px)" : "13.5px"};min-height:66px;padding:10px;">
                 ${t.text}
               </button>
             `).join("")}
@@ -1107,28 +1107,28 @@ function renderHangeulLab(root, navigate) {
       </div>
 
       <div class="section-head"><h2>14 Phụ âm cơ bản &amp; 5 Phụ âm căng (Bấm thẻ để nghe)</h2></div>
-      <div class="grid-3">
+      <div class="hangeul-grid">
         ${[...HANGEUL_DATA.basicConsonants, ...HANGEUL_DATA.tenseConsonants].map((c) => `
           <div class="box-kind clickable" data-speak="${c.sample.split("(")[0].trim()}">
-            <div style="display:flex;justify-content:space-between;align-items:center;">
-              <span class="ko" style="font-size:32px;font-weight:800;color:var(--primary-1);">${c.ch}</span>
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;">
+              <span class="ko" style="font-size:clamp(24px,6vw,32px);font-weight:800;color:var(--primary-1);">${c.ch}</span>
               <span class="badge-orange">${c.sound}</span>
             </div>
-            <div style="font-weight:600;margin-top:4px;">${c.name} · Ví dụ: <span class="ko">${c.sample}</span></div>
-            <div style="font-size:13px;color:var(--text-muted);margin-top:4px;">${c.tip}</div>
+            <div style="font-weight:600;margin-top:4px;font-size:13.5px;">${c.name} · <span class="ko">${c.sample}</span></div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:3px;">${c.tip}</div>
           </div>
         `).join("")}
       </div>
 
       <div class="section-head"><h2>Nguyên âm đơn &amp; Nguyên âm ghép</h2></div>
-      <div class="grid-3">
+      <div class="hangeul-grid">
         ${HANGEUL_DATA.vowels.map((v) => `
           <div class="box-kind clickable" data-speak="${v.sample.split("(")[0].trim()}">
-            <div style="display:flex;justify-content:space-between;align-items:center;">
-              <span class="ko" style="font-size:28px;font-weight:800;color:var(--primary-1);">${v.ch}</span>
-              <span style="font-weight:700;color:var(--primary-1);">[${v.sound}]</span>
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;">
+              <span class="ko" style="font-size:clamp(22px,5.6vw,28px);font-weight:800;color:var(--primary-1);">${v.ch}</span>
+              <span style="font-weight:700;color:var(--primary-1);font-size:13px;">[${v.sound}]</span>
             </div>
-            <div style="font-size:14px;margin-top:6px;">Ví dụ: <strong class="ko">${v.sample}</strong></div>
+            <div style="font-size:13px;margin-top:5px;">Ví dụ: <strong class="ko">${v.sample}</strong></div>
           </div>
         `).join("")}
       </div>

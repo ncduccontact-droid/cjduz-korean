@@ -1,5 +1,5 @@
-import { store, ROADMAP_SCORE_SCALES, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261127-06";
-import { ico } from "../icons.js?v=20261127-06";
+import { store, ROADMAP_SCORE_SCALES, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261127-07";
+import { ico } from "../icons.js?v=20261127-07";
 
 /**
  * Hydrates a 70-question TOPIK I or 104-question TOPIK II exam from normalized slots + itemPool.
@@ -816,21 +816,21 @@ function renderExamRoom(root, sys, exam, scope, navigate, registerCleanup) {
     root.innerHTML = `
       <div class="container-web">
         <!-- Top Exam Action Bar -->
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
-          <button type="button" class="btn-outline-teal" id="btn-back-overview">
-            ← Quay lại đề / Chọn phần khác
+        <div class="exam-topbar">
+          <button type="button" class="btn-outline-teal nw" id="btn-back-overview" style="padding:7px 12px;font-size:13px;">
+            ← Quay lại
           </button>
-          <div style="text-align:center;">
-            <strong style="font-size:16.5px;display:block;">${exam.title}</strong>
+          <div class="exam-top-title" style="text-align:center;min-width:0;">
+            <strong style="font-size:clamp(14.5px,3.8vw,16.5px);display:block;line-height:1.3;">${exam.title}</strong>
             <span style="font-size:12px;color:var(--text-muted);display:inline-flex;align-items:center;gap:4px;">${ico("pin", 13)} Nguồn: ${exam.sourceOrg}</span>
           </div>
-          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-            <span id="exam-clock" style="background:var(--primary-3);padding:7px 14px;border-radius:10px;font-weight:750;color:var(--primary-1);font-variant-numeric:tabular-nums;display:inline-flex;align-items:center;gap:5px;">
-              ${ico("clock", 16)} ${m}:${s}
+          <div class="exam-top-actions" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <span id="exam-clock" class="nw" style="background:var(--primary-3);padding:7px 12px;border-radius:10px;font-weight:750;font-size:13.5px;color:var(--primary-1);font-variant-numeric:tabular-nums;display:inline-flex;align-items:center;gap:5px;">
+              ${ico("clock", 15)} ${m}:${s}
             </span>
             ${!submitted
-              ? `<button type="button" class="btn-primary" id="btn-submit-exam">Nộp bài</button>`
-              : `<button type="button" class="btn-outline-teal" data-retake-exam="1">${ico("refresh", 15)} Làm lại đề này</button>`}
+              ? `<button type="button" class="btn-primary nw" id="btn-submit-exam" style="padding:8px 14px;font-size:13.5px;">Nộp bài</button>`
+              : `<button type="button" class="btn-outline-teal nw" data-retake-exam="1" style="padding:7px 12px;font-size:13px;">${ico("refresh", 14)} Làm lại</button>`}
           </div>
         </div>
 
@@ -1003,10 +1003,10 @@ function renderExamRoom(root, sys, exam, scope, navigate, registerCleanup) {
               ` : ""}
             `}
 
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:20px;gap:10px;">
-              <button type="button" class="btn-outline-teal" id="btn-prev-q" ${qIdx === 0 ? "disabled" : ""}>← Câu trước</button>
-              <span style="font-size:13px;color:var(--text-muted);">Đã làm: <strong>${getAnsweredCount()}/${questions.length}</strong> câu</span>
-              <button type="button" class="btn-primary" id="btn-next-q" ${qIdx === questions.length - 1 ? "disabled" : ""}>Câu tiếp theo →</button>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:18px;gap:8px;">
+              <button type="button" class="btn-outline-teal nw" id="btn-prev-q" style="padding:8px 12px;font-size:13px;" ${qIdx === 0 ? "disabled" : ""}>← Trước</button>
+              <span class="nw" style="font-size:12.5px;color:var(--text-muted);">Đã làm: <strong style="color:var(--text-main);">${getAnsweredCount()}/${questions.length}</strong></span>
+              <button type="button" class="btn-primary nw" id="btn-next-q" style="padding:8px 14px;font-size:13px;" ${qIdx === questions.length - 1 ? "disabled" : ""}>Tiếp theo →</button>
             </div>
           </div>
 

@@ -1,5 +1,5 @@
-import { store, DEFAULT_ROADMAP_PROFILE, normalizeBookId, getBookWords, getBookCurriculum, evaluateRoadmapScore } from "../store.js?v=20261127-06";
-import { ico, daisyLogoSVG } from "../icons.js?v=20261127-06";
+import { store, DEFAULT_ROADMAP_PROFILE, normalizeBookId, getBookWords, getBookCurriculum, evaluateRoadmapScore } from "../store.js?v=20261127-07";
+import { ico, daisyLogoSVG } from "../icons.js?v=20261127-07";
 
 const PLACEMENT_QUESTIONS = [
   { q: "1. Chọn câu chào lịch sự khi mới gặp lần đầu:", opts: ["안녕히 가세요.", "만나서 반갑습니다.", "잘 먹겠습니다.", "주말 잘 보내세요."], ans: 1 },
@@ -143,58 +143,59 @@ export function getGuidedStudyPlan(db, navigate, startGuidedStep = null) {
         }
       ];
     } else {
+      const bookNum = bookId.replace("q", "") || "1";
+      const lsPad = String(lsNum).padStart(2, "0");
+      const cleanPartName = unit.partTitle.replace(/^Phần\s*\d+\s*·\s*/i, "").trim();
       shortTopic = isMilestone
-        ? `${STAGE_LABELS[bookId]} · Tổng kết Chặng ${Math.floor(day / 5)}`
-        : `${STAGE_LABELS[bookId]} · Bài ${String(lsNum).padStart(2, "0")} (${unit.partTitle.split("·")[0].trim()})`;
+        ? `Quyển ${bookNum} · Tổng kết Chặng ${Math.floor(day / 5)}`
+        : `Quyển ${bookNum} · Bài ${lsPad} · Phần ${unit.part}`;
 
       rawTasks = [
         {
-          tag: "Bước 1 · Học từ vựng",
+          tag: "Bước 1 · Từ vựng",
           icon: "cards",
-          label: `Lật thẻ B${String(lsNum).padStart(2, "0")} · ${unit.partTitle} (${unit.words.length} từ)`,
+          label: `B${lsPad} · Phần ${unit.part}: ${cleanPartName}`,
           route: "theory",
           params: { sub: "vocab-review", book: bookId, lesson: lsNum, part: unit.part, mode: "flashcard" },
           autoDone: pMast >= Math.min(6, Math.max(1, Math.ceil(unit.words.length * 0.6))),
-          hint: `Thuộc ${pMast}/${unit.words.length} từ phần này`
+          hint: `Đã thuộc ${pMast}/${unit.words.length} từ`
         },
         {
-          tag: "Bước 2 · Làm bài tập",
+          tag: "Bước 2 · Bài tập",
           icon: "book",
-          label: `Làm Sách bài tập Bài ${String(lsNum).padStart(2, "0")}: ${unit.lessonTitle}`,
+          label: `Bài tập B${lsPad}: ${unit.lessonTitle}`,
           route: "theory",
           params: { sub: "lesson-detail", book: bookId, lesson: lsNum, tab: "workbook" },
           autoDone: Boolean(wbStat && wbStat.total > 0),
-          hint: wbStat ? `Điểm Sách BT: ${wbStat.pct}%` : "Từ vựng & Ngữ pháp 익힘책"
+          hint: wbStat ? `Điểm: ${wbStat.pct}%` : "Từ vựng & Ngữ pháp"
         },
         {
           tag: "Bước 3 · Dịch câu",
           icon: "pen",
-          label: `Luyện dịch câu Việt → Hàn Bài ${String(lsNum).padStart(2, "0")}`,
+          label: `Dịch câu Việt → Hàn · Bài ${lsPad}`,
           route: "theory",
           params: { sub: "lesson-detail", book: bookId, lesson: lsNum, tab: "translate" },
           autoDone: trCnt >= 2,
-          hint: trCnt ? `Đã dịch đúng ${trCnt} câu` : "Rèn trật tự tiểu từ & đuôi câu"
+          hint: trCnt ? `Đã dịch ${trCnt} câu` : "Ghép cụm từ chuẩn"
         },
         isMilestone
           ? {
-              tag: "Bước 4 · Luyện đề cuối",
+              tag: "Bước 4 · Luyện đề",
               icon: "exam",
-              label: isTopik2
-                ? `Thi đề tuyển chọn TOPIK II (Chấm thang ${STAGE_LABELS[bookId]})`
-                : `Thi đề tuyển chọn TOPIK I (Chấm thang ${STAGE_LABELS[bookId]})`,
+              label: `Thi đề tuyển chọn ${isTopik2 ? "TOPIK II" : "TOPIK I"}`,
               route: "mock-test",
               params: { sub: isTopik2 ? "topik2" : "topik1", viewMode: "exams", category: "curated" },
               autoDone: (store.state.examHistory?.length || 0) >= Math.floor(day / 5),
-              hint: "Đánh giá điểm tổng hợp cuối chặng"
+              hint: "Đánh giá cuối chặng"
             }
           : {
-              tag: "Bước 4 · Luyện đề cuối",
+              tag: "Bước 4 · Luyện đề",
               icon: "exam",
               label: `Luyện ${skillKey === "listening" ? "Nghe" : "Đọc"} ${isTopik2 ? "TOPIK II" : "TOPIK I"} · Dạng ${dNum}`,
               route: "mock-test",
               params: { sub: isTopik2 ? "topik2" : "topik1", viewMode: "segments", skill: skillKey, typeId: segTypeId },
               autoDone: (store.state.partStats?.[segTypeId]?.total || 0) >= 3,
-              hint: `Đã làm ${store.state.partStats?.[segTypeId]?.total || 0} câu dạng này`
+              hint: `Đã làm ${store.state.partStats?.[segTypeId]?.total || 0} câu`
             }
       ];
     }
@@ -253,8 +254,8 @@ export function renderRoadmapScoreCardHTML(evalObj) {
         <div>
           <span style="font-size:12.5px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:2px;">Đánh giá năng lực · ${evalObj.label}</span>
           <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;">
-            <strong style="font-size:28px;font-weight:800;color:var(--text-main);">${evalObj.estimatedScore} <span style="font-size:15px;color:var(--text-muted);font-weight:600;">/ ${evalObj.maxScore} điểm</span></strong>
-            <span style="font-size:13px;font-weight:600;color:${evalObj.passed ? "var(--success)" : "var(--primary-1)"};">
+            <strong class="stat-num" style="color:var(--text-main);">${evalObj.estimatedScore} <span style="font-size:14px;color:var(--text-muted);font-weight:600;">/ ${evalObj.maxScore} điểm</span></strong>
+            <span style="font-size:12.5px;font-weight:600;color:${evalObj.passed ? "var(--success)" : "var(--primary-1)"};">
               · ${evalObj.statusLabel}
             </span>
           </div>
@@ -321,7 +322,7 @@ export function renderRoadmapView(root, db, navigate, openAccountCustomizer) {
                 <span class="badge-orange">${STAGE_LABELS[profile.startBook] || STAGE_LABELS.q1}</span>
                 <span class="meta-chip">Từ vựng → Bài tập → Dịch câu → Luyện đề</span>
               </div>
-              <h1 style="margin:0 0 6px;font-size:20px;font-weight:750;">Ngày ${activeDay.day}: ${activeDay.shortTopic}</h1>
+              <h1 class="title-hero" style="margin-bottom:5px;">Ngày ${activeDay.day}: ${activeDay.shortTopic}</h1>
               <p style="margin:0 0 14px;color:var(--text-muted);font-size:14px;">
                 Bước tiếp theo: <strong style="color:var(--text-main);">${nextTask.label}</strong>
               </p>

@@ -1,27 +1,37 @@
-import { store, getBookWords, evaluateRoadmapScore } from "../store.js?v=20261127-06";
-import { ico, daisyLogoSVG } from "../icons.js?v=20261127-06";
-import { getGuidedStudyPlan, STAGE_LABELS } from "./roadmap.js?v=20261127-06";
+import { store, getBookWords, evaluateRoadmapScore } from "../store.js?v=20261127-07";
+import { ico, daisyLogoSVG } from "../icons.js?v=20261127-07";
+import { getGuidedStudyPlan, STAGE_LABELS } from "./roadmap.js?v=20261127-07";
 
-export const ADMIN_QR_IMG_SRC = "/media/vietqr_admin_v2.jpg?v=20261127-06";
+export const ADMIN_QR_IMG_SRC = "/media/vietqr_admin_v2.jpg?v=20261127-07";
 
 export function renderAdminSupportCardHTML(extraStyle = "") {
   return `
     <section class="donate-cute-card" ${extraStyle ? `style="${extraStyle}"` : ""}>
       <div class="donate-top-left">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-          ${daisyLogoSVG(28)}
-          <strong style="font-size:16px;color:var(--text-main);">Ủng hộ admin nhée &gt;&lt;</strong>
+        <div style="display:flex;align-items:center;gap:7px;">
+          ${daisyLogoSVG(24)}
+          <strong style="font-size:clamp(14.5px,3.8vw,16px);color:var(--text-main);white-space:nowrap;">Ủng hộ admin nhée &gt;&lt;</strong>
         </div>
 
         <div class="donate-bank-box">
-          <span style="font-weight:800;color:var(--primary-1);letter-spacing:0.02em;">VIETCOMBANK</span>
-          <span class="donate-sep">·</span>
-          <span style="font-size:15px;font-weight:800;color:var(--text-main);font-variant-numeric:tabular-nums;">0201000736282</span>
-          <span class="donate-sep">·</span>
-          <span style="font-weight:700;color:var(--text-secondary);">NGUYEN CHI DUC</span>
+          <div class="donate-bank-desktop-line">
+            <span style="font-weight:800;color:var(--primary-1);letter-spacing:0.02em;">VIETCOMBANK</span>
+            <span class="donate-sep"> · </span>
+            <span style="font-size:14.5px;font-weight:800;color:var(--text-main);font-variant-numeric:tabular-nums;">0201000736282</span>
+            <span class="donate-sep"> · </span>
+            <span style="font-weight:700;color:var(--text-secondary);">NGUYEN CHI DUC</span>
+          </div>
+          <div class="donate-bank-mobile-line">
+            <div style="font-size:11px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+              <strong style="color:var(--primary-1);">VIETCOMBANK</strong>
+              <span style="color:#CBD5E1;"> · </span>
+              <strong style="color:var(--text-secondary);">NGUYEN CHI DUC</strong>
+            </div>
+            <div style="font-size:14.5px;font-weight:800;color:var(--text-main);font-variant-numeric:tabular-nums;line-height:1.25;">0201000736282</div>
+          </div>
         </div>
 
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">
+        <div class="donate-btn-row">
           <button type="button" class="btn-outline-teal" data-copy-stk="1" style="padding:5px 11px;font-size:12px;border-radius:9px;">
             Sao chép STK
           </button>
@@ -119,38 +129,38 @@ export function renderHomeView(root, db, navigate, startGuidedStep = null, openP
       <section class="today-plan-grid">
         <!-- LEFT: TODAY'S FOCUSED STUDY PLAN -->
         <div class="box-kind">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:14px;">
-            <div>
-              <div style="font-size:12.5px;font-weight:600;color:var(--text-muted);margin-bottom:2px;display:flex;align-items:center;gap:6px;">
-                ${ico("compass", 16)} <span>Lộ trình hôm nay · Ngày ${activeDay.day}/30</span>
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:12px;">
+            <div style="min-width:0;flex:1;">
+              <div style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:2px;display:flex;align-items:center;gap:5px;">
+                ${ico("compass", 15)} <span>Lộ trình hôm nay · Ngày ${activeDay.day}/30</span>
               </div>
-              <h1 style="margin:0;font-size:19px;font-weight:750;color:var(--text-main);">
+              <h1 class="title-hero">
                 ${activeDay.shortTopic}
               </h1>
             </div>
-            <span class="badge-orange" style="flex-shrink:0;">
+            <span class="badge-orange nw" style="flex-shrink:0;">
               ${activeDay.doneSteps}/${activeDay.totalSteps} bước
             </span>
           </div>
 
           <div class="next-up-spotlight">
-            <div style="min-width:0;flex:1 1 200px;">
-              <div style="font-size:12px;font-weight:650;color:var(--primary-1);margin-bottom:3px;">
+            <div style="min-width:0;flex:1 1 190px;">
+              <div style="font-size:12px;font-weight:650;color:var(--primary-1);margin-bottom:2px;">
                 Bước tiếp theo (${nextTask.stepIdx + 1}/${activeDay.totalSteps})
               </div>
-              <strong style="font-size:16.5px;display:block;color:var(--text-main);line-height:1.35;margin-bottom:2px;">
+              <strong class="title-spot ko" style="margin-bottom:2px;">
                 ${nextTask.label}
               </strong>
-              <span style="font-size:13px;color:var(--text-muted);">${nextTask.hint}</span>
+              <span style="font-size:12.5px;color:var(--text-muted);">${nextTask.hint}</span>
             </div>
 
-            <div style="display:flex;gap:8px;flex-wrap:wrap;width:auto;">
+            <div class="spot-actions">
               <button type="button" class="btn-primary" id="btn-start-next-step">
-                ${ico("play", 17)} Bắt đầu học
+                ${ico("play", 16)} Bắt đầu học
               </button>
               ${dueCount > 0 ? `
                 <button type="button" class="btn-soft-jade" id="btn-home-due-srs">
-                  ${ico("cards", 17)} Ôn ${dueCount} từ đến hạn
+                  ${ico("cards", 16)} Ôn ${dueCount} từ
                 </button>
               ` : ""}
             </div>
@@ -162,21 +172,21 @@ export function renderHomeView(root, db, navigate, startGuidedStep = null, openP
               const cleanCategory = t.tag.replace(/^Bước\s*\d+\s*·\s*/i, "");
               return `
                 <div class="today-step-row ${t.done ? "is-done" : (isNext ? "is-next" : "")}">
-                  <div style="display:flex;align-items:center;gap:11px;min-width:0;flex:1;">
+                  <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1;">
                     <button type="button" class="step-check-btn ${t.done ? "checked" : ""}" data-home-chk="${activeDay.day}" data-sidx="${t.stepIdx}" data-stotal="${activeDay.totalSteps}" title="Đánh dấu hoàn thành">
                       ${t.done ? ico("check", 24) : (t.stepIdx + 1)}
                     </button>
                     <div style="min-width:0;flex:1;">
-                      <div style="font-size:14px;font-weight:650;line-height:1.35;${t.done ? "text-decoration:line-through;color:var(--text-muted);" : "color:var(--text-main);"}">
+                      <div class="step-title ko" style="${t.done ? "text-decoration:line-through;color:var(--text-muted);" : ""}">
                         ${t.label}
                       </div>
-                      <div style="font-size:12px;color:var(--text-muted);margin-top:1px;">
-                        ${cleanCategory} · ${t.hint}
+                      <div class="step-sub">
+                        ${cleanCategory} · <span class="nw">${t.hint}</span>
                       </div>
                     </div>
                   </div>
 
-                  <button type="button" class="${isNext ? "btn-soft-jade" : "btn-outline-teal"}" data-home-go="${t.stepIdx}" style="padding:6px 12px;font-size:12.5px;border-radius:9px;flex-shrink:0;">
+                  <button type="button" class="${isNext ? "btn-soft-jade" : "btn-outline-teal"} nw" data-home-go="${t.stepIdx}" style="padding:6px 11px;font-size:12px;border-radius:9px;flex-shrink:0;">
                     ${t.done ? "Xem lại" : (isNext ? "Học tiếp" : "Mở")}
                   </button>
                 </div>
@@ -202,8 +212,8 @@ export function renderHomeView(root, db, navigate, startGuidedStep = null, openP
                 <span style="font-size:12px;font-weight:600;color:var(--text-muted);">Thang ${evalObj.gradeName}</span>
                 <span style="font-size:12px;font-weight:650;color:var(--primary-1);">Đạt từ ${evalObj.passScore}/${evalObj.maxScore}đ</span>
               </div>
-              <div style="font-size:26px;font-weight:800;color:var(--text-main);line-height:1.15;margin-bottom:8px;">
-                ${evalObj.estimatedScore} <span style="font-size:13.5px;color:var(--text-muted);font-weight:600;">/ ${evalObj.maxScore} điểm</span>
+              <div class="stat-num" style="color:var(--text-main);margin-bottom:8px;">
+                ${evalObj.estimatedScore} <span style="font-size:13px;color:var(--text-muted);font-weight:600;">/ ${evalObj.maxScore} điểm</span>
               </div>
               <div style="position:relative;margin-bottom:7px;">
                 <div class="progress-track" style="height:7px;background:#E2E8F0;">
@@ -228,12 +238,9 @@ export function renderHomeView(root, db, navigate, startGuidedStep = null, openP
               `).join("")}
             </div>
 
-            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12.5px;color:var(--text-muted);">
-              <span>30 ngày: <strong style="color:var(--text-main);">${completedDaysCount}/30 (${roadmapPct}%)</strong></span>
-              <label style="display:inline-flex;align-items:center;gap:6px;">
-                <span>Thi sau <strong style="color:var(--text-main);">${daysLeft} ngày</strong></span>
-                <input type="date" id="home-exam-date" value="${s.examDate}" style="padding:4px 8px;border-radius:8px;font-size:12px;font-weight:600;width:128px;" />
-              </label>
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;font-size:12px;color:var(--text-muted);">
+              <span>30 ngày: <strong style="color:var(--text-main);">${completedDaysCount}/30 (${roadmapPct}%)</strong> · Còn <strong style="color:var(--text-main);">${daysLeft} ngày</strong></span>
+              <input type="date" id="home-exam-date" value="${s.examDate}" style="padding:4px 8px;border-radius:8px;font-size:12px;font-weight:600;width:128px;" title="Ngày thi dự kiến" />
             </div>
           </div>
 
@@ -300,21 +307,21 @@ export function renderHomeView(root, db, navigate, startGuidedStep = null, openP
       <div class="home-books-grid">
         ${levels.map((lv, idx) => `
           <article class="achieve-card clickable" data-lv-idx="${idx}">
-            <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;">
-              <strong style="font-size:15px;color:var(--text-main);display:inline-flex;align-items:center;gap:6px;">
-                ${ico("book", 18)} Quyển ${lv.bookNum}
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:4px;flex-wrap:wrap;">
+              <strong class="nw" style="font-size:14.5px;color:var(--text-main);display:inline-flex;align-items:center;gap:5px;">
+                ${ico("book", 17)} Quyển ${lv.bookNum}
               </strong>
-              <span class="badge-orange">${lv.shortLevel}</span>
+              <span class="badge-orange nw" style="padding:2px 7px;font-size:11px;">${lv.shortLevel}</span>
             </div>
-            <div style="font-size:12.5px;color:var(--text-muted);">
-              ${lv.chaptersCount} bài · Thuộc <strong style="color:var(--text-secondary);">${lv.mastered}/${lv.totalWords}</strong> từ
+            <div style="font-size:12px;color:var(--text-muted);">
+              ${lv.chaptersCount} bài · <strong class="nw" style="color:var(--text-secondary);">${lv.mastered}/${lv.totalWords} từ</strong>
             </div>
             <div class="progress-track">
               <div class="progress-fill" style="width:${lv.pct}%"></div>
             </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--text-muted);margin-top:auto;">
-              <span>${lv.passDesc}</span>
-              <span style="color:var(--primary-1);font-weight:650;">Mở ›</span>
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:11.5px;color:var(--text-muted);margin-top:auto;">
+              <span class="nw">${lv.passDesc}</span>
+              <span class="nw" style="color:var(--primary-1);font-weight:650;">Mở ›</span>
             </div>
           </article>
         `).join("")}

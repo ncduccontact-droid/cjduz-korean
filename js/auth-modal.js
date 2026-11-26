@@ -1,5 +1,5 @@
-import { store, isLocalPreviewHost, BOOK_SURVEY_OPTIONS, DEFAULT_ROADMAP_PROFILE } from "./store.js?v=20261127-06";
-import { ico, daisyLogoSVG } from "./icons.js?v=20261127-06";
+import { store, isLocalPreviewHost, BOOK_SURVEY_OPTIONS, DEFAULT_ROADMAP_PROFILE } from "./store.js?v=20261127-07";
+import { ico, daisyLogoSVG } from "./icons.js?v=20261127-07";
 
 let authConfigCache = null;
 
