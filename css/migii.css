@@ -163,6 +163,7 @@ html, body {
   width: 100%;
   max-width: 100%;
   overflow-x: hidden;
+  overflow-x: clip;
   overscroll-behavior-x: none;
   -webkit-text-size-adjust: 100%;
   background-color: var(--bg-body);
@@ -187,8 +188,8 @@ body {
 #bottom-support-slot,
 .migii-footer {
   width: 100%;
-  max-width: 100vw;
-  overflow-x: hidden;
+  max-width: 100%;
+  overflow-x: clip;
 }
 
 pre {
@@ -568,16 +569,16 @@ html[data-theme="jade_aurora"] .user-auth-pill {
   width: 100%;
   max-width: 1140px;
   margin: 0 auto;
-  padding: 24px 20px 64px;
-  overflow-x: hidden;
+  padding: 24px 20px 32px;
+  overflow-x: clip;
 }
 
 .container-narrow {
   width: 100%;
   max-width: 940px;
   margin: 0 auto;
-  padding: 24px 20px 64px;
-  overflow-x: hidden;
+  padding: 24px 20px 32px;
+  overflow-x: clip;
 }
 
 .breadcrumb-bar {
@@ -967,7 +968,7 @@ html[data-theme="jade_aurora"] .user-auth-pill {
   box-shadow: var(--shadow-card);
   min-width: 0;
   max-width: 100%;
-  overflow: hidden;
+  overflow-x: clip;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -1660,9 +1661,10 @@ html[data-theme="jade_aurora"] .user-auth-pill {
 
 /* Compact Support Card */
 .bottom-support-wrap {
+  width: 100%;
   max-width: 1140px;
-  margin: -28px auto 0;
-  padding: 0 20px 36px;
+  margin: 0 auto;
+  padding: 4px 20px 32px;
 }
 
 .bottom-support-wrap.narrow {
@@ -1831,9 +1833,9 @@ html[data-theme="jade_aurora"] .user-auth-pill {
   .grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   body {
     padding-top: 58px;
-    padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(62px + env(safe-area-inset-bottom, 0px));
   }
-  .migii-footer { padding-bottom: calc(86px + env(safe-area-inset-bottom, 0px)); }
+  .migii-footer { padding: 16px 14px 20px; }
 
   .mobile-bottom-nav {
     position: fixed;
@@ -1912,8 +1914,8 @@ html[data-theme="jade_aurora"] .user-auth-pill {
   #nav-user-label { max-width: 84px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; }
 
   .container-web,
-  .container-narrow { padding: 14px 14px 40px; }
-  .bottom-support-wrap { margin: -16px auto 0; padding: 0 14px 28px; }
+  .container-narrow { padding: 14px 14px 24px; }
+  .bottom-support-wrap { margin: 0 auto; padding: 4px 14px 24px; }
   .box-kind { padding: 16px; border-radius: 16px; }
   .section-head { margin: 22px 0 10px; }
   .section-head h2 { font-size: 17px; }
@@ -2004,8 +2006,8 @@ html[data-theme="jade_aurora"] .user-auth-pill {
 @media (max-width: 640px) {
   html, body { font-size: 14px; line-height: 1.52; }
   .container-web,
-  .container-narrow { padding: 12px 12px 34px; }
-  .bottom-support-wrap { margin: -14px auto 0; padding: 0 12px 24px; }
+  .container-narrow { padding: 12px 12px 20px; }
+  .bottom-support-wrap { margin: 0 auto; padding: 4px 12px 20px; }
   .box-kind { padding: 14px; border-radius: 15px; }
   .theory-card { padding: 12px 14px; border-radius: 14px; gap: 10px; }
   .achieve-card { padding: 12px 13px; border-radius: 14px; gap: 7px; }

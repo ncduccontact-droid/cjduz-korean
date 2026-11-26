@@ -1,7 +1,7 @@
-import { store, evaluateRoadmapScore, speakKoreanTTS } from "../store.js?v=20261127-07";
-import { ico } from "../icons.js?v=20261127-07";
-import { analyzePronunciationRules, conjugateKoreanPredicate } from "../korean-engine.js?v=20261127-07";
-import { renderRoadmapScoreCardHTML } from "./roadmap.js?v=20261127-07";
+import { store, evaluateRoadmapScore, speakKoreanTTS } from "../store.js?v=20261127-08";
+import { ico } from "../icons.js?v=20261127-08";
+import { analyzePronunciationRules, conjugateKoreanPredicate } from "../korean-engine.js?v=20261127-08";
+import { renderRoadmapScoreCardHTML } from "./roadmap.js?v=20261127-08";
 
 const PARTICLE_NOTES = [
   { suffix: "에서는", role: "Tiểu từ Nơi diễn ra hành động + Nhấn mạnh chủ đề" },
