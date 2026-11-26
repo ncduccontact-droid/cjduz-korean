@@ -1,6 +1,6 @@
-import { store, getBookWords, evaluateRoadmapScore } from "../store.js?v=20261127-03";
-import { ico, daisyLogoSVG } from "../icons.js?v=20261127-03";
-import { getGuidedStudyPlan, STAGE_LABELS } from "./roadmap.js?v=20261127-03";
+import { store, getBookWords, evaluateRoadmapScore } from "../store.js?v=20261127-04";
+import { ico, daisyLogoSVG } from "../icons.js?v=20261127-04";
+import { getGuidedStudyPlan, STAGE_LABELS } from "./roadmap.js?v=20261127-04";
 
 export function renderHomeView(root, db, navigate, startGuidedStep = null, openProfileSettings = null, modalRoot = null) {
   const s = store.state;
@@ -34,10 +34,39 @@ export function renderHomeView(root, db, navigate, startGuidedStep = null, openP
     };
   });
 
-  const qrImgSrc = "/media/vietqr_admin_v2.jpg?v=20261127-03";
+  const qrImgSrc = "/media/vietqr_admin_v2.jpg?v=20261127-04";
 
   root.innerHTML = `
     <div class="container-web">
+      <!-- TOP VIETQR SUPPORT CARD -->
+      <section class="donate-cute-card donate-top-banner" style="margin-bottom:16px;">
+        <div class="donate-top-left">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            ${daisyLogoSVG(28)}
+            <strong style="font-size:16px;color:var(--text-main);">Ủng hộ admin nhée &gt;&lt;</strong>
+          </div>
+
+          <div class="donate-bank-box">
+            <span style="font-weight:800;color:var(--primary-1);letter-spacing:0.02em;">VIETCOMBANK</span>
+            <span class="donate-sep">·</span>
+            <span style="font-size:15px;font-weight:800;color:var(--text-main);font-variant-numeric:tabular-nums;">0201000736282</span>
+            <span class="donate-sep">·</span>
+            <span style="font-weight:700;color:var(--text-secondary);">NGUYEN CHI DUC</span>
+          </div>
+
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">
+            <button type="button" class="btn-outline-teal" id="btn-copy-stk" style="padding:5px 11px;font-size:12px;border-radius:9px;">
+              Sao chép STK
+            </button>
+            <button type="button" class="btn-soft-jade" id="btn-zoom-qr" style="padding:5px 11px;font-size:12px;border-radius:9px;">
+              Phóng to QR
+            </button>
+          </div>
+        </div>
+
+        <img src="${qrImgSrc}" alt="VietQR VIETCOMBANK 0201000736282 NGUYEN CHI DUC" class="donate-qr-thumb" id="img-donate-qr" title="Bấm để phóng to mã QR" />
+      </section>
+
       <section class="today-plan-grid">
         <!-- LEFT: TODAY'S FOCUSED STUDY PLAN -->
         <div class="box-kind">
@@ -242,48 +271,20 @@ export function renderHomeView(root, db, navigate, startGuidedStep = null, openP
         `).join("")}
       </div>
 
-      <!-- Writing Studio + Admin VietQR Support Card -->
-      <div class="grid-2" style="margin-top:24px;align-items:stretch;">
-        <section class="outline-ai" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;">
-          <div style="display:flex;align-items:center;gap:12px;">
-            <div class="icon-vocab-badge">${ico("pen", 24)}</div>
-            <div>
-              <strong style="font-size:15.5px;display:block;">Phòng Viết 원고지 &amp; Sổ tay câu sai</strong>
-              <span style="font-size:13px;color:var(--text-muted);">Luyện viết Câu 51–54 và ôn lại các câu làm nhầm</span>
-            </div>
+      <!-- Writing Studio & Mistake Notebook Strip -->
+      <section class="outline-ai" style="margin-top:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div class="icon-vocab-badge">${ico("pen", 24)}</div>
+          <div>
+            <strong style="font-size:15.5px;display:block;">Phòng Viết 원고지 &amp; Sổ tay câu sai</strong>
+            <span style="font-size:13px;color:var(--text-muted);">Luyện viết Câu 51–54 và ôn lại các câu làm nhầm</span>
           </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <button class="btn-soft-jade" id="btn-mia-writing">${ico("pen", 16)} Viết 원고지</button>
-            <button class="btn-outline-teal" id="btn-mia-check">${ico("target", 16)} Câu sai (${s.mistakes.length})</button>
-          </div>
-        </section>
-
-        <section class="donate-cute-card">
-          <div style="flex:1;min-width:175px;">
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-              ${daisyLogoSVG(28)}
-              <strong style="font-size:16px;color:var(--text-main);">Ủng hộ admin nhée &gt;&lt;</strong>
-            </div>
-
-            <div style="background:#F8FAFC;border-radius:12px;padding:9px 12px;margin-bottom:10px;line-height:1.5;font-size:13px;">
-              <div style="font-weight:750;color:var(--primary-1);letter-spacing:0.02em;">VIETCOMBANK</div>
-              <div style="font-size:15.5px;font-weight:800;color:var(--text-main);font-variant-numeric:tabular-nums;">0201000736282</div>
-              <div style="font-weight:700;color:var(--text-secondary);">NGUYEN CHI DUC</div>
-            </div>
-
-            <div style="display:flex;gap:6px;flex-wrap:wrap;">
-              <button type="button" class="btn-outline-teal" id="btn-copy-stk" style="padding:6px 12px;font-size:12.5px;">
-                Sao chép STK
-              </button>
-              <button type="button" class="btn-soft-jade" id="btn-zoom-qr" style="padding:6px 12px;font-size:12.5px;">
-                Phóng to QR
-              </button>
-            </div>
-          </div>
-
-          <img src="${qrImgSrc}" alt="VietQR VIETCOMBANK 0201000736282 NGUYEN CHI DUC" class="donate-qr-thumb" id="img-donate-qr" title="Bấm để phóng to mã QR" />
-        </section>
-      </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn-soft-jade" id="btn-mia-writing">${ico("pen", 16)} Viết 원고지</button>
+          <button class="btn-outline-teal" id="btn-mia-check">${ico("target", 16)} Câu sai (${s.mistakes.length})</button>
+        </div>
+      </section>
     </div>
   `;
 
