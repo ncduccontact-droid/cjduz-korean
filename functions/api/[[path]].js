@@ -160,10 +160,31 @@ export async function onRequest(context) {
     }
     const code = randomOtp();
     const pwHash = await pbkdf2Hash(password);
-    const payload = JSON.stringify({ name, password_hash: pwHash, roadmapProfile: body.roadmapProfile || {}, initialState: body.initialState || {} });
-    await env.DB.prepare("INSERT OR REPLACE INTO otp_codes(email, purpose, code, payload_json, expires_at) VALUES (?, 'register', ?, ?, ?)").bind(email, code, payload, now + 900).run();
+    const rp = body.roadmapProfile || {};
+    const st = { ...(body.initialState || {}), roadmapProfile: rp };
     const mailRes = await sendTransactionalEmail(env, email, `[CJDUZ] Mã xác thực đăng ký: ${code}`, otpHtml("Xác thực đăng ký CJDUZ", name, code, sender));
-    return jsonResp({ ok: true, email, sender, mailSent: mailRes.sent });
+
+    // If Gmail OAuth credentials are not bound yet, activate account immediately on D1 so users can sign up & get personalized roadmaps right away
+    if (!mailRes.sent) {
+      await env.DB.prepare(`
+        INSERT INTO users(email, name, password_hash, auth_provider, verified, roadmap_profile_json, state_json, created_at)
+        VALUES (?, ?, ?, 'email', 1, ?, ?, ?)
+        ON CONFLICT(email) DO UPDATE SET name=excluded.name, password_hash=excluded.password_hash, verified=1, roadmap_profile_json=excluded.roadmap_profile_json, state_json=excluded.state_json
+      `).bind(email, name, pwHash, JSON.stringify(rp), JSON.stringify(st), now).run();
+      const u = await env.DB.prepare("SELECT id FROM users WHERE email = ?").bind(email).first();
+      const token = randomToken();
+      await env.DB.prepare("INSERT INTO sessions(token, user_id, expires_at) VALUES (?, ?, ?)").bind(token, u.id, now + 30 * 86400).run();
+      return jsonResp({
+        ok: true,
+        autoActivated: true,
+        token,
+        user: { id: u.id, email, name, authProvider: "email", roadmapProfile: rp, state: st }
+      });
+    }
+
+    const payload = JSON.stringify({ name, password_hash: pwHash, roadmapProfile: rp, initialState: body.initialState || {} });
+    await env.DB.prepare("INSERT OR REPLACE INTO otp_codes(email, purpose, code, payload_json, expires_at) VALUES (?, 'register', ?, ?, ?)").bind(email, code, payload, now + 900).run();
+    return jsonResp({ ok: true, email, sender, mailSent: true });
   }
 
   if (path === "/api/auth/verify-otp") {

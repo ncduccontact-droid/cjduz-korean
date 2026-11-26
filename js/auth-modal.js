@@ -364,6 +364,11 @@ export async function openAuthModal(modalRoot, initialView = null, onCompleted =
         });
         const data = await res.json();
         if (data.ok) {
+          if (data.autoActivated && data.token && data.user) {
+            store.applyAuthenticatedUser(data.token, data.user);
+            closeModal();
+            return;
+          }
           pendingEmail = data.email;
           devOtpHint = data.devOtpPreview || "";
           setStatus(
@@ -416,6 +421,11 @@ export async function openAuthModal(modalRoot, initialView = null, onCompleted =
         });
         const data = await res.json();
         if (data.ok) {
+          if (data.autoActivated && data.token && data.user) {
+            store.applyAuthenticatedUser(data.token, data.user);
+            closeModal();
+            return;
+          }
           pendingEmail = data.email;
           devOtpHint = data.devOtpPreview || "";
           setStatus(
