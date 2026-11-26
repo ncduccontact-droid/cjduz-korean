@@ -10,4 +10,4 @@ PUBLIC_DOMAIN = "https://docusync.online"
 [[d1_databases]]
 binding = "DB"
 database_name = "cjduz-korean-db"
-database_id = "REPLACE_WITH_D1_DATABASE_ID"
+database_id = "e87efc6a-44ad-4eae-a535-d493d06480ea"
