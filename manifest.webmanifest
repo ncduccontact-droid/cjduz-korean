@@ -1,0 +1,22 @@
+{
+  "name": "D ● TOPIK · Tiếng Hàn & Luyện Thi TOPIK",
+  "short_name": "D ● TOPIK",
+  "description": "Học Tiếng Hàn Tổng Hợp Quyển 1–6, Ngữ pháp & 30 Đề Thi TOPIK I/II.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F6FAF9",
+  "theme_color": "#0D9488",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/media/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/media/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

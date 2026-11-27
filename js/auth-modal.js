@@ -1,5 +1,5 @@
-import { store, isLocalPreviewHost, BOOK_SURVEY_OPTIONS, DEFAULT_ROADMAP_PROFILE } from "./store.js?v=20261127-12";
-import { ico, daisyLogoSVG } from "./icons.js?v=20261127-12";
+import { store, isLocalPreviewHost, BOOK_SURVEY_OPTIONS, DEFAULT_ROADMAP_PROFILE } from "./store.js?v=20261127-13";
+import { ico, daisyLogoSVG } from "./icons.js?v=20261127-13";
 
 let authConfigCache = null;
 
@@ -208,6 +208,7 @@ export async function renderMandatoryAuthGate(appRoot, onAuthenticated) {
       </div>
     ` : "";
 
+    const showGoogleAuth = Boolean(cfg.googleClientId) || isLocalPreviewHost();
     let formCard = "";
     if (view === "register") {
       formCard = `
@@ -216,13 +217,15 @@ export async function renderMandatoryAuthGate(appRoot, onAuthenticated) {
           <button type="button" class="btn-skill" style="flex:1;justify-content:center;" data-v="login">Đăng nhập</button>
         </div>
 
-        <div id="gate-google-slot" style="margin-bottom:10px;">
-          <button type="button" class="google-btn" id="gate-google-btn">
-            ${GOOGLE_SVG}
-            <span>Tiếp tục nhanh bằng Google</span>
-          </button>
-        </div>
-        <div style="text-align:center;font-size:12px;color:var(--text-muted);margin:10px 0;">— hoặc đăng ký bằng Email (tiếp theo sẽ chọn Quyển học) —</div>
+        ${showGoogleAuth ? `
+          <div id="gate-google-slot" style="margin-bottom:10px;">
+            <button type="button" class="google-btn" id="gate-google-btn">
+              ${GOOGLE_SVG}
+              <span>Tiếp tục nhanh bằng Google</span>
+            </button>
+          </div>
+          <div style="text-align:center;font-size:12px;color:var(--text-muted);margin:10px 0;">— hoặc đăng ký bằng Email (tiếp theo sẽ chọn Quyển học) —</div>
+        ` : ""}
 
         <form id="gate-reg-form" style="display:flex;flex-direction:column;gap:10px;">
           <input id="gr-name" required value="${draft.name}" placeholder="Họ tên / Biệt danh của bạn..." style="padding:11px 16px;border-radius:99px;border:1.5px solid var(--border-card);" />
@@ -240,10 +243,12 @@ export async function renderMandatoryAuthGate(appRoot, onAuthenticated) {
           <button type="button" class="btn-skill active" style="flex:1;justify-content:center;" data-v="login">Đăng nhập</button>
         </div>
 
-        <button type="button" class="google-btn" id="gate-google-btn" style="margin-bottom:12px;">
-          ${GOOGLE_SVG}
-          <span>Đăng nhập bằng Google</span>
-        </button>
+        ${showGoogleAuth ? `
+          <button type="button" class="google-btn" id="gate-google-btn" style="margin-bottom:12px;">
+            ${GOOGLE_SVG}
+            <span>Đăng nhập bằng Google</span>
+          </button>
+        ` : ""}
 
         <form id="gate-login-form" style="display:flex;flex-direction:column;gap:10px;">
           <input id="gl-email" type="email" required placeholder="Email đã đăng ký..." style="padding:11px 16px;border-radius:99px;border:1.5px solid var(--border-card);" />
@@ -458,6 +463,7 @@ export async function openAuthModal(modalRoot, initialView = "profile", onComple
         </div>
       ` : "";
 
+      const showGoogleAuth = Boolean(cfg.googleClientId) || isLocalPreviewHost();
       let formBody = "";
       if (view === "login") {
         formBody = `
@@ -465,12 +471,14 @@ export async function openAuthModal(modalRoot, initialView = "profile", onComple
             <button type="button" class="btn-skill active" style="flex:1;justify-content:center;" data-v="login">Đăng nhập</button>
             <button type="button" class="btn-skill" style="flex:1;justify-content:center;" data-v="register">Tạo tài khoản</button>
           </div>
-          <div id="gate-google-slot" style="margin-bottom:10px;">
-            <button type="button" class="google-btn" id="gate-google-btn">
-              ${GOOGLE_SVG}
-              <span>Đăng nhập bằng Google</span>
-            </button>
-          </div>
+          ${showGoogleAuth ? `
+            <div id="gate-google-slot" style="margin-bottom:10px;">
+              <button type="button" class="google-btn" id="gate-google-btn">
+                ${GOOGLE_SVG}
+                <span>Đăng nhập bằng Google</span>
+              </button>
+            </div>
+          ` : ""}
           <form id="gate-login-form" style="display:flex;flex-direction:column;gap:10px;">
             <input id="gl-email" type="email" required placeholder="Email đã đăng ký..." style="padding:11px 14px;" />
             <input id="gl-pw" type="password" required placeholder="Mật khẩu..." style="padding:11px 14px;" />
@@ -487,12 +495,14 @@ export async function openAuthModal(modalRoot, initialView = "profile", onComple
             <button type="button" class="btn-skill" style="flex:1;justify-content:center;" data-v="login">Đăng nhập</button>
             <button type="button" class="btn-skill active" style="flex:1;justify-content:center;" data-v="register">Tạo tài khoản</button>
           </div>
-          <div id="gate-google-slot" style="margin-bottom:10px;">
-            <button type="button" class="google-btn" id="gate-google-btn">
-              ${GOOGLE_SVG}
-              <span>Tiếp tục nhanh bằng Google</span>
-            </button>
-          </div>
+          ${showGoogleAuth ? `
+            <div id="gate-google-slot" style="margin-bottom:10px;">
+              <button type="button" class="google-btn" id="gate-google-btn">
+                ${GOOGLE_SVG}
+                <span>Tiếp tục nhanh bằng Google</span>
+              </button>
+            </div>
+          ` : ""}
           <form id="gate-reg-form" style="display:flex;flex-direction:column;gap:10px;">
             <input id="gr-name" required value="${draft.name}" placeholder="Họ tên / Biệt danh của bạn..." style="padding:11px 14px;" />
             <input id="gr-email" type="email" required value="${draft.email}" placeholder="Email cá nhân (lưu tiến độ Cloud)..." style="padding:11px 14px;" />
@@ -610,12 +620,20 @@ export async function openAuthModal(modalRoot, initialView = "profile", onComple
             <span>Đặt lại tiến độ lộ trình về Ngày 1 theo quyển vừa chọn</span>
           </label>
 
-          <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;">
-            <button type="button" class="btn-primary" id="btn-save-prof">${ico("cloud", 16)} Lưu cài đặt lộ trình</button>
+          <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;">
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <button type="button" class="btn-primary" id="btn-save-prof">${ico("cloud", 16)} Lưu cài đặt lộ trình</button>
+              ${typeof window !== "undefined" && window.webkit?.messageHandlers?.dtopikNative ? `
+                <button type="button" class="btn-outline-teal" id="btn-ios-reminder">Nhắc giờ học (iOS)</button>
+              ` : ""}
+            </div>
             ${isLocalPreviewHost() ? `
               <button type="button" class="btn-outline-teal" id="btn-preview-survey">Mở Khảo sát chọn Quyển</button>
             ` : `
-              <button type="button" class="btn-outline-teal" id="btn-logout-acc" style="border-color:var(--danger);color:var(--danger);">Đăng xuất</button>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <button type="button" class="btn-outline-teal" id="btn-logout-acc" style="border-color:var(--danger);color:var(--danger);">Đăng xuất</button>
+                <button type="button" id="btn-delete-acc" style="background:none;border:none;color:var(--text-muted);font-size:12.5px;font-weight:600;text-decoration:underline;cursor:pointer;padding:6px 4px;">Xóa tài khoản</button>
+              </div>
             `}
           </div>
         </div>
@@ -643,6 +661,14 @@ export async function openAuthModal(modalRoot, initialView = "profile", onComple
       msg = `${ico("check", 15)} Đã cập nhật lộ trình học vào Hồ sơ học viên!`;
       renderProfileModal();
     });
+    const iosRemBtn = modalRoot.querySelector("#btn-ios-reminder");
+    if (iosRemBtn) {
+      iosRemBtn.addEventListener("click", () => {
+        try {
+          window.webkit.messageHandlers.dtopikNative.postMessage({ action: "openReminderSheet" });
+        } catch {}
+      });
+    }
     const prevSurveyBtn = modalRoot.querySelector("#btn-preview-survey");
     if (prevSurveyBtn) {
       prevSurveyBtn.addEventListener("click", () => {
@@ -654,6 +680,19 @@ export async function openAuthModal(modalRoot, initialView = "profile", onComple
       logoutBtn.addEventListener("click", async () => {
         await store.logout();
         close();
+      });
+    }
+    const deleteBtn = modalRoot.querySelector("#btn-delete-acc");
+    if (deleteBtn) {
+      deleteBtn.addEventListener("click", async () => {
+        if (!window.confirm("Bạn chắc chắn muốn xóa vĩnh viễn tài khoản và toàn bộ dữ liệu học tập trên D ● TOPIK? Hành động này không thể hoàn tác.")) return;
+        try {
+          await store.deleteAccount();
+          close();
+        } catch (err) {
+          msg = err.message || "Không thể xóa tài khoản lúc này.";
+          renderProfileModal();
+        }
       });
     }
   }

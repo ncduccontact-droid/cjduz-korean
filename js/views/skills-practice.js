@@ -1,9 +1,9 @@
-import { store, playAudio, preloadAudioUrls, stopAllAudio, speakKoreanTTS, bindHangulEnter, renderExplainDisclosure, renderQuizHistoryPillHTML } from "../store.js?v=20261127-12";
-import { ico } from "../icons.js?v=20261127-12";
-import { analyzePronunciationRules, conjugateKoreanPredicate } from "../korean-engine.js?v=20261127-12";
-import { renderChapterExercises } from "../chapter-exercises.js?v=20261127-12";
-import { renderShortsShadowingStudio } from "../shorts-shadowing.js?v=20261127-12";
-import { renderGrammarStudioView } from "../grammar-studio.js?v=20261127-12";
+import { store, playAudio, preloadAudioUrls, stopAllAudio, speakKoreanTTS, bindHangulEnter, renderExplainDisclosure, renderQuizHistoryPillHTML } from "../store.js?v=20261127-13";
+import { ico } from "../icons.js?v=20261127-13";
+import { analyzePronunciationRules, conjugateKoreanPredicate } from "../korean-engine.js?v=20261127-13";
+import { renderChapterExercises } from "../chapter-exercises.js?v=20261127-13";
+import { renderShortsShadowingStudio } from "../shorts-shadowing.js?v=20261127-13";
+import { renderGrammarStudioView } from "../grammar-studio.js?v=20261127-13";
 
 const READING_PASSAGES = [
   {

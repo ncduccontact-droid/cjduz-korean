@@ -1,7 +1,7 @@
-import { store, normalizeBookId, getBookCurriculum, playAudio, speakKoreanTTS, bindHangulEnter, renderExplainDisclosure, renderQuizHistoryPillHTML } from "./store.js?v=20261127-12";
-import { appendJamoToText } from "./korean-engine.js?v=20261127-12";
-import { HANGEUL_DATA } from "./curated-content.js?v=20261127-12";
-import { ico } from "./icons.js?v=20261127-12";
+import { store, normalizeBookId, getBookCurriculum, playAudio, speakKoreanTTS, bindHangulEnter, renderExplainDisclosure, renderQuizHistoryPillHTML } from "./store.js?v=20261127-13";
+import { appendJamoToText } from "./korean-engine.js?v=20261127-13";
+import { HANGEUL_DATA } from "./curated-content.js?v=20261127-13";
+import { ico } from "./icons.js?v=20261127-13";
 
 // ============================================================================
 // 1. HIGH-FREQUENCY TOPIK EXAM GRAMMAR BANK (Ôn ngữ pháp trọng tâm thi TOPIK)

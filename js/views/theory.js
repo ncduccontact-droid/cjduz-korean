@@ -1,9 +1,9 @@
-import { store, normalizeBookId, getBookWords, getBookCurriculum, playAudio, preloadAudioUrls, speakKoreanTTS, bindHangulEnter, renderQuizHistoryPillHTML } from "../store.js?v=20261127-12";
-import { ico } from "../icons.js?v=20261127-12";
-import { analyzePronunciationRules, appendJamoToText } from "../korean-engine.js?v=20261127-12";
-import { HANGEUL_DATA, HANJA_ROOTS, FREQUENT_TOPIK_EXPRESSIONS } from "../curated-content.js?v=20261127-12";
-import { renderChapterExercises } from "../chapter-exercises.js?v=20261127-12";
-import { renderGrammarStudioView, renderInlineLessonGrammarSection } from "../grammar-studio.js?v=20261127-12";
+import { store, normalizeBookId, getBookWords, getBookCurriculum, playAudio, preloadAudioUrls, speakKoreanTTS, bindHangulEnter, renderQuizHistoryPillHTML } from "../store.js?v=20261127-13";
+import { ico } from "../icons.js?v=20261127-13";
+import { analyzePronunciationRules, appendJamoToText } from "../korean-engine.js?v=20261127-13";
+import { HANGEUL_DATA, HANJA_ROOTS, FREQUENT_TOPIK_EXPRESSIONS } from "../curated-content.js?v=20261127-13";
+import { renderChapterExercises } from "../chapter-exercises.js?v=20261127-13";
+import { renderGrammarStudioView, renderInlineLessonGrammarSection } from "../grammar-studio.js?v=20261127-13";
 
 function buildSubPartsForLesson(db, bookKey, lessonNum, lessonWords) {
   const bookCur = getBookCurriculum(db, bookKey);

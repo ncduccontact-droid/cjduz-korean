@@ -325,6 +325,19 @@ export async function onRequest(context) {
     return jsonResp({ ok: true }, 200, "");
   }
 
+  if (path === "/api/auth/delete-account") {
+    bearer = bearer || extractToken(request, body);
+    const s = await env.DB.prepare("SELECT user_id FROM sessions WHERE token = ? AND expires_at > ?").bind(bearer, now).first();
+    if (!s) return jsonResp({ ok: false, error: "Phiên đăng nhập không hợp lệ." }, 401);
+    const u = await env.DB.prepare("SELECT email FROM users WHERE id = ?").bind(s.user_id).first();
+    await env.DB.prepare("DELETE FROM sessions WHERE user_id = ?").bind(s.user_id).run();
+    if (u && u.email) {
+      await env.DB.prepare("DELETE FROM otp_codes WHERE email = ?").bind(u.email).run();
+    }
+    await env.DB.prepare("DELETE FROM users WHERE id = ?").bind(s.user_id).run();
+    return jsonResp({ ok: true }, 200, "");
+  }
+
   if (path === "/api/user/sync") {
     bearer = bearer || extractToken(request, body);
     const s = await env.DB.prepare("SELECT user_id FROM sessions WHERE token = ? AND expires_at > ?").bind(bearer, now).first();

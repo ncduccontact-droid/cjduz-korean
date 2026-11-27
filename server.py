@@ -731,6 +731,19 @@ class CJDUZKoreanHandler(SimpleHTTPRequestHandler):
                 conn.close()
             return self.send_json(200, {"ok": True}, cookie_val="")
 
+        if path == "/api/auth/delete-account":
+            tok = self.get_bearer_token(body)
+            user = get_user_by_token(tok)
+            if not user:
+                return self.send_json(401, {"ok": False, "error": "Chưa đăng nhập"})
+            conn = sqlite3.connect(AUTH_DB_FILE)
+            conn.execute("DELETE FROM sessions WHERE user_id = ?", (user["id"],))
+            conn.execute("DELETE FROM otp_codes WHERE email = ?", (user["email"],))
+            conn.execute("DELETE FROM users WHERE id = ?", (user["id"],))
+            conn.commit()
+            conn.close()
+            return self.send_json(200, {"ok": True}, cookie_val="")
+
         # 7. SYNC PER-USER PROGRESS & PERSONALIZED ROADMAP
         if path == "/api/user/sync":
             user = get_user_by_token(self.get_bearer_token(body))

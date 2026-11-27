@@ -339,6 +339,34 @@ export const store = {
     this.notify();
   },
 
+  async deleteAccount() {
+    const res = await fetch("/api/auth/delete-account", {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        ...(this.session.token ? { "Authorization": `Bearer ${this.session.token}` } : {})
+      },
+      body: JSON.stringify({ token: this.session.token || "" })
+    });
+    const data = await res.json().catch(() => ({ ok: false }));
+    if (!data.ok && !isLocalPreviewHost()) {
+      throw new Error(data.error || "Không thể xóa tài khoản lúc này.");
+    }
+    this.session = isLocalPreviewHost() ? createLocalReviewSession() : { mode: "guest", token: "", user: null };
+    this.state = createFreshState();
+    this.syncStatus = "synced";
+    try {
+      localStorage.removeItem(AUTH_TOKEN_KEY);
+      localStorage.removeItem("cjduz_auth_session_v2");
+      localStorage.removeItem(LOCAL_PREVIEW_STATE_KEY);
+      if (typeof sessionStorage !== "undefined") sessionStorage.removeItem(LOCAL_PREVIEW_STATE_KEY);
+    } catch {}
+    applyDocumentTheme(DEFAULT_THEME_ID);
+    this.notify();
+    return true;
+  },
+
   updateRoadmapProfile(newProfile, resetCheckedDays = false) {
     const pickedOpt = BOOK_SURVEY_OPTIONS.find((b) => b.id === newProfile.startBook);
     const syncedStage = pickedOpt ? pickedOpt.legacyStage : (newProfile.startStage || this.state.roadmapProfile?.startStage || "sc1");
