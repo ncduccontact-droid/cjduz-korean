@@ -1,4 +1,4 @@
-import { ico, daisyLogoSVG } from "./icons.js?v=20261127-09";
+import { ico, daisyLogoSVG } from "./icons.js?v=20261127-10";
 
 // Temporarily locked while refreshing original licensed audio/video content
 export const YOUTUBE_SHORTS_CLIPS = [];

@@ -1,7 +1,7 @@
-import { store, evaluateRoadmapScore, speakKoreanTTS } from "../store.js?v=20261127-09";
-import { ico } from "../icons.js?v=20261127-09";
-import { analyzePronunciationRules, conjugateKoreanPredicate } from "../korean-engine.js?v=20261127-09";
-import { renderRoadmapScoreCardHTML } from "./roadmap.js?v=20261127-09";
+import { store, evaluateRoadmapScore, speakKoreanTTS } from "../store.js?v=20261127-10";
+import { ico } from "../icons.js?v=20261127-10";
+import { analyzePronunciationRules, conjugateKoreanPredicate } from "../korean-engine.js?v=20261127-10";
+import { renderRoadmapScoreCardHTML } from "./roadmap.js?v=20261127-10";
 
 const PARTICLE_NOTES = [
   { suffix: "에서는", role: "Tiểu từ Nơi diễn ra hành động + Nhấn mạnh chủ đề" },
@@ -257,21 +257,18 @@ export function renderCheckAndToolsView(root, db, navigate, params = {}) {
       });
     } else if (tab === "xray") {
       body.innerHTML = `
-        <div class="outline-ai" style="margin-bottom:22px;">
-          <h3 style="margin:0 0 8px;display:flex;align-items:center;gap:8px;">${ico("xray", 21)} Giải phẫu câu tiếng Hàn X-Ray (D ● TOPIK Studio)</h3>
-          <p style="margin:0 0 10px;font-size:14px;color:var(--text-muted);">
-            Dán bất kỳ câu tiếng Hàn nào để tách từng thành phần tiểu từ, đuôi câu kính ngữ, tra từ vựng và soi biến âm:
-          </p>
+        <div class="outline-ai" style="margin-bottom:18px;">
+          <h3 style="margin:0 0 8px;display:flex;align-items:center;gap:8px;font-size:17px;">${ico("xray", 20)} Giải phẫu câu X-Ray</h3>
           <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
-            <input id="xray-inp" class="ko" value="${sentenceInput.replace(/"/g, "&quot;")}" style="flex:1;min-width:200px;padding:11px 16px;font-size:17px;font-weight:700;" />
-            <button type="button" class="btn-primary" id="xray-speak">${ico("speaker", 17)} Đọc câu</button>
+            <input id="xray-inp" class="ko" value="${sentenceInput.replace(/"/g, "&quot;")}" placeholder="Dán câu tiếng Hàn để tách tiểu từ, gốc từ và soi biến âm..." style="flex:1;min-width:200px;padding:10px 14px;font-size:16.5px;font-weight:700;" />
+            <button type="button" class="btn-primary" id="xray-speak">${ico("speaker", 16)} Nghe</button>
           </div>
           <div id="xray-live-results"></div>
         </div>
 
         <div class="box-kind">
-          <h3 style="margin:0 0 10px;display:flex;align-items:center;gap:8px;">${ico("gear", 20)} Máy chia Động/Tính từ Bất quy tắc nhanh</h3>
-          <input id="tool-verb-inp" class="ko" value="${verbQuery.replace(/"/g, "&quot;")}" placeholder="Nhập động/tính từ nguyên thể (VD: 춥다, 듣다, 모르다, 쓰다, 짓다)..." style="max-width:420px;width:100%;padding:9px 16px;font-size:17px;font-weight:700;margin-bottom:12px;" />
+          <h3 style="margin:0 0 8px;display:flex;align-items:center;gap:8px;font-size:17px;">${ico("gear", 19)} Chia động/tính từ bất quy tắc</h3>
+          <input id="tool-verb-inp" class="ko" value="${verbQuery.replace(/"/g, "&quot;")}" placeholder="Nhập nguyên thể -다 (VD: 춥다, 듣다, 모르다, 쓰다)..." style="max-width:420px;width:100%;padding:9px 14px;font-size:16.5px;font-weight:700;margin-bottom:12px;" />
           <div id="verb-live-results"></div>
         </div>
       `;

@@ -1,14 +1,17 @@
-import { store, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261127-09";
-import { ico } from "../icons.js?v=20261127-09";
-import { analyzePronunciationRules, conjugateKoreanPredicate } from "../korean-engine.js?v=20261127-09";
-import { renderChapterExercises } from "../chapter-exercises.js?v=20261127-09";
-import { renderShortsShadowingStudio } from "../shorts-shadowing.js?v=20261127-09";
+import { store, playAudio, preloadAudioUrls, stopAllAudio, speakKoreanTTS } from "../store.js?v=20261127-10";
+import { ico } from "../icons.js?v=20261127-10";
+import { analyzePronunciationRules, conjugateKoreanPredicate } from "../korean-engine.js?v=20261127-10";
+import { renderChapterExercises } from "../chapter-exercises.js?v=20261127-10";
+import { renderShortsShadowingStudio } from "../shorts-shadowing.js?v=20261127-10";
+import { renderGrammarStudioView } from "../grammar-studio.js?v=20261127-10";
 
 const READING_PASSAGES = [
   {
     id: "read_1",
-    level: "Sơ cấp 1 · Giáo trình Tổng Hợp",
-    title: "대학생 흐엉 씨의 하루 (Một ngày của sinh viên Hương)",
+    level: "Bài 1 · Sơ cấp 1",
+    audioSrc: "media/reading_read_1.mp3",
+    title: "대학생 흐엉 씨의 하루",
+    viTitle: "Một ngày của sinh viên Hương",
     paragraphs: [
       "저는 베트남 사람입니다. 지금 한국 대학교에서 한국어를 공부합니다.",
       "아침 일곱 시에 일어납니다. 학생 식당에서 친구와 아침 밥을 먹습니다.",
@@ -24,13 +27,15 @@ const READING_PASSAGES = [
     },
     questions: [
       { id: "r1_q1", question: "흐엉 씨는 오후에 어디에서 숙제합니까?", options: ["교실", "도서관", "학생 식당", "운동장"], answer: 1, explain: "Trong bài có câu: '오후에는 도서관에서 숙제합니다' (Buổi chiều làm bài tập ở thư viện)." },
-      { id: "r1_q2", question: "이 글의 내용과 같은 것을 고르십시오 (Chọn câu đúng với nội dung bài):", options: ["흐엉 씨는 혼자 아침을 먹습니다.", "수업은 오후 두 시에 끝납니다.", "저녁에 운동장에서 운동합니다.", "일곱 시에 학교에 갑니다."], answer: 2, explain: "Câu cuối bài nêu rõ: '저녁에는 운동장에서 운동합니다'." }
+      { id: "r1_q2", question: "이 글의 내용과 같은 것을 고르십시오:", options: ["흐엉 씨는 혼자 아침을 먹습니다.", "수업은 오후 두 시에 끝납니다.", "저녁에 운동장에서 운동합니다.", "일곱 시에 학교에 갑니다."], answer: 2, explain: "Câu cuối bài: '저녁에는 운동장에서 운동합니다'." }
     ]
   },
   {
     id: "read_2",
-    level: "TOPIK I · Đọc Thông báo & Đời sống",
-    title: "도서관 이용 안내문 (Thông báo hướng dẫn sử dụng Thư viện)",
+    level: "Bài 2 · TOPIK I",
+    audioSrc: "media/reading_read_2.mp3",
+    title: "도서관 이용 안내문",
+    viTitle: "Hướng dẫn sử dụng Thư viện",
     paragraphs: [
       "우리 대학교 도서관은 월요일부터 토요일까지 문을 엽니다. 일요일과 공휴일에는 쉽니다.",
       "학생증을 가지고 오면 한 번에 책을 다섯 권까지 빌릴 수 있습니다. 도서관 안에서는 음식을 먹거나 큰 소리로 이야기하면 안 됩니다."
@@ -49,8 +54,10 @@ const READING_PASSAGES = [
   },
   {
     id: "read_3",
-    level: "TOPIK II (Cấp 3–4) · Xã hội & Tiêu dùng",
-    title: "1인 가구 증가와 소비 변화 (Sự gia tăng hộ độc thân & thay đổi tiêu dùng)",
+    level: "Bài 3 · TOPIK II",
+    audioSrc: "media/reading_read_3.mp3",
+    title: "1인 가구 증가와 소비 변화",
+    viTitle: "Hộ độc thân & thay đổi tiêu dùng",
     paragraphs: [
       "최근 한국 사회에서는 혼자 사는 1인 가구가 빠르게 늘어나고 있다. 이에 따라 마트나 편의점에서도 대용량 제품보다는 소포장 식품이 큰 인기를 끌고 있다.",
       "또한 집에서 간단하게 요리해 먹을 수 있는 간편식 매출도 해마다 증가하는 추세이다. 기업들은 이러한 변화에 맞추어 다양한 맞춤형 상품을 개발하고 있다."
@@ -63,7 +70,7 @@ const READING_PASSAGES = [
       "증가하는 추세이다": "đang có xu hướng gia tăng", "맞춤형": "thiết kế đo ni đóng giày / cá nhân hóa", "개발하고": "đang phát triển"
     },
     questions: [
-      { id: "r3_q1", question: "이 글의 중심 생각으로 가장 알맞은 것을 고르십시오:", options: ["1인 가구가 줄어들면서 대형 마트가 사라지고 있다.", "가구 형태의 변화가 식품 소비와 상품 개발에 영향을 미치고 있다.", "건강을 위해 집에서 직접 요리하는 사람이 줄고 있다.", "편의점 물건 가격이 점점 비싸지고 있다."], answer: 1, explain: "Bài đọc phân tích việc tăng hộ 1 người làm thay đổi xu hướng tiêu thụ thực phẩm nhỏ gọn và khiến doanh nghiệp phát triển sản phẩm tương ứng." }
+      { id: "r3_q1", question: "이 글의 중심 생각으로 가장 알맞은 것을 고르십시오:", options: ["1인 가구가 줄어들면서 대형 마트가 사라지고 있다.", "가구 형태의 변화가 식품 소비와 상품 개발에 영향을 미치고 있다.", "건강을 위해 집에서 직접 요리하는 사람이 줄고 있다.", "편의점 물건 가격이 점점 비싸지고 있다."], answer: 1, explain: "Việc tăng hộ 1 người làm thay đổi xu hướng tiêu thụ thực phẩm nhỏ gọn và phát triển sản phẩm tương ứng." }
     ]
   }
 ];
@@ -91,32 +98,42 @@ const ROLEPLAY_SCENARIOS = [
 ];
 
 export function renderSkillsPracticeView(root, db, navigate, params = {}) {
-  let activeSkill = params.skill || "translate"; // translate | listening | reading | shadowing | textbook-shadow | roleplay
+  let activeSkill = params.skill || "translate"; // translate | grammar | listening | reading | shadowing | textbook-shadow | roleplay
+  let chBook = params.book || "q1";
   let chLesson = Number(params.lesson || 1);
 
+  if (activeSkill === "grammar") {
+    return renderGrammarStudioView(root, db, navigate, { mode: params.mode || "topik", book: chBook, lesson: chLesson });
+  }
+
   function renderHeaderAndTabs() {
+    const books = db.books6 || [];
+    const curBookObj = books.find((b) => b.bookId === chBook) || books[0];
+    const chapters = curBookObj?.chapters || Array.from({ length: 15 }, (_, i) => ({ lesson: i + 1, title: `Bài ${i + 1}` }));
+    if (!chapters.some((c) => c.lesson === chLesson)) chLesson = chapters[0]?.lesson || 1;
+
     root.innerHTML = `
       <div class="container-web">
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
-          <div class="breadcrumb-bar" style="margin-bottom:0;">
-            <span>Luyện tập</span><span>/</span><span>Kỹ năng tổng hợp</span>
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+          <div class="skill-pills-row" style="margin-bottom:0;flex:1;min-width:0;">
+            <button class="btn-skill ${activeSkill === "translate" ? "active" : ""}" data-sk="translate">
+              ${ico("pen", 15)} Dịch câu &amp; Bài tập
+            </button>
+            <button class="btn-skill ${activeSkill === "grammar" ? "active" : ""}" data-sk="grammar">
+              ${ico("layers", 15)} Ngữ pháp
+            </button>
+            <button class="btn-skill ${activeSkill === "listening" ? "active" : ""}" data-sk="listening">${ico("headphones", 15)} Nghe chép</button>
+            <button class="btn-skill ${activeSkill === "reading" ? "active" : ""}" data-sk="reading">${ico("book", 15)} Đọc hiểu</button>
+            <button class="btn-skill ${activeSkill === "roleplay" ? "active" : ""}" data-sk="roleplay">${ico("chat", 15)} Giao tiếp</button>
+            <button class="btn-skill ${activeSkill === "shadowing" || activeSkill === "textbook-shadow" ? "active" : ""}" data-sk="shadowing">
+              ${ico("lock", 14)} Shadowing
+            </button>
           </div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;">
-            <button type="button" class="btn-outline-teal" id="sw-to-topik1" style="padding:5px 12px;font-size:13px;">Luyện dạng TOPIK I</button>
-            <button type="button" class="btn-outline-teal" id="sw-to-topik2" style="padding:5px 12px;font-size:13px;">Luyện dạng TOPIK II</button>
-          </div>
-        </div>
 
-        <div class="skill-pills-row">
-          <button class="btn-skill ${activeSkill === "translate" ? "active" : ""}" data-sk="translate">
-            ${ico("pen", 16)} Dịch câu &amp; Bài tập chương
-          </button>
-          <button class="btn-skill ${activeSkill === "shadowing" || activeSkill === "textbook-shadow" ? "active" : ""}" data-sk="shadowing">
-            ${ico("lock", 15)} Shadowing
-          </button>
-          <button class="btn-skill ${activeSkill === "listening" ? "active" : ""}" data-sk="listening">${ico("headphones", 16)} Nghe chép</button>
-          <button class="btn-skill ${activeSkill === "reading" ? "active" : ""}" data-sk="reading">${ico("book", 16)} Đọc hiểu</button>
-          <button class="btn-skill ${activeSkill === "roleplay" ? "active" : ""}" data-sk="roleplay">${ico("chat", 16)} Giao tiếp &amp; Kính ngữ</button>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button type="button" class="btn-outline-teal" id="sw-to-topik1" style="padding:5px 10px;font-size:12.5px;">TOPIK I</button>
+            <button type="button" class="btn-outline-teal" id="sw-to-topik2" style="padding:5px 10px;font-size:12.5px;">TOPIK II</button>
+          </div>
         </div>
 
         <div id="skill-stage"></div>
@@ -127,6 +144,10 @@ export function renderSkillsPracticeView(root, db, navigate, params = {}) {
     root.querySelector("#sw-to-topik2").addEventListener("click", () => navigate("mock-test", { sub: "topik2", viewMode: "segments", skill: "listening" }));
     root.querySelectorAll("[data-sk]").forEach((btn) => {
       btn.addEventListener("click", () => {
+        if (btn.dataset.sk === "grammar") {
+          navigate("theory", { sub: "grammar-list", mode: "topik" });
+          return;
+        }
         navigate("practice", { sub: "skills", skill: btn.dataset.sk, lesson: chLesson });
       });
     });
@@ -134,20 +155,28 @@ export function renderSkillsPracticeView(root, db, navigate, params = {}) {
     const stage = root.querySelector("#skill-stage");
     if (activeSkill === "translate") {
       stage.innerHTML = `
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
-          <strong>Chọn Chương để Luyện dịch câu &amp; Bài tập TOPIK:</strong>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+          <select id="prac-bk-select" class="box-select">
+            ${books.map((b) => `<option value="${b.bookId}" ${b.bookId === chBook ? "selected" : ""}>${b.shortTitle}</option>`).join("")}
+          </select>
           <select id="prac-ch-select" class="box-select">
-            ${Array.from({ length: 15 }, (_, i) => i + 1).map((n) => `
-              <option value="${n}" ${n === chLesson ? "selected" : ""}>Sơ cấp 1 · Chương ${String(n).padStart(2, "0")}</option>
+            ${chapters.map((c) => `
+              <option value="${c.lesson}" ${c.lesson === chLesson ? "selected" : ""}>Bài ${String(c.lesson).padStart(2, "0")}: ${c.title}</option>
             `).join("")}
           </select>
         </div>
         <div id="prac-ch-body"></div>
       `;
-      stage.querySelector("#prac-ch-select").addEventListener("change", (e) => {
-        navigate("practice", { sub: "skills", skill: "translate", lesson: Number(e.target.value) });
+      stage.querySelector("#prac-bk-select")?.addEventListener("change", (e) => {
+        chBook = e.target.value;
+        chLesson = 1;
+        renderHeaderAndTabs();
       });
-      renderChapterExercises(stage.querySelector("#prac-ch-body"), db, "sc1", chLesson);
+      stage.querySelector("#prac-ch-select").addEventListener("change", (e) => {
+        chLesson = Number(e.target.value);
+        renderHeaderAndTabs();
+      });
+      renderChapterExercises(stage.querySelector("#prac-ch-body"), db, chBook, chLesson, "translate");
     } else if (activeSkill === "shadowing" || activeSkill === "textbook-shadow") {
       renderShortsShadowingStudio(stage, db, (nextSkill) => {
         navigate("practice", { sub: "skills", skill: nextSkill || "translate", lesson: chLesson });
@@ -324,8 +353,11 @@ function renderListeningModule(stage, db) {
 function renderReadingModule(stage, db) {
   let pIdx = 0;
   let showVi = false;
+  let isPlayingPassage = false;
   let selectedWordInfo = null;
   let answers = {};
+
+  preloadAudioUrls(READING_PASSAGES.map((p) => p.audioSrc).filter(Boolean));
 
   // Build quick lookup map from extracted DB
   const vocabMap = new Map();
@@ -338,7 +370,6 @@ function renderReadingModule(stage, db) {
     if (passageGlossary[clean]) {
       return { token: clean, meaning: passageGlossary[clean], matchCard: vocabMap.get(clean) || null };
     }
-    // Strip common Korean particles (은/는/이/가/을/를/에서/에/와/과/도/만)
     const stripped = clean.replace(/(에서는|에서|으로|부터|까지|은|는|이|가|을|를|에|와|과|도|만)$/, "");
     if (passageGlossary[stripped]) {
       return { token: clean, meaning: passageGlossary[stripped], matchCard: vocabMap.get(stripped) || null };
@@ -351,16 +382,16 @@ function renderReadingModule(stage, db) {
       const c = vocabMap.get(stripped);
       return { token: `${clean} (gốc: ${stripped})`, meaning: c.vietnamese, matchCard: c };
     }
-    return { token: clean, meaning: "Bấm nút Loa để nghe phát âm hoặc mở Tra cứu & Chia ĐT trên góc phải.", matchCard: null };
+    return { token: clean, meaning: "Bấm nút Loa để nghe phát âm hoặc mở Tra từ trên thanh điều hướng.", matchCard: null };
   }
 
   function render() {
     const p = READING_PASSAGES[pIdx];
     stage.innerHTML = `
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
         ${READING_PASSAGES.map((item, i) => `
-          <button class="btn-outline-teal" data-p="${i}" style="${i === pIdx ? "background:var(--primary);color:#FFF;" : ""}">
-            Bài đọc ${i + 1}: ${item.level}
+          <button class="btn-outline-teal" data-p="${i}" style="padding:6px 13px;font-size:13px;${i === pIdx ? "background:var(--primary);color:#FFF;" : ""}">
+            ${item.level}
           </button>
         `).join("")}
       </div>
@@ -368,51 +399,53 @@ function renderReadingModule(stage, db) {
       <div class="grid-2" style="align-items:start;">
         <!-- Left: Tap-to-Lookup Korean Passage -->
         <div class="box-kind">
-          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px;">
-            <h3 class="ko" style="margin:0;font-size:19px;color:var(--primary-1);">${p.title}</h3>
-            <button class="btn-audio" id="btn-read-aloud" title="Đọc mẫu cả bài">${ico("speaker", 18)}</button>
-          </div>
-          <div style="font-size:12.5px;color:var(--primary-1);font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px;">
-            ${ico("bulb", 16)} <span>Mẹo đọc nhanh D ● TOPIK: Bấm vào bất kỳ chữ tiếng Hàn nào bên dưới để tra nghĩa tức thì!</span>
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px;">
+            <div>
+              <h3 class="ko" style="margin:0;font-size:18px;color:var(--primary-1);">${p.title}</h3>
+              <span style="font-size:12.5px;color:var(--text-muted);">${p.viTitle} · Chạm từ bất kỳ để tra nghĩa</span>
+            </div>
+            <button type="button" class="btn-soft-jade nw" id="btn-read-aloud" style="padding:6px 12px;font-size:12.5px;flex-shrink:0;">
+              ${isPlayingPassage ? `${ico("stop", 14)} Dừng` : `${ico("speaker", 15)} Nghe bài`}
+            </button>
           </div>
 
-          <div class="ko" style="font-size:18px;line-height:1.9;background:#F8FAFB;padding:16px;border-radius:12px;">
+          <div class="ko" style="font-size:17.5px;line-height:1.88;background:#F8FAFB;padding:15px 16px;border-radius:12px;">
             ${p.paragraphs.map((para) => `
-              <p style="margin:0 0 12px;">
+              <p style="margin:0 0 10px;">
                 ${para.split(" ").map((tok) => `<span class="tap-word" data-tok="${tok}">${tok}</span>`).join(" ")}
               </p>
             `).join("")}
           </div>
 
           ${selectedWordInfo ? `
-            <div style="margin-top:12px;background:var(--primary-3);border:1px solid var(--primary);border-radius:10px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px;">
+            <div style="margin-top:10px;background:var(--primary-3);border:1px solid var(--primary);border-radius:10px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px;">
               <div>
-                <strong class="ko" style="font-size:18px;color:var(--primary-4);">${selectedWordInfo.token}</strong>
-                <div style="font-size:14.5px;font-weight:600;margin-top:2px;">Nghĩa: ${selectedWordInfo.meaning}</div>
+                <strong class="ko" style="font-size:17px;color:var(--primary-4);">${selectedWordInfo.token}</strong>
+                <div style="font-size:14px;font-weight:600;margin-top:2px;">${selectedWordInfo.meaning}</div>
               </div>
               <div style="display:flex;gap:6px;">
-                <button class="btn-audio" id="btn-tok-speak">${ico("speaker", 18)}</button>
-                ${selectedWordInfo.matchCard ? `<button class="btn-orange" id="btn-tok-star" style="padding:6px 12px;font-size:12.5px;">${ico("star", 15)} Lưu ôn từ</button>` : ""}
+                <button class="btn-audio" id="btn-tok-speak">${ico("speaker", 17)}</button>
+                ${selectedWordInfo.matchCard ? `<button class="btn-orange" id="btn-tok-star" style="padding:5px 11px;font-size:12px;">${ico("star", 14)} Lưu</button>` : ""}
               </div>
             </div>
           ` : ""}
 
-          <button class="btn-outline-teal" id="btn-toggle-vi" style="margin-top:14px;padding:6px 14px;font-size:13.5px;">
-            ${showVi ? "Ẩn bản dịch tiếng Việt" : "Xem bản dịch tiếng Việt toàn bài"}
+          <button class="btn-outline-teal" id="btn-toggle-vi" style="margin-top:12px;padding:5px 12px;font-size:13px;">
+            ${showVi ? "Ẩn bản dịch" : "Xem bản dịch"}
           </button>
-          ${showVi ? `<p style="margin:10px 0 0;font-size:14px;color:var(--text-muted);background:#FFF9EB;padding:12px;border-radius:10px;">${p.viTranslation}</p>` : ""}
+          ${showVi ? `<p style="margin:10px 0 0;font-size:13.5px;color:var(--text-secondary);background:#FFF9EB;padding:11px 13px;border-radius:10px;">${p.viTranslation}</p>` : ""}
         </div>
 
         <!-- Right: Reading Comprehension Check -->
         <div class="box-kind">
-          <h3 style="margin:0 0 14px;font-size:18px;">Câu hỏi Đọc hiểu &amp; Check đáp án</h3>
-          <div style="display:flex;flex-direction:column;gap:18px;">
+          <h3 style="margin:0 0 12px;font-size:17px;">Câu hỏi đọc hiểu</h3>
+          <div style="display:flex;flex-direction:column;gap:14px;">
             ${p.questions.map((q) => {
               const picked = answers[q.id];
               return `
-                <div style="background:#F8FAFB;padding:14px;border-radius:12px;">
-                  <strong class="ko" style="display:block;margin-bottom:10px;">${q.question}</strong>
-                  <div style="display:flex;flex-direction:column;gap:8px;">
+                <div style="background:#F8FAFB;padding:13px 14px;border-radius:12px;">
+                  <strong class="ko" style="display:block;margin-bottom:8px;font-size:15px;">${q.question}</strong>
+                  <div style="display:flex;flex-direction:column;gap:7px;">
                     ${q.options.map((opt, oi) => {
                       let bg = "#FFFFFF";
                       let border = "#E5E7EB";
@@ -421,15 +454,15 @@ function renderReadingModule(stage, db) {
                         else if (oi === picked) { bg = "rgba(255,90,96,0.14)"; border = "var(--danger)"; }
                       }
                       return `
-                        <button type="button" class="ko" data-qid="${q.id}" data-oi="${oi}" style="text-align:left;padding:9px 12px;border-radius:8px;border:1.5px solid ${border};background:${bg};cursor:pointer;font-weight:500;">
+                        <button type="button" class="ko" data-qid="${q.id}" data-oi="${oi}" style="text-align:left;padding:8px 12px;border-radius:8px;border:1.5px solid ${border};background:${bg};cursor:pointer;font-weight:500;">
                           ${oi + 1}. ${opt}
                         </button>
                       `;
                     }).join("")}
                   </div>
                   ${picked !== undefined ? `
-                    <div style="margin-top:10px;font-size:13.5px;color:var(--primary-4);background:var(--primary-3);padding:8px 12px;border-radius:8px;">
-                      ${picked === q.answer ? `${ico("check", 15)} Chính xác!` : `${ico("cross", 15)} Đã lưu vào Sổ tay câu sai!`} — ${q.explain}
+                    <div style="margin-top:9px;font-size:13px;color:var(--primary-4);background:var(--primary-3);padding:8px 11px;border-radius:8px;">
+                      ${picked === q.answer ? `${ico("check", 14)} Chính xác!` : `${ico("cross", 14)} Chưa đúng`} — ${q.explain}
                     </div>
                   ` : ""}
                 </div>
@@ -441,9 +474,35 @@ function renderReadingModule(stage, db) {
     `;
 
     stage.querySelectorAll("[data-p]").forEach((b) => {
-      b.addEventListener("click", () => { pIdx = Number(b.dataset.p); selectedWordInfo = null; showVi = false; render(); });
+      b.addEventListener("click", () => {
+        stopAllAudio();
+        isPlayingPassage = false;
+        pIdx = Number(b.dataset.p);
+        selectedWordInfo = null;
+        showVi = false;
+        render();
+      });
     });
-    stage.querySelector("#btn-read-aloud").addEventListener("click", () => speakKoreanTTS(p.paragraphs.join(" "), 0.92));
+
+    stage.querySelector("#btn-read-aloud").addEventListener("click", () => {
+      if (isPlayingPassage) {
+        stopAllAudio();
+        isPlayingPassage = false;
+        render();
+        return;
+      }
+      isPlayingPassage = true;
+      render();
+      if (p.audioSrc) {
+        const aud = playAudio(p.audioSrc, 0.98);
+        if (aud) {
+          aud.onended = () => { isPlayingPassage = false; render(); };
+        }
+      } else {
+        speakKoreanTTS(p.paragraphs.join(" "), 0.96);
+      }
+    });
+
     stage.querySelector("#btn-toggle-vi").addEventListener("click", () => { showVi = !showVi; render(); });
 
     stage.querySelectorAll(".tap-word").forEach((sp) => {
@@ -455,13 +514,18 @@ function renderReadingModule(stage, db) {
 
     const tokSpeak = stage.querySelector("#btn-tok-speak");
     if (tokSpeak && selectedWordInfo) {
-      tokSpeak.addEventListener("click", () => speakKoreanTTS(selectedWordInfo.token.split("(")[0].trim()));
+      tokSpeak.addEventListener("click", () => {
+        isPlayingPassage = false;
+        const cardAud = selectedWordInfo.matchCard?.wordAudio;
+        if (cardAud) playAudio(cardAud);
+        else speakKoreanTTS(selectedWordInfo.token.split("(")[0].trim());
+      });
     }
     const tokStar = stage.querySelector("#btn-tok-star");
     if (tokStar && selectedWordInfo?.matchCard) {
       tokStar.addEventListener("click", () => {
         store.toggleStar(selectedWordInfo.matchCard.id);
-        tokStar.innerHTML = `${ico("check", 14)} Đã lưu!`;
+        tokStar.innerHTML = `${ico("check", 13)} Đã lưu`;
       });
     }
 

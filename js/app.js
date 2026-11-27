@@ -1,16 +1,16 @@
-import { store, UI_THEMES, isLocalPreviewHost, playAudio, preloadAudioUrls, speakKoreanTTS } from "./store.js?v=20261127-09";
-import { ico, daisyLogoSVG } from "./icons.js?v=20261127-09";
-import { conjugateKoreanPredicate } from "./korean-engine.js?v=20261127-09";
-import { openAuthModal, renderMandatoryAuthGate, renderOnboardingSurvey } from "./auth-modal.js?v=20261127-09";
-import { playSakuraPageIntro } from "./sakura-intro.js?v=20261127-09";
-import { buildUrl, parseUrl, getAncestorChain } from "./router.js?v=20261127-09";
-import { renderHomeView, renderAdminSupportCardHTML, bindAdminSupportCardEvents } from "./views/home.js?v=20261127-09";
-import { renderTheoryView } from "./views/theory.js?v=20261127-09";
-import { renderRoadmapView, getGuidedStudyPlan } from "./views/roadmap.js?v=20261127-09";
-import { renderSkillsPracticeView } from "./views/skills-practice.js?v=20261127-09";
-import { renderTopikPracticeView } from "./views/topik-practice.js?v=20261127-09";
-import { renderMockTestView } from "./views/mocktest.js?v=20261127-09";
-import { renderCheckAndToolsView } from "./views/check-tools.js?v=20261127-09";
+import { store, UI_THEMES, isLocalPreviewHost, playAudio, preloadAudioUrls, stopAllAudio, speakKoreanTTS } from "./store.js?v=20261127-10";
+import { ico, daisyLogoSVG } from "./icons.js?v=20261127-10";
+import { conjugateKoreanPredicate } from "./korean-engine.js?v=20261127-10";
+import { openAuthModal, renderMandatoryAuthGate, renderOnboardingSurvey } from "./auth-modal.js?v=20261127-10";
+import { playSakuraPageIntro } from "./sakura-intro.js?v=20261127-10";
+import { buildUrl, parseUrl, getAncestorChain } from "./router.js?v=20261127-10";
+import { renderHomeView, renderAdminSupportCardHTML, bindAdminSupportCardEvents } from "./views/home.js?v=20261127-10";
+import { renderTheoryView } from "./views/theory.js?v=20261127-10";
+import { renderRoadmapView, getGuidedStudyPlan } from "./views/roadmap.js?v=20261127-10";
+import { renderSkillsPracticeView } from "./views/skills-practice.js?v=20261127-10";
+import { renderTopikPracticeView } from "./views/topik-practice.js?v=20261127-10";
+import { renderMockTestView } from "./views/mocktest.js?v=20261127-10";
+import { renderCheckAndToolsView } from "./views/check-tools.js?v=20261127-10";
 
 const appRoot = document.getElementById("app-root");
 const modalRoot = document.getElementById("modal-root");
@@ -132,6 +132,7 @@ function registerCleanup(fn) {
 }
 
 function runViewCleanups() {
+  stopAllAudio();
   while (activeCleanups.length > 0) {
     const fn = activeCleanups.pop();
     try { fn(); } catch {}
@@ -499,7 +500,7 @@ async function initApp() {
     safeJsonFetch("/data/sc1_grammar.json", []),
     safeJsonFetch("/data/sejong_vocab.json", []),
     safeJsonFetch("/data/topik1_bank.json", []),
-    safeJsonFetch("/data/books_1_to_6_curriculum.json", { books: [] }),
+    safeJsonFetch("/data/books_1_to_6_curriculum.json?v=20261127-10", { books: [] }),
     safeJsonFetch("/data/topik_full_system.json", { taxonomy: { topik1: {}, topik2: {} }, itemPool: {}, exams: { topik1: [], topik2: [] } }),
     safeJsonFetch("/api/custom-decks", [])
   ]);

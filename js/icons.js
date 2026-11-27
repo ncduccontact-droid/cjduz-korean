@@ -100,8 +100,8 @@ const COLOR_ICONS = {
     <path d="M3.5 10.4h3.6l4.9-4v12.8l-4.9-4H3.5A1.8 1.8 0 0 1 1.7 13.4v-1.2a1.8 1.8 0 0 1 1.8-1.8z" fill="#0369A1"/>
     <path d="M3.5 9.2h3.6l4.9-4v12.8l-4.9-4H3.5A1.8 1.8 0 0 1 1.7 12.2V11a1.8 1.8 0 0 1 1.8-1.8z" fill="#38BDF8"/>
     <rect x="4" y="10.4" width="2.2" height="2.4" rx="1" fill="#FFFFFF" fill-opacity="0.8"/>
-    <path d="M15.6 9.2a4.2 4.2 0 0 1 0 5.6" stroke="#F59E0B" stroke-width="2.4" stroke-linecap="round"/>
-    <path d="M18.6 6.8a7.5 7.5 0 0 1 0 10.4" stroke="#10B981" stroke-width="2.4" stroke-linecap="round"/>
+    <path d="M15.6 9.2a4.2 4.2 0 0 1 0 5.6" fill="none" stroke="#F59E0B" stroke-width="2.4" stroke-linecap="round"/>
+    <path d="M18.6 6.8a7.5 7.5 0 0 1 0 10.4" fill="none" stroke="#10B981" stroke-width="2.4" stroke-linecap="round"/>
   `,
 
   // Studio Berry-Violet Headphones + Coral Earcups

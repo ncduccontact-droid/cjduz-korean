@@ -1,5 +1,5 @@
-import { store, ROADMAP_SCORE_SCALES, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261127-09";
-import { ico } from "../icons.js?v=20261127-09";
+import { store, ROADMAP_SCORE_SCALES, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261127-10";
+import { ico } from "../icons.js?v=20261127-10";
 
 /**
  * Hydrates a 70-question TOPIK I or 104-question TOPIK II exam from normalized slots + itemPool.
@@ -168,104 +168,94 @@ export function renderMockTestView(root, db, navigate, params = {}, registerClea
   const lvTaxonomy = sys.taxonomy[levelKey] || { listening: [], reading: [], writing: [] };
   const activeTypes = lvTaxonomy[skill] || lvTaxonomy.listening || [];
 
+  function shortSourceBadge(ex) {
+    if (ex.category === "niied") return "NIIED";
+    if ((ex.sourceOrg || "").includes("IBT")) return "TOPIK IBT";
+    if ((ex.sourceOrg || "").includes("Sejong")) return "King Sejong";
+    return "Xu hướng mới";
+  }
+
+  function cleanExamTitle(title) {
+    return String(title || "")
+      .replace(/^TOPIK\s+(I|II)\s*·\s*/i, "")
+      .replace(/\s*Chính Thức NIIED/i, "")
+      .replace(/\s*기출\)/, ")");
+  }
+
   root.innerHTML = `
     <div class="container-web">
-      <div class="breadcrumb-bar">
-        <button type="button" id="bc-home">Trang chủ</button>
-        <span>/</span>
-        <span>Đề thi ${levelKey === "topik1" ? "TOPIK I (70 câu)" : "TOPIK II (104 câu)"}</span>
-      </div>
-
-      <div class="box-kind" style="padding:18px 20px;margin-bottom:16px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:14px;">
+      <div class="box-kind" style="padding:15px 18px;margin-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
           <div>
-            <h1 style="margin:0;font-size:19.5px;font-weight:750;">
-              Đề thi ${levelKey === "topik1" ? "TOPIK I (70 câu · 200 điểm)" : "TOPIK II (104 câu · 300 điểm)"}
+            <h1 style="margin:0;font-size:18.5px;font-weight:750;">
+              Đề thi ${levelKey === "topik1" ? "TOPIK I" : "TOPIK II"}
+              <span style="font-size:13px;font-weight:500;color:var(--text-muted);margin-left:6px;">
+                ${levelKey === "topik1" ? "70 câu · 100 phút · Đỗ ≥ 80/200đ" : "104 câu · 180 phút · Đỗ ≥ 120/300đ"}
+              </span>
             </h1>
           </div>
 
-          <div style="display:flex;gap:4px;background:#F1F5F9;padding:4px;border-radius:10px;">
-            <button type="button" id="lv-btn-t1" style="padding:6px 15px;border-radius:8px;border:none;font-size:13.5px;font-weight:650;cursor:pointer;background:${levelKey === "topik1" ? "#FFFFFF" : "transparent"};color:${levelKey === "topik1" ? "var(--primary-1)" : "var(--text-muted)"};${levelKey === "topik1" ? "box-shadow:0 1px 3px rgba(15,23,42,0.08);" : ""}">
+          <div style="display:flex;gap:4px;background:#F1F5F9;padding:3px;border-radius:10px;">
+            <button type="button" id="lv-btn-t1" style="padding:5px 14px;border-radius:8px;border:none;font-size:13px;font-weight:650;cursor:pointer;background:${levelKey === "topik1" ? "#FFFFFF" : "transparent"};color:${levelKey === "topik1" ? "var(--primary-1)" : "var(--text-muted)"};${levelKey === "topik1" ? "box-shadow:0 1px 3px rgba(15,23,42,0.08);" : ""}">
               TOPIK I
             </button>
-            <button type="button" id="lv-btn-t2" style="padding:6px 15px;border-radius:8px;border:none;font-size:13.5px;font-weight:650;cursor:pointer;background:${levelKey === "topik2" ? "#FFFFFF" : "transparent"};color:${levelKey === "topik2" ? "var(--primary-1)" : "var(--text-muted)"};${levelKey === "topik2" ? "box-shadow:0 1px 3px rgba(15,23,42,0.08);" : ""}">
+            <button type="button" id="lv-btn-t2" style="padding:5px 14px;border-radius:8px;border:none;font-size:13px;font-weight:650;cursor:pointer;background:${levelKey === "topik2" ? "#FFFFFF" : "transparent"};color:${levelKey === "topik2" ? "var(--primary-1)" : "var(--text-muted)"};${levelKey === "topik2" ? "box-shadow:0 1px 3px rgba(15,23,42,0.08);" : ""}">
               TOPIK II
             </button>
           </div>
         </div>
 
-        <div class="grid-2" style="gap:10px;">
-          <button type="button" id="mode-card-exams" style="text-align:left;padding:13px 16px;border-radius:14px;cursor:pointer;border:1.5px solid ${viewMode === "exams" ? "var(--primary)" : "var(--border-card)"};background:${viewMode === "exams" ? "var(--primary-3)" : "#FFFFFF"};">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
-              <strong style="font-size:15px;color:var(--text-main);">${ico("exam", 16)} Làm Full Đề (${rawExams.length} đề)</strong>
-              ${viewMode === "exams" ? `<span class="badge-orange" style="background:#FFFFFF;">Đang chọn</span>` : ""}
-            </div>
-            <div style="font-size:13px;color:var(--text-muted);">
-              Đủ ${levelKey === "topik1" ? "70 câu · 100 phút" : "104 câu · 180 phút"} chuẩn cấu trúc thi
-            </div>
+        <div class="grid-2" style="gap:8px;">
+          <button type="button" id="mode-card-exams" style="text-align:left;padding:10px 14px;border-radius:12px;cursor:pointer;border:1.5px solid ${viewMode === "exams" ? "var(--primary)" : "var(--border-card)"};background:${viewMode === "exams" ? "var(--primary-3)" : "#FFFFFF"};display:flex;justify-content:space-between;align-items:center;gap:8px;">
+            <strong style="font-size:14px;color:var(--text-main);display:inline-flex;align-items:center;gap:6px;">${ico("exam", 16)} Full Đề (${rawExams.length} đề)</strong>
+            <span style="font-size:12px;color:var(--text-muted);">${levelKey === "topik1" ? "70 câu" : "104 câu"}</span>
           </button>
 
-          <button type="button" id="mode-card-segments" style="text-align:left;padding:13px 16px;border-radius:14px;cursor:pointer;border:1.5px solid ${viewMode === "segments" ? "var(--primary)" : "var(--border-card)"};background:${viewMode === "segments" ? "var(--primary-3)" : "#FFFFFF"};">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
-              <strong style="font-size:15px;color:var(--text-main);">${ico("layers", 16)} Luyện từng dạng (Dạng 1 → ${levelKey === "topik1" ? "8" : "10"})</strong>
-              ${viewMode === "segments" ? `<span class="badge-orange" style="background:#FFFFFF;">Đang chọn</span>` : ""}
-            </div>
-            <div style="font-size:13px;color:var(--text-muted);">
-              Tách riêng Nghe · Đọc${levelKey === "topik2" ? " · Viết" : ""}, chấm ngay từng câu
-            </div>
+          <button type="button" id="mode-card-segments" style="text-align:left;padding:10px 14px;border-radius:12px;cursor:pointer;border:1.5px solid ${viewMode === "segments" ? "var(--primary)" : "var(--border-card)"};background:${viewMode === "segments" ? "var(--primary-3)" : "#FFFFFF"};display:flex;justify-content:space-between;align-items:center;gap:8px;">
+            <strong style="font-size:14px;color:var(--text-main);display:inline-flex;align-items:center;gap:6px;">${ico("layers", 16)} Luyện từng dạng (Dạng 1–${levelKey === "topik1" ? "8" : "10"})</strong>
+            <span style="font-size:12px;color:var(--text-muted);">Chấm ngay</span>
           </button>
         </div>
       </div>
 
       ${viewMode === "exams" ? `
-        <div class="exam-nav">
-          <button class="${category === "all" ? "active" : ""}" data-cat="all">Tất cả (${rawExams.length})</button>
-          <button class="${category === "curated" ? "active" : ""}" data-cat="curated">${ico("star", 14)} Đề tuyển chọn (${curatedCount})</button>
-          <button class="${category === "niied" ? "active" : ""}" data-cat="niied">Đề NIIED (Kỳ 35–64)</button>
-          <button class="${category === "sejong_ibt" ? "active" : ""}" data-cat="sejong_ibt">IBT &amp; Sejong</button>
-          <button class="${category === "trend" ? "active" : ""}" data-cat="trend">Xu hướng 2024–2025</button>
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+          <div class="exam-nav" style="margin-bottom:0;">
+            <button class="${category === "all" ? "active" : ""}" data-cat="all">Tất cả (${rawExams.length})</button>
+            <button class="${category === "curated" ? "active" : ""}" data-cat="curated">${ico("star", 13)} Tuyển chọn (${curatedCount})</button>
+            <button class="${category === "niied" ? "active" : ""}" data-cat="niied">NIIED</button>
+            <button class="${category === "sejong_ibt" ? "active" : ""}" data-cat="sejong_ibt">IBT &amp; Sejong</button>
+            <button class="${category === "trend" ? "active" : ""}" data-cat="trend">2024–2025</button>
+          </div>
+          <span style="font-size:12px;color:var(--text-muted);">
+            Nguồn chuẩn: <strong>NIIED</strong> (<a href="https://www.topik.go.kr" target="_blank" rel="noopener noreferrer" style="color:var(--primary-1);">topik.go.kr</a>) · IBT · King Sejong
+          </span>
         </div>
 
         <div class="grid-2">
           ${filteredExams.map((ex) => {
             const past = store.state.examHistory.find((h) => h.examId === ex.id);
             return `
-              <div class="box-kind" style="padding:18px 20px;display:flex;flex-direction:column;justify-content:space-between;">
-                <div>
-                  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px;">
-                    <h3 style="margin:0;font-size:16.5px;line-height:1.35;">${ex.title}</h3>
-                    ${ex.curated ? `<span class="badge-orange" style="flex-shrink:0;">${ico("star", 13)} Tuyển chọn</span>` : ""}
+              <div class="box-kind" style="padding:14px 16px;display:flex;flex-direction:column;justify-content:space-between;gap:12px;">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+                  <div>
+                    <h3 style="margin:0;font-size:15.5px;line-height:1.35;">${cleanExamTitle(ex.title)}</h3>
+                    ${past ? `
+                      <div style="font-size:12px;color:var(--success);font-weight:700;margin-top:4px;display:flex;align-items:center;gap:4px;">
+                        ${ico("check", 14)} <span>Đã làm: ${past.score}/${past.maxScore}đ · ${past.grade}</span>
+                      </div>
+                    ` : ""}
                   </div>
-
-                  <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;">
-                    <span class="meta-chip" style="color:var(--primary-1);">Full ${ex.totalQuestions} câu</span>
-                    <span class="meta-chip">${ex.minutes} phút</span>
-                    <span class="meta-chip">Đỗ ${ex.passScore}/${ex.maxScore}đ</span>
-                  </div>
-
-                  ${ex.curated && ex.curatedNote ? `
-                    <div style="font-size:12.5px;color:var(--text-muted);margin-bottom:8px;">
-                      ${ex.curatedNote}
-                    </div>
-                  ` : ""}
-
-                  <div style="font-size:12px;color:var(--text-muted);background:var(--bg-body);padding:6px 10px;border-radius:10px;margin-bottom:12px;">
-                    Nguồn: <strong style="color:var(--text-main);">${ex.sourceOrg}</strong>
-                    ${ex.sourceUrl ? ` · <a href="${ex.sourceUrl}" target="_blank" rel="noopener noreferrer" style="color:var(--primary-1);font-weight:700;">${ex.sourceUrl.replace("https://", "")}</a>` : ""}
-                  </div>
-
-                  ${past ? `
-                    <div style="font-size:12.5px;color:var(--success);font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:5px;">
-                      ${ico("check", 15)} <span>Gần nhất: ${past.score}/${past.maxScore}đ (${past.grade})</span>
-                    </div>
-                  ` : ""}
+                  <span class="meta-chip" style="flex-shrink:0;${ex.curated ? "color:var(--primary-1);background:var(--primary-3);border-color:rgba(13,148,136,0.2);" : ""}">
+                    ${shortSourceBadge(ex)}
+                  </span>
                 </div>
 
-                <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                  <button type="button" class="btn-primary" data-quick-full="${ex.id}" style="flex:1;">
-                    Làm Full ${ex.totalQuestions} câu
+                <div style="display:flex;gap:8px;">
+                  <button type="button" class="btn-primary" data-quick-full="${ex.id}" style="flex:1;padding:8px 12px;font-size:13.5px;">
+                    Làm đề
                   </button>
-                  <button type="button" class="btn-outline-teal" data-open-seg="${ex.id}">
+                  <button type="button" class="btn-outline-teal" data-open-seg="${ex.id}" style="padding:8px 12px;font-size:13px;">
                     Chia phần
                   </button>
                 </div>
@@ -276,14 +266,14 @@ export function renderMockTestView(root, db, navigate, params = {}, registerClea
       ` : `
         <div class="skill-pills-row">
           <button type="button" class="btn-skill ${skill === "listening" ? "active" : ""}" data-seg-sk="listening">
-            ${ico("headphones", 16)} Nghe · 듣기 (${lvTaxonomy.listening.length} dạng)
+            ${ico("headphones", 16)} Nghe (${lvTaxonomy.listening.length})
           </button>
           <button type="button" class="btn-skill ${skill === "reading" ? "active" : ""}" data-seg-sk="reading">
-            ${ico("book", 16)} Đọc · 읽기 (${lvTaxonomy.reading.length} dạng)
+            ${ico("book", 16)} Đọc (${lvTaxonomy.reading.length})
           </button>
           ${levelKey === "topik2" ? `
             <button type="button" class="btn-skill ${skill === "writing" ? "active" : ""}" data-seg-sk="writing">
-              ${ico("pen", 16)} Viết · 쓰기 (Câu 51–54)
+              ${ico("pen", 16)} Viết (Câu 51–54)
             </button>
           ` : ""}
         </div>
@@ -293,26 +283,21 @@ export function renderMockTestView(root, db, navigate, params = {}, registerClea
             const poolItems = Object.values(sys.itemPool).filter((it) => it.typeId === tp.id);
             const st = store.state.partStats[tp.id] || { correct: 0, total: 0 };
             const pct = st.total > 0 ? Math.round((st.correct / st.total) * 100) : 0;
-            const masteredBadge = st.total >= 4 && pct >= 85
-              ? `<span style="background:rgba(58,202,116,0.16);color:#15803D;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:800;display:inline-flex;align-items:center;gap:4px;">${ico("check", 14)} Đã nhuần nhuyễn (${pct}%)</span>`
-              : `<span style="background:var(--primary-3);color:var(--primary-1);padding:3px 10px;border-radius:99px;font-size:12px;font-weight:700;">${poolItems.length} câu luyện · ${tp.ptsDesc}</span>`;
 
             return `
-              <div class="box-kind clickable" data-drill-type="${tp.id}" style="display:flex;flex-direction:column;justify-content:space-between;">
+              <div class="box-kind clickable" data-drill-type="${tp.id}" style="padding:14px 16px;display:flex;flex-direction:column;justify-content:space-between;gap:10px;">
                 <div>
-                  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px;">
+                  <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px;">
                     <span class="badge-orange" style="background:rgba(254,154,5,0.14);">${tp.code} · ${tp.range}</span>
-                    ${masteredBadge}
+                    <span class="meta-chip">${poolItems.length} câu</span>
                   </div>
-                  <strong style="font-size:16.5px;display:block;margin-bottom:4px;">${tp.title}</strong>
-                  <div class="ko" style="font-size:13px;color:var(--primary-1);font-weight:600;margin-bottom:8px;">유형: ${tp.koTitle} (Mỗi đề thật: ${tp.countPerExam} câu)</div>
-                  <div style="font-size:13.5px;color:var(--text-muted);margin-bottom:12px;display:flex;align-items:flex-start;gap:6px;">${ico("bulb", 16)} <span><strong>Mẹo ăn điểm:</strong> ${tp.tip}</span></div>
+                  <strong style="font-size:15.5px;display:block;">${tp.title}</strong>
                 </div>
 
                 <div>
-                  <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px;">
-                    <span>Đã luyện đúng: <strong>${st.correct}/${st.total} lượt</strong></span>
-                    <span>Độ nhuần nhuyễn: <strong style="color:var(--primary-1);">${pct}%</strong></span>
+                  <div style="display:flex;justify-content:space-between;font-size:12.5px;color:var(--text-muted);margin-bottom:4px;">
+                    <span>Đúng ${st.correct}/${st.total}</span>
+                    <strong style="color:var(--primary-1);">${pct}%</strong>
                   </div>
                   <div class="progress-track">
                     <div class="progress-fill ${st.total > 0 && pct < 60 ? "danger" : ""}" style="width:${pct}%"></div>
@@ -326,7 +311,6 @@ export function renderMockTestView(root, db, navigate, params = {}, registerClea
     </div>
   `;
 
-  root.querySelector("#bc-home").addEventListener("click", () => navigate("home"));
   root.querySelector("#lv-btn-t1").addEventListener("click", () => navigate("mock-test", { sub: "topik1", viewMode, category, skill }));
   root.querySelector("#lv-btn-t2").addEventListener("click", () => navigate("mock-test", { sub: "topik2", viewMode, category, skill: skill === "writing" ? "listening" : skill }));
   root.querySelector("#mode-card-exams").addEventListener("click", () => navigate("mock-test", { sub: levelKey, viewMode: "exams", category }));
@@ -359,80 +343,70 @@ function renderSingleExamOverview(root, sys, exam, navigate) {
   root.innerHTML = `
     <div class="container-web">
       <div class="breadcrumb-bar">
-        <button type="button" id="bc-home">Trang chủ</button>
-        <span>/</span>
-        <button type="button" id="bc-list">Kho đề ${exam.level === "topik1" ? "TOPIK I" : "TOPIK II"}</button>
+        <button type="button" id="bc-list">← Kho đề ${exam.level === "topik1" ? "TOPIK I" : "TOPIK II"}</button>
         <span>/</span>
         <span>${exam.title}</span>
       </div>
 
-      <div class="prediction-banner" style="margin-bottom:20px;">
+      <div class="prediction-banner" style="margin-bottom:16px;padding:16px 20px;">
         <div>
-          <span class="badge-orange" style="margin-bottom:8px;">${exam.ribbon || "ĐỀ CHUẨN"} · ĐỦ ${exam.totalQuestions} CÂU</span>
-          <h2 style="margin:0 0 6px;color:var(--primary-1);">${exam.title}</h2>
-          <div style="font-size:14px;color:var(--text-muted);margin-bottom:6px;">${exam.structureDesc}</div>
-          <div style="font-size:13px;color:#334155;display:flex;align-items:center;gap:5px;">${ico("pin", 15)} <span><strong>Nguồn:</strong> ${exam.sourceOrg}</span></div>
+          <h2 style="margin:0 0 4px;font-size:18.5px;color:var(--primary-1);">${exam.title}</h2>
+          <div style="font-size:13px;color:var(--text-muted);">${exam.totalQuestions} câu · ${exam.minutes} phút · Nguồn: ${exam.sourceOrg}</div>
         </div>
-        <button type="button" class="btn-primary" id="btn-launch-full" style="font-size:16px;padding:13px 24px;">
-          ${ico("bolt", 18)} Vào Thi Full Đề (${exam.totalQuestions} câu · ${exam.minutes} phút)
+        <button type="button" class="btn-primary" id="btn-launch-full" style="font-size:14.5px;padding:10px 20px;">
+          ${ico("bolt", 16)} Thi Full Đề (${exam.totalQuestions} câu)
         </button>
       </div>
 
-      <!-- SECTION-BY-SECTION ENTRY -->
-      <div class="section-head" style="margin-top:6px;">
-        <h2>Chia theo từng kỹ năng lớn của đề này</h2>
-      </div>
-      <div class="${exam.level === "topik2" ? "grid-3" : "grid-2"}" style="margin-bottom:22px;">
-        <div class="box-kind">
-          <strong style="font-size:17px;color:var(--primary-1);display:flex;align-items:center;gap:7px;margin-bottom:6px;">${ico("headphones", 20)} Phần Nghe · 듣기</strong>
-          <p style="font-size:13.5px;color:var(--text-muted);margin:0 0 12px;">
-            ${exam.level === "topik1" ? "Câu 1 → Câu 30 (30 câu · 100 điểm · 40 phút)" : "Câu 1 → Câu 50 (50 câu · 100 điểm · 60 phút)"} — Giọng đọc Hàn tự nhiên .mp3.
-          </p>
-          <button type="button" class="btn-outline-teal" data-scope="listening">Làm riêng Phần Nghe →</button>
+      <div class="${exam.level === "topik2" ? "grid-3" : "grid-2"}" style="margin-bottom:18px;">
+        <div class="box-kind" style="padding:14px 16px;">
+          <strong style="font-size:15.5px;color:var(--primary-1);display:flex;align-items:center;gap:6px;margin-bottom:4px;">${ico("headphones", 18)} Nghe · 듣기</strong>
+          <div style="font-size:12.5px;color:var(--text-muted);margin-bottom:10px;">
+            ${exam.level === "topik1" ? "Câu 1–30 · 40 phút · 100đ" : "Câu 1–50 · 60 phút · 100đ"}
+          </div>
+          <button type="button" class="btn-outline-teal" data-scope="listening" style="padding:6px 12px;font-size:13px;">Làm phần Nghe →</button>
         </div>
 
         ${exam.level === "topik2" ? `
-          <div class="box-kind">
-            <strong style="font-size:17px;color:var(--primary-1);display:flex;align-items:center;gap:7px;margin-bottom:6px;">${ico("pen", 20)} Phần Viết · 쓰기</strong>
-            <p style="font-size:13.5px;color:var(--text-muted);margin:0 0 12px;">
-              Câu 51 → Câu 54 (4 câu tự luận · 100 điểm · 50 phút) — Có ô điền ㉠㉡, giấy kẻ ô 원고지 &amp; bài mẫu.
-            </p>
-            <button type="button" class="btn-outline-teal" data-scope="writing">Làm riêng Phần Viết →</button>
+          <div class="box-kind" style="padding:14px 16px;">
+            <strong style="font-size:15.5px;color:var(--primary-1);display:flex;align-items:center;gap:6px;margin-bottom:4px;">${ico("pen", 18)} Viết · 쓰기</strong>
+            <div style="font-size:12.5px;color:var(--text-muted);margin-bottom:10px;">
+              Câu 51–54 · 50 phút · 100đ
+            </div>
+            <button type="button" class="btn-outline-teal" data-scope="writing" style="padding:6px 12px;font-size:13px;">Làm phần Viết →</button>
           </div>
         ` : ""}
 
-        <div class="box-kind">
-          <strong style="font-size:17px;color:var(--primary-1);display:flex;align-items:center;gap:7px;margin-bottom:6px;">${ico("book", 20)} Phần Đọc · 읽기</strong>
-          <p style="font-size:13.5px;color:var(--text-muted);margin:0 0 12px;">
-            ${exam.level === "topik1" ? "Câu 31 → Câu 70 (40 câu · 100 điểm · 60 phút)" : "Đọc 1 → 50 / Toàn đề 55 → 104 (50 câu · 100 điểm · 70 phút)"}.
-          </p>
-          <button type="button" class="btn-outline-teal" data-scope="reading">Làm riêng Phần Đọc →</button>
+        <div class="box-kind" style="padding:14px 16px;">
+          <strong style="font-size:15.5px;color:var(--primary-1);display:flex;align-items:center;gap:6px;margin-bottom:4px;">${ico("book", 18)} Đọc · 읽기</strong>
+          <div style="font-size:12.5px;color:var(--text-muted);margin-bottom:10px;">
+            ${exam.level === "topik1" ? "Câu 31–70 · 60 phút · 100đ" : "Câu 55–104 · 70 phút · 100đ"}
+          </div>
+          <button type="button" class="btn-outline-teal" data-scope="reading" style="padding:6px 12px;font-size:13px;">Làm phần Đọc →</button>
         </div>
       </div>
 
-      <!-- QUESTION-TYPE BREAKDOWN INSIDE THIS EXAM -->
-      <div class="section-head">
-        <h2>Chia nhỏ từng dạng câu hỏi trong đề này (Dạng 1 → Dạng cuối)</h2>
+      <div class="section-head" style="margin-top:0;">
+        <h2>Chia theo từng dạng câu</h2>
       </div>
       <div class="grid-2">
         ${[
-          ...lvTax.listening.map((t) => ({ ...t, secIcon: `${ico("headphones", 15)} Nghe` })),
-          ...(lvTax.writing || []).map((t) => ({ ...t, secIcon: `${ico("pen", 15)} Viết` })),
-          ...lvTax.reading.map((t) => ({ ...t, secIcon: `${ico("book", 15)} Đọc` }))
+          ...lvTax.listening.map((t) => ({ ...t, secIcon: `${ico("headphones", 14)} Nghe` })),
+          ...(lvTax.writing || []).map((t) => ({ ...t, secIcon: `${ico("pen", 14)} Viết` })),
+          ...lvTax.reading.map((t) => ({ ...t, secIcon: `${ico("book", 14)} Đọc` }))
         ].map((tp) => `
-          <div class="box-kind clickable" data-scope="${tp.id}" style="padding:16px 18px;display:flex;justify-content:space-between;align-items:center;gap:12px;">
+          <div class="box-kind clickable" data-scope="${tp.id}" style="padding:12px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px;">
             <div>
-              <span style="font-size:12px;font-weight:700;color:var(--primary-1);">${tp.secIcon} · ${tp.range}</span>
-              <strong style="display:block;font-size:15px;margin-top:2px;">${tp.title}</strong>
+              <span style="font-size:11.5px;font-weight:700;color:var(--primary-1);">${tp.secIcon} · ${tp.range}</span>
+              <strong style="display:block;font-size:14.5px;margin-top:2px;">${tp.title}</strong>
             </div>
-            <span class="btn-outline-teal" style="padding:5px 12px;font-size:12.5px;flex-shrink:0;">Luyện (${tp.countPerExam} câu) →</span>
+            <span class="btn-outline-teal" style="padding:4px 10px;font-size:12px;flex-shrink:0;">${tp.countPerExam} câu ›</span>
           </div>
         `).join("")}
       </div>
     </div>
   `;
 
-  root.querySelector("#bc-home").addEventListener("click", () => navigate("home"));
   root.querySelector("#bc-list").addEventListener("click", () => navigate("mock-test", { sub: exam.level, viewMode: "exams" }));
   root.querySelector("#btn-launch-full").addEventListener("click", () => {
     navigate("mock-test", { sub: exam.level, examId: exam.id, action: "room", scope: "full" });

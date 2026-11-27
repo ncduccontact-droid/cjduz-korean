@@ -1,7 +1,7 @@
-import { store, normalizeBookId, getBookWords, getBookCurriculum, playAudio, preloadAudioUrls, speakKoreanTTS } from "./store.js?v=20261127-09";
-import { appendJamoToText } from "./korean-engine.js?v=20261127-09";
-import { HANGEUL_DATA } from "./curated-content.js?v=20261127-09";
-import { ico } from "./icons.js?v=20261127-09";
+import { store, normalizeBookId, getBookWords, getBookCurriculum, playAudio, preloadAudioUrls, speakKoreanTTS } from "./store.js?v=20261127-10";
+import { appendJamoToText } from "./korean-engine.js?v=20261127-10";
+import { HANGEUL_DATA } from "./curated-content.js?v=20261127-10";
+import { ico } from "./icons.js?v=20261127-10";
 
 /**
  * Interactive Workbook (익힘책 · Sách Bài Tập) for ALL 6 BOOKS (Quyển 1 -> Quyển 6):
@@ -63,17 +63,17 @@ export function renderChapterExercises(container, db, bookKey, lessonNum, initia
 
       workbookDrills.push({
         id: `wb_voc_${normBook}_${lessonNum}_${idx}`,
-        badge: "익힘책 · Bài tập Từ vựng ngữ cảnh",
+        badge: "Từ vựng",
         audioSrc: w.exampleAudio || w.wordAudio || "",
         question: hasDirect
-          ? `[Sách bài tập] Chọn từ vựng phù hợp nhất điền vào chỗ trống:`
-          : `[Sách bài tập] Nghĩa tiếng Việt chuẩn của từ '${w.korean}' trong câu dưới là:`,
+          ? `Chọn từ vựng phù hợp điền vào chỗ trống:`
+          : `Nghĩa của từ '${w.korean}' trong câu dưới là:`,
         passage: hasDirect
-          ? `${w.exampleKo.replace(targetClean, "(          )")}\n→ Nghĩa câu: ${w.exampleVi}`
+          ? `${w.exampleKo.replace(targetClean, "(          )")}\n→ ${w.exampleVi}`
           : `${w.exampleKo}`,
         options: rotated.map((r) => r.txt),
         answer: rotated.findIndex((r) => r.isAns),
-        explain: `${w.korean} = ${w.vietnamese}. Câu đầy đủ: "${w.exampleKo}" (${w.exampleVi}).`
+        explain: `${w.korean} = ${w.vietnamese}. Câu đầy đủ: "${w.exampleKo}".`
       });
     });
 
@@ -186,25 +186,25 @@ export function renderChapterExercises(container, db, bookKey, lessonNum, initia
     const doneCnt = Object.keys(pickedMap).length;
     const correctCnt = list.filter((q) => pickedMap[q.id] === q.answer).length;
     stage.innerHTML = `
-      <div style="display:flex;flex-direction:column;gap:14px;">
-        <div class="box-kind" style="background:var(--primary-3);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;padding:12px 18px;">
-          <strong style="color:var(--primary-4);font-size:14.5px;display:inline-flex;align-items:center;gap:7px;">
-            ${isWorkbook ? `${ico("workbook", 18)} Kết quả Sách bài tập (익힘책):` : `${ico("target", 18)} Kết quả câu hỏi chuẩn TOPIK:`} Đúng ${correctCnt} / ${doneCnt} câu đã làm (Tổng ${list.length} câu)
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div class="box-kind" style="background:var(--primary-3);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;padding:10px 16px;">
+          <strong style="color:var(--primary-4);font-size:14px;display:inline-flex;align-items:center;gap:6px;">
+            ${isWorkbook ? ico("workbook", 16) : ico("target", 16)} Đúng ${correctCnt}/${list.length} câu
           </strong>
-          <span class="badge-orange">${doneCnt === list.length ? `${ico("trophy", 14)} Đã hoàn thành!` : "Chọn đáp án để chấm điểm ngay"}</span>
+          <span style="font-size:12.5px;color:var(--text-muted);">${doneCnt === list.length ? "Đã hoàn thành" : `Đã làm ${doneCnt}/${list.length}`}</span>
         </div>
 
         ${list.map((q, qi) => {
           const userPick = pickedMap[q.id];
           const answered = userPick !== undefined;
           return `
-            <div class="box-kind">
-              <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
-                <span class="badge-orange">${q.badge || q.typeBadge} · Câu ${qi + 1}</span>
-                ${q.audioSrc ? `<button type="button" class="btn-primary" data-ex-aud="${q.audioSrc}" style="padding:5px 13px;font-size:12.5px;">${ico("speaker", 14)} Nghe câu Hàn</button>` : ""}
+            <div class="box-kind" style="padding:16px 18px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
+                <span class="meta-chip" style="color:var(--primary-1);">Câu ${qi + 1}</span>
+                ${q.audioSrc ? `<button type="button" class="btn-soft-jade" data-ex-aud="${q.audioSrc}" style="padding:4px 11px;font-size:12px;">${ico("speaker", 14)} Nghe</button>` : ""}
               </div>
-              <div style="font-weight:700;font-size:15.5px;margin-bottom:8px;">${q.question}</div>
-              ${q.passage ? `<pre class="ko" style="white-space:pre-wrap;background:var(--bg-body);border:1px solid var(--border-card);padding:12px 14px;border-radius:12px;font-size:16px;margin:0 0 12px;">${q.passage}</pre>` : ""}
+              <div style="font-weight:700;font-size:15px;margin-bottom:8px;">${q.question}</div>
+              ${q.passage ? `<pre class="ko" style="white-space:pre-wrap;background:var(--bg-body);border:1px solid var(--border-card);padding:11px 14px;border-radius:12px;font-size:15.5px;margin:0 0 10px;">${q.passage}</pre>` : ""}
 
               <div class="grid-2" style="gap:8px;">
                 ${q.options.map((opt, oi) => {
@@ -262,24 +262,19 @@ export function renderChapterExercises(container, db, bookKey, lessonNum, initia
     const savedTrCount = store.state.translationDone?.[`${normBook}_${lessonNum}`] || 0;
 
     container.innerHTML = `
-      <div class="prediction-banner" style="padding:16px 20px;margin-bottom:18px;">
-        <div>
-          <strong style="color:var(--primary-1);font-size:16.5px;display:inline-flex;align-items:center;gap:7px;">${ico("workbook", 20)} Sách Bài Tập (익힘책) · Bài ${String(lessonNum).padStart(2, "0")}: ${chapObj?.title || ""}</strong>
-          <div style="font-size:13.5px;color:var(--text-muted);margin-top:2px;">
-            Làm bài tập Từ vựng &amp; Ngữ pháp → Luyện dịch câu Việt–Hàn → Chốt câu hỏi chuẩn TOPIK.
-          </div>
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:14px;">
+        <div class="skill-pills-row" style="margin-bottom:0;">
           <button type="button" class="btn-skill ${exSection === "workbook" ? "active" : ""}" data-sec="workbook">
-            I. Bài tập Sách BT (${doneWb}/${workbookDrills.length})
+            ${ico("workbook", 15)} Bài tập (${doneWb}/${workbookDrills.length})
           </button>
           <button type="button" class="btn-skill ${exSection === "translate" ? "active" : ""}" data-sec="translate">
-            II. Luyện Dịch Câu (${translationItems.length} câu${savedTrCount ? ` · Đã dịch ${savedTrCount}` : ""})
+            ${ico("pen", 15)} Dịch câu (${translationItems.length}${savedTrCount ? ` · Đạt ${savedTrCount}` : ""})
           </button>
           <button type="button" class="btn-skill ${exSection === "topik" ? "active" : ""}" data-sec="topik">
-            III. Câu chuẩn TOPIK (${doneTopik}/${topikDrills.length})
+            ${ico("exam", 15)} Câu TOPIK (${doneTopik}/${topikDrills.length})
           </button>
         </div>
+        ${chapObj?.title ? `<span style="font-size:12.5px;color:var(--text-muted);font-weight:600;">Bài ${String(lessonNum).padStart(2, "0")}: ${chapObj.title}</span>` : ""}
       </div>
 
       <div id="chapter-ex-stage"></div>

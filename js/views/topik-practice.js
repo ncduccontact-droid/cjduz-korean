@@ -1,6 +1,6 @@
-import { store, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261127-09";
-import { WONGOKJI_PROMPTS, TOPIK_SPEAKING_TASKS } from "../topik-bank.js?v=20261127-09";
-import { ico } from "../icons.js?v=20261127-09";
+import { store, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261127-10";
+import { WONGOKJI_PROMPTS, TOPIK_SPEAKING_TASKS } from "../topik-bank.js?v=20261127-10";
+import { ico } from "../icons.js?v=20261127-10";
 
 export function renderTopikPracticeView(root, db, navigate, params = {}, registerCleanup = () => {}) {
   const sys = db.topikFullSystem || { taxonomy: { topik1: {}, topik2: {} }, itemPool: {} };
@@ -33,44 +33,36 @@ export function renderTopikPracticeView(root, db, navigate, params = {}, registe
 
   root.innerHTML = `
     <div class="container-web">
-      <div class="breadcrumb-bar">
-        <button type="button" id="bc-prac-home">Luyện tập</button>
-        <span>/</span>
-        <span>${levelKey === "topik1" ? "Luyện nhuần nhuyễn từng dạng TOPIK I (Dạng 1 → Dạng 8)" : "Luyện nhuần nhuyễn từng dạng TOPIK II & Speaking (Dạng 1 → Dạng 10)"}</span>
-      </div>
-
-      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:10px;max-width:100%;min-width:0;">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px;max-width:100%;min-width:0;">
         <div class="skill-pills-row" style="margin-bottom:0;min-width:0;max-width:100%;">
-          <button class="btn-skill ${skill === "listening" ? "active" : ""}" data-sk="listening">${ico("headphones", 17)} Nghe · 듣기 (${(lvTax.listening || []).length} Dạng)</button>
-          <button class="btn-skill ${skill === "reading" ? "active" : ""}" data-sk="reading">${ico("book", 17)} Đọc · 읽기 (${(lvTax.reading || []).length} Dạng)</button>
+          <button class="btn-skill ${skill === "listening" ? "active" : ""}" data-sk="listening">${ico("headphones", 16)} Nghe (${(lvTax.listening || []).length})</button>
+          <button class="btn-skill ${skill === "reading" ? "active" : ""}" data-sk="reading">${ico("book", 16)} Đọc (${(lvTax.reading || []).length})</button>
           ${levelKey === "topik2" ? `
             <button class="btn-skill ${skill === "writing" ? "active" : ""}" data-sk="writing">
-              ${ico("pen", 17)} Viết 원고지 (쓰기)
-              <span class="badge-mia">51~54</span>
+              ${ico("pen", 16)} Viết 원고지
+              <span class="badge-mia">51–54</span>
             </button>
             <button class="btn-skill ${skill === "speaking" ? "active" : ""}" data-sk="speaking">
-              ${ico("mic", 17)} Nói 6 Câu (말하기)
-              <span class="badge-mia">MIC</span>
+              ${ico("mic", 16)} Nói (말하기)
             </button>
           ` : ""}
         </div>
 
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
           <select id="switch-topik-lv" class="box-select">
-            <option value="topik1" ${levelKey === "topik1" ? "selected" : ""}>Cấu trúc TOPIK I (Dạng 1–8)</option>
-            <option value="topik2" ${levelKey === "topik2" ? "selected" : ""}>Cấu trúc TOPIK II (Dạng 1–10)</option>
+            <option value="topik1" ${levelKey === "topik1" ? "selected" : ""}>TOPIK I (Dạng 1–8)</option>
+            <option value="topik2" ${levelKey === "topik2" ? "selected" : ""}>TOPIK II (Dạng 1–10)</option>
           </select>
-          <button type="button" class="btn-outline-teal" id="btn-jump-full-exams" style="padding:7px 14px;font-size:13px;">
-            ${ico("exam", 16)} Vào làm Full Đề ${levelKey === "topik1" ? "70 câu" : "104 câu"} →
+          <button type="button" class="btn-outline-teal" id="btn-jump-full-exams" style="padding:6px 12px;font-size:12.5px;">
+            ${ico("exam", 15)} Full Đề →
           </button>
         </div>
       </div>
 
-      <div id="topik-practice-body" style="margin-top:18px;"></div>
+      <div id="topik-practice-body" style="margin-top:14px;"></div>
     </div>
   `;
 
-  root.querySelector("#bc-prac-home").addEventListener("click", () => navigate("practice", { sub: "skills", skill: "translate" }));
   root.querySelector("#switch-topik-lv").addEventListener("change", (e) => {
     navigate("practice", { sub: e.target.value, skill: "listening" });
   });
@@ -94,19 +86,15 @@ export function renderTopikPracticeView(root, db, navigate, params = {}, registe
         const pct = st.total > 0 ? Math.round((st.correct / st.total) * 100) : 0;
         const barClass = st.total > 0 && pct < 50 ? "danger" : (st.total > 0 && pct < 75 ? "warn" : "");
         return `
-          <div class="box-kind clickable" data-open-part="${part.id}">
-            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:6px;">
+          <div class="box-kind clickable" data-open-part="${part.id}" style="padding:14px 16px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:5px;">
               <span class="badge-orange" style="background:rgba(254,154,5,0.14);">${part.code} · ${part.range}</span>
-              <span style="font-size:12.5px;background:var(--primary-3);color:var(--primary-1);padding:3px 10px;border-radius:99px;font-weight:700;flex-shrink:0;">
-                ${part.questions.length} câu luyện · ${part.ptsDesc}
-              </span>
+              <span class="meta-chip">${part.questions.length} câu</span>
             </div>
-            <strong style="font-size:16.5px;color:var(--text-main);display:block;margin-bottom:4px;">${part.title}</strong>
-            <div class="ko" style="font-size:13px;color:var(--primary-1);font-weight:600;margin-bottom:8px;">유형: ${part.koTitle}</div>
-            <div style="font-size:13.5px;color:var(--text-muted);margin-bottom:12px;display:flex;align-items:flex-start;gap:6px;">${ico("bulb", 16)} <span>${part.tip}</span></div>
-            <div style="display:flex;justify-content:space-between;font-size:13.5px;margin-bottom:6px;">
-              <span>Trả lời đúng: <strong>${st.correct}/${st.total}</strong></span>
-              <span>Độ nhuần nhuyễn: <strong style="color:var(--primary-1);">${pct}%</strong></span>
+            <strong style="font-size:15.5px;color:var(--text-main);display:block;margin-bottom:8px;">${part.title}</strong>
+            <div style="display:flex;justify-content:space-between;font-size:12.5px;color:var(--text-muted);margin-bottom:5px;">
+              <span>Đúng ${st.correct}/${st.total}</span>
+              <strong style="color:var(--primary-1);">${pct}%</strong>
             </div>
             <div class="progress-track">
               <div class="progress-fill ${barClass}" style="width:${pct}%"></div>

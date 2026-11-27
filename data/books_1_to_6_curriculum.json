@@ -161,7 +161,7 @@
           "workbook": {
             "vocabGrammarDrills": [
               {
-                "q": "[Sách bài tập B01] Điền tiểu từ đúng: '저(   ) 베트남 사람입니다.'",
+                "q": "Điền tiểu từ đúng: '저(   ) 베트남 사람입니다.'",
                 "opts": [
                   "는",
                   "은",
@@ -172,7 +172,7 @@
                 "exp": "'저' không có patchim nên đi với tiểu từ chủ đề '는' → 저는."
               },
               {
-                "q": "[Sách bài tập B01] Chọn câu hỏi nghề nghiệp đúng chuẩn trang trọng:",
+                "q": "Chọn câu hỏi nghề nghiệp đúng chuẩn trang trọng:",
                 "opts": [
                   "민수 씨는 학생입니까?",
                   "민수 씨는 학생입니다?",
@@ -183,7 +183,7 @@
                 "exp": "Câu hỏi trang trọng của danh từ dùng 'N + 입니까?'."
               },
               {
-                "q": "[Sách bài tập B01] Khi bạn ra về còn thầy giáo ở lại lớp, bạn chào thế nào?",
+                "q": "Khi bạn ra về còn thầy giáo ở lại lớp, bạn chào thế nào?",
                 "opts": [
                   "안녕히 계세요.",
                   "안녕히 가세요.",
@@ -388,7 +388,7 @@
           "workbook": {
             "vocabGrammarDrills": [
               {
-                "q": "[Sách bài tập B02] Chọn tiểu từ đúng: '교실에 책상(   ) 있습니다.'",
+                "q": "Chọn tiểu từ đúng: '교실에 책상(   ) 있습니다.'",
                 "opts": [
                   "이",
                   "가",
@@ -399,7 +399,7 @@
                 "exp": "'책상' có patchim ㅇ nên đi với tiểu từ chủ ngữ '이' trước 있습니다."
               },
               {
-                "q": "[Sách bài tập B02] Chọn phủ định đúng của danh từ: '여기는 서점(          ).'",
+                "q": "Chọn phủ định đúng của danh từ: '여기는 서점(          ).'",
                 "opts": [
                   "이 아닙니다",
                   "가 아닙니다",
@@ -410,7 +410,7 @@
                 "exp": "'서점' có patchim ㅁ → '서점이 아닙니다' (không phải là hiệu sách)."
               },
               {
-                "q": "[Sách bài tập B02] Đồ vật ở gần người nghe, xa người nói thì dùng đại từ nào?",
+                "q": "Đồ vật ở gần người nghe, xa người nói thì dùng đại từ nào?",
                 "opts": [
                   "그것",
                   "이것",
@@ -591,7 +591,7 @@
           "workbook": {
             "vocabGrammarDrills": [
               {
-                "q": "[Sách bài tập B03] Điền cặp tiểu từ đúng: '도서관(   ) 가서 한국어를 공부합니다.' / '도서관(   ) 책을 읽습니다.'",
+                "q": "Điền cặp tiểu từ đúng: '도서관(   ) 가서 한국어를 공부합니다.' / '도서관(   ) 책을 읽습니다.'",
                 "opts": [
                   "에 / 에서",
                   "에서 / 에",
@@ -602,7 +602,7 @@
                 "exp": "가다 dùng '에' (đích đến), còn 읽다 là hành động diễn ra tại địa điểm nên dùng '에서'."
               },
               {
-                "q": "[Sách bài tập B03] Chia đuôi -ㅂ니다/습니다 đúng cho động từ '먹다' và '마시다':",
+                "q": "Chia đuôi -ㅂ니다/습니다 đúng cho động từ '먹다' và '마시다':",
                 "opts": [
                   "먹습니다 / 마십니다",
                   "먹읍니다 / 마십니다",
@@ -613,7 +613,7 @@
                 "exp": "'먹다' có patchim → 먹습니다; '마시다' không có patchim → 마십니다."
               },
               {
-                "q": "[Sách bài tập B03] Điền tiểu từ tân ngữ: '아침에 빵(   ) 먹고 우유(   ) 마십니다.'",
+                "q": "Điền tiểu từ tân ngữ: '아침에 빵(   ) 먹고 우유(   ) 마십니다.'",
                 "opts": [
                   "을 / 를",
                   "를 / 을",
@@ -774,7 +774,7 @@
           "workbook": {
             "vocabGrammarDrills": [
               {
-                "q": "[Sách bài tập B04] Cách viết ngày '16 tháng 6' bằng tiếng Hàn đúng chuẩn là:",
+                "q": "Cách viết ngày '16 tháng 6' bằng tiếng Hàn đúng chuẩn là:",
                 "opts": [
                   "유월 십육 일",
                   "육월 십육 일",
@@ -785,7 +785,7 @@
                 "exp": "Tháng 6 viết đặc biệt là '유월' (bỏ ㄱ), ngày dùng số Hán–Hàn '십육 일'."
               },
               {
-                "q": "[Sách bài tập B04] Từ nghi vấn nào KHÔNG cộng thêm tiểu từ thời gian '에'?",
+                "q": "Từ nghi vấn nào KHÔNG cộng thêm tiểu từ thời gian '에'?",
                 "opts": [
                   "언제",
                   "월요일",
@@ -796,7 +796,7 @@
                 "exp": "Các từ 오늘, 어제, 내일, 언제 không kết hợp với tiểu từ '에'."
               },
               {
-                "q": "[Sách bài tập B04] Chọn từ đúng hỏi ngày trong tháng: '오늘이 몇 월 (     )입니까?'",
+                "q": "Chọn từ đúng hỏi ngày trong tháng: '오늘이 몇 월 (     )입니까?'",
                 "opts": [
                   "며칠",
                   "몇 일",
@@ -970,7 +970,7 @@
           "workbook": {
             "vocabGrammarDrills": [
               {
-                "q": "[Sách bài tập B05] Cách đọc '2 giờ 30 phút' chuẩn xác là:",
+                "q": "Cách đọc '2 giờ 30 phút' chuẩn xác là:",
                 "opts": [
                   "두 시 삼십 분",
                   "이 시 삼십 분",
@@ -981,7 +981,7 @@
                 "exp": "Giờ dùng số thuần Hàn rút gọn (둘 → 두 시), phút dùng số Hán–Hàn (삼십 분 / 반)."
               },
               {
-                "q": "[Sách bài tập B05] Chia đuôi lịch sự -아/어요 đúng cho '배우다' và '가르치다':",
+                "q": "Chia đuôi lịch sự -아/어요 đúng cho '배우다' và '가르치다':",
                 "opts": [
                   "배워요 / 가르쳐요",
                   "배우어요 / 가르치어요",
@@ -992,7 +992,7 @@
                 "exp": "배우 + 어요 → 배워요; 가르치 + 어요 → 가르쳐요."
               },
               {
-                "q": "[Sách bài tập B05] Chọn câu phủ định với '안' đặt ĐÚNG vị trí:",
+                "q": "Chọn câu phủ định với '안' đặt ĐÚNG vị trí:",
                 "opts": [
                   "보통 아침에 커피를 안 마셔요.",
                   "보통 아침에 안 커피를 마셔요.",
@@ -1143,7 +1143,7 @@
           "workbook": {
             "vocabGrammarDrills": [
               {
-                "q": "[Sách bài tập B06] Chia thì quá khứ đúng của '바쁘다' và '하다':",
+                "q": "Chia thì quá khứ đúng của '바쁘다' và '하다':",
                 "opts": [
                   "바빴어요 / 했어요",
                   "바뻤어요 / 했어요",
@@ -1154,7 +1154,7 @@
                 "exp": "'바쁘다' lược ㅡ, âm trước là ㅏ nên cộng -았어요 → 바빴어요."
               },
               {
-                "q": "[Sách bài tập B06] Chọn câu rủ rê lịch sự 'Chúng ta hãy cùng đi công viên nhé':",
+                "q": "Chọn câu rủ rê lịch sự 'Chúng ta hãy cùng đi công viên nhé':",
                 "opts": [
                   "우리 같이 공원에 갑시다.",
                   "우리 같이 공원에 가세요.",
@@ -1165,7 +1165,7 @@
                 "exp": "Đuôi rủ rê -(으)ㅂ시다 gắn sau thân không patchim 가다 → 갑시다."
               },
               {
-                "q": "[Sách bài tập B06] Điền từ để hỏi đúng: '(     ) 영화를 좋아해요? — 코미디 영화를 좋아해요.'",
+                "q": "Điền từ để hỏi đúng: '(     ) 영화를 좋아해요? — 코미디 영화를 좋아해요.'",
                 "opts": [
                   "무슨",
                   "어디",
@@ -1323,7 +1323,7 @@
           "workbook": {
             "vocabGrammarDrills": [
               {
-                "q": "[Sách bài tập B07] Chọn đơn vị đếm đúng cho '1 đôi giày thể thao' và '2 quyển sách':",
+                "q": "Chọn đơn vị đếm đúng cho '1 đôi giày thể thao' và '2 quyển sách':",
                 "opts": [
                   "운동화 한 켤레 / 책 두 권",
                   "운동화 하나 켤레 / 책 둘 권",
@@ -1334,7 +1334,7 @@
                 "exp": "Giày/tất đếm bằng 켤레, sách đếm bằng 권, đi với số thuần Hàn rút gọn 한, 두."
               },
               {
-                "q": "[Sách bài tập B07] Chọn câu diễn tả mong muốn đúng: 'Tôi muốn mua chiếc túi này.'",
+                "q": "Chọn câu diễn tả mong muốn đúng: 'Tôi muốn mua chiếc túi này.'",
                 "opts": [
                   "이 가방을 사고 싶어요.",
                   "이 가방이 사고 싶어요요.",
@@ -1345,7 +1345,7 @@
                 "exp": "Ngôi thứ nhất diễn tả mong muốn dùng 'V-고 싶어요'."
               },
               {
-                "q": "[Sách bài tập B07] Số tiền '50.000 won' viết bằng tiếng Hàn là:",
+                "q": "Số tiền '50.000 won' viết bằng tiếng Hàn là:",
                 "opts": [
                   "오만 원",
                   "오십천 원",
@@ -1499,7 +1499,7 @@
           "workbook": {
             "vocabGrammarDrills": [
               {
-                "q": "[Sách bài tập B08] Chia bất quy tắc ㅂ đúng cho '맵다' (cay) và '싱겁다' (nhạt):",
+                "q": "Chia bất quy tắc ㅂ đúng cho '맵다' (cay) và '싱겁다' (nhạt):",
                 "opts": [
                   "매워요 / 싱거워요",
                   "맵어요 / 싱겁어요",
@@ -1510,7 +1510,7 @@
                 "exp": "Bất quy tắc ㅂ: lược ㅂ + 워요 → 매워요, 싱거워요."
               },
               {
-                "q": "[Sách bài tập B08] Chọn câu khuyên ngăn 'Xin đừng ăn mì gói vào ban đêm':",
+                "q": "Chọn câu khuyên ngăn 'Xin đừng ăn mì gói vào ban đêm':",
                 "opts": [
                   "밤에 라면을 먹지 마세요.",
                   "밤에 라면을 안 먹으세요.",
@@ -1521,7 +1521,7 @@
                 "exp": "Cấm đoán/khuyên đừng làm gì dùng 'V-지 마세요'."
               },
               {
-                "q": "[Sách bài tập B08] Điền tiểu từ chỉ phương tiện/dụng cụ: '한국 사람은 밥을 숟가락(     ) 먹어요.'",
+                "q": "Điền tiểu từ chỉ phương tiện/dụng cụ: '한국 사람은 밥을 숟가락(     ) 먹어요.'",
                 "opts": [
                   "으로",
                   "로",
@@ -1696,7 +1696,7 @@
           "workbook": {
             "vocabGrammarDrills": [
               {
-                "q": "[Sách bài tập B09] Điền tiểu từ chỉ phương hướng: '이 길(   ) 똑바로 가세요.' / '오른쪽(   ) 가세요.'",
+                "q": "Điền tiểu từ chỉ phương hướng: '이 길(   ) 똑바로 가세요.' / '오른쪽(   ) 가세요.'",
                 "opts": [
                   "로 / 으로",
                   "으로 / 로",
@@ -1707,7 +1707,7 @@
                 "exp": "Danh từ patchim ㄹ ('길') cộng thẳng '로' → 길로; '오른쪽' có patchim ㄱ → 오른쪽으로."
               },
               {
-                "q": "[Sách bài tập B09] Chọn từ chỉ vị trí đúng: '은행과 약국 (     )에 꽃집이 있어요.'",
+                "q": "Chọn từ chỉ vị trí đúng: '은행과 약국 (     )에 꽃집이 있어요.'",
                 "opts": [
                   "사이",
                   "건너편",
@@ -1718,7 +1718,7 @@
                 "exp": "'A와/과 B 사이에' = ở giữa A và B."
               },
               {
-                "q": "[Sách bài tập B09] Chia -(으)세요 đúng cho động từ '살다' (sống) và '찾다' (tìm):",
+                "q": "Chia -(으)세요 đúng cho động từ '살다' (sống) và '찾다' (tìm):",
                 "opts": [
                   "사세요 / 찾으세요",
                   "살으세요 / 찾으세요",
@@ -1892,7 +1892,7 @@
           "workbook": {
             "vocabGrammarDrills": [
               {
-                "q": "[Sách bài tập B10] Chọn câu kính ngữ ĐÚNG hoàn toàn khi nói về ông bà:",
+                "q": "Chọn câu kính ngữ ĐÚNG hoàn toàn khi nói về ông bà:",
                 "opts": [
                   "할머니께서는 지금 방에 계세요.",
                   "할머니는 지금 방에 있어요.",
@@ -1903,7 +1903,7 @@
                 "exp": "Kính ngữ đặc biệt: 있다 → 계시다 (계세요), 먹다 → 드시다/잡수시다, 자다 → 주무시다."
               },
               {
-                "q": "[Sách bài tập B10] 'Bố tôi năm nay 50 tuổi' viết chuẩn số thuần Hàn là:",
+                "q": "'Bố tôi năm nay 50 tuổi' viết chuẩn số thuần Hàn là:",
                 "opts": [
                   "아버지께서는 올해 쉰 살이세요.",
                   "아버지께서는 올해 오십 살이세요.",
@@ -1914,7 +1914,7 @@
                 "exp": "30: 서른 · 40: 마흔 · 50: 쉰 · 60: 예순 · 70: 일흔 · 80: 여든 · 90: 아흔."
               },
               {
-                "q": "[Sách bài tập B10] 'Em trai tôi 20 tuổi' viết đúng biến đổi trước '살' là:",
+                "q": "'Em trai tôi 20 tuổi' viết đúng biến đổi trước '살' là:",
                 "opts": [
                   "스무 살",
                   "스물 살",
@@ -2081,7 +2081,7 @@
           "workbook": {
             "vocabGrammarDrills": [
               {
-                "q": "[Sách bài tập B11] Chia bất quy tắc ㅎ của '어떻다' với đuôi -아/어요:",
+                "q": "Chia bất quy tắc ㅎ của '어떻다' với đuôi -아/어요:",
                 "opts": [
                   "어때요",
                   "어떻어요",
@@ -2092,7 +2092,7 @@
                 "exp": "어떻다 + -아/어요 → lược ㅎ, kết hợp thành '어때요'."
               },
               {
-                "q": "[Sách bài tập B11] Chọn cấu trúc dự đoán tương lai: 'Chiều nay chắc trời sẽ mưa.'",
+                "q": "Chọn cấu trúc dự đoán tương lai: 'Chiều nay chắc trời sẽ mưa.'",
                 "opts": [
                   "오후에 비가 올 거예요.",
                   "오후에 비가 오을 거예요.",
@@ -2103,7 +2103,7 @@
                 "exp": "'오다' không patchim + -ㄹ 거예요 → 올 거예요."
               },
               {
-                "q": "[Sách bài tập B11] Chọn động từ mặc/đeo đúng cặp với '장갑' (găng tay) và '코트' (áo khoác):",
+                "q": "Chọn động từ mặc/đeo đúng cặp với '장갑' (găng tay) và '코트' (áo khoác):",
                 "opts": [
                   "장갑을 끼다 / 코트를 입다",
                   "장갑을 입다 / 코트를 쓰다",
@@ -2253,7 +2253,7 @@
           "workbook": {
             "vocabGrammarDrills": [
               {
-                "q": "[Sách bài tập B12] Điền tiểu từ người nhận hành động: '어제 친구(     ) 문자를 보냈어요.'",
+                "q": "Điền tiểu từ người nhận hành động: '어제 친구(     ) 문자를 보냈어요.'",
                 "opts": [
                   "에게",
                   "에서",
@@ -2264,7 +2264,7 @@
                 "exp": "'에게 / 한테' chỉ người nhận cuộc gọi hoặc tin nhắn (kính ngữ với bề trên là '께')."
               },
               {
-                "q": "[Sách bài tập B12] Chọn cấu trúc chỉ ý định 'Tôi định mua điện thoại mới':",
+                "q": "Chọn cấu trúc chỉ ý định 'Tôi định mua điện thoại mới':",
                 "opts": [
                   "새 휴대폰을 사려고 해요.",
                   "새 휴대폰을 살려고 해요.",
@@ -2275,7 +2275,7 @@
                 "exp": "사다 không patchim + -려고 하다 → 사려고 해요."
               },
               {
-                "q": "[Sách bài tập B12] Chọn lý do có thể đi với câu mệnh lệnh '-으세요': '극장 안(          ) 휴대폰을 끄세요.'",
+                "q": "Chọn lý do có thể đi với câu mệnh lệnh '-으세요': '극장 안(          ) 휴대폰을 끄세요.'",
                 "opts": [
                   "이니까",
                   "이라서",
@@ -2427,7 +2427,7 @@
           "workbook": {
             "vocabGrammarDrills": [
               {
-                "q": "[Sách bài tập B13] Chia bất quy tắc 르 đúng cho '고르다' (chọn) ở thì quá khứ:",
+                "q": "Chia bất quy tắc 르 đúng cho '고르다' (chọn) ở thì quá khứ:",
                 "opts": [
                   "골랐어요",
                   "고랐어요",
@@ -2438,7 +2438,7 @@
                 "exp": "고르다: âm trước 르 là ㅗ nên thêm ㄹ + 랐어요 → 골랐어요."
               },
               {
-                "q": "[Sách bài tập B13] Chọn động từ kính ngữ đúng khi tặng quà cho cô giáo:",
+                "q": "Chọn động từ kính ngữ đúng khi tặng quà cho cô giáo:",
                 "opts": [
                   "선생님께 꽃다발을 드렸어요.",
                   "선생님에게 꽃다발을 주었어요.",
@@ -2449,7 +2449,7 @@
                 "exp": "Biếu/tặng bề trên dùng tiểu từ '께' + động từ kính ngữ '드리다'."
               },
               {
-                "q": "[Sách bài tập B13] Chọn câu hỏi ý kiến lịch sự 'Mình tặng quà gì cho bạn ấy nhỉ?':",
+                "q": "Chọn câu hỏi ý kiến lịch sự 'Mình tặng quà gì cho bạn ấy nhỉ?':",
                 "opts": [
                   "무슨 선물을 줄까요?",
                   "무슨 선물을 줍시다?",
@@ -2603,7 +2603,7 @@
           "workbook": {
             "vocabGrammarDrills": [
               {
-                "q": "[Sách bài tập B14] Chuyển động từ thành danh từ đúng: '제 취미는 사진 (          )예요.'",
+                "q": "Chuyển động từ thành danh từ đúng: '제 취미는 사진 (          )예요.'",
                 "opts": [
                   "찍기",
                   "찍는",
@@ -2614,7 +2614,7 @@
                 "exp": "Danh từ hóa động từ bằng 'V-기' hoặc 'V-는 것' (찍기예요 / 찍는 것이에요)."
               },
               {
-                "q": "[Sách bài tập B14] Chia bất quy tắc ㄷ đúng cho '걷다' (đi bộ) và '듣다' (nghe):",
+                "q": "Chia bất quy tắc ㄷ đúng cho '걷다' (đi bộ) và '듣다' (nghe):",
                 "opts": [
                   "걸어요 / 들어요",
                   "걷어요 / 듣어요",
@@ -2625,7 +2625,7 @@
                 "exp": "Bất quy tắc ㄷ: ㄷ biến thành ㄹ trước nguyên âm → 걸어요, 들어요."
               },
               {
-                "q": "[Sách bài tập B14] Phó từ nào BẮT BUỘC phải đi kèm dạng phủ định (안 / 못 / 없다)?",
+                "q": "Phó từ nào BẮT BUỘC phải đi kèm dạng phủ định (안 / 못 / 없다)?",
                 "opts": [
                   "전혀",
                   "항상",
@@ -2781,7 +2781,7 @@
           "workbook": {
             "vocabGrammarDrills": [
               {
-                "q": "[Sách bài tập B15] Điền cặp tiểu từ điểm đi – điểm đến: '집(     ) 학교(     ) 버스로 삼십 분 걸려요.'",
+                "q": "Điền cặp tiểu từ điểm đi – điểm đến: '집(     ) 학교(     ) 버스로 삼십 분 걸려요.'",
                 "opts": [
                   "에서 / 까지",
                   "부터 / 까지",
@@ -2792,7 +2792,7 @@
                 "exp": "Khoảng cách địa điểm dùng 'N1에서 N2까지', còn mốc thời gian dùng '부터 ~ 까지'."
               },
               {
-                "q": "[Sách bài tập B15] Chọn câu chỉ mục đích di chuyển đúng: 'Tôi ra ga Seoul để đón bạn.'",
+                "q": "Chọn câu chỉ mục đích di chuyển đúng: 'Tôi ra ga Seoul để đón bạn.'",
                 "opts": [
                   "친구를 마중하러 서울역에 가요.",
                   "친구를 마중하려고 서울역에 먹어요.",
@@ -2803,7 +2803,7 @@
                 "exp": "'V-(으)러 가다/오다' diễn tả mục đích của động từ di chuyển."
               },
               {
-                "q": "[Sách bài tập B15] Chia bất quy tắc ㅂ của '가깝다' (gần):",
+                "q": "Chia bất quy tắc ㅂ của '가깝다' (gần):",
                 "opts": [
                   "가까워요",
                   "가깝어요",
@@ -2921,7 +2921,7 @@
           "workbook": {
             "vocabGrammarDrills": [
               {
-                "q": "[Sách bài tập Q2-B01] Chọn cách chia '-아/어지다' đúng với '친하다' (thân) và '예쁘다' (đẹp):",
+                "q": "Chọn cách chia '-아/어지다' đúng với '친하다' (thân) và '예쁘다' (đẹp):",
                 "opts": [
                   "친해졌어요 / 예뻐졌어요",
                   "친하졌어요 / 예쁘졌어요",
@@ -2932,7 +2932,7 @@
                 "exp": "친하다 → 친해지다; 예쁘다 lược ㅡ → 예뻐지다."
               },
               {
-                "q": "[Sách bài tập Q2-B01] Chọn câu dùng '-(으)면서' ĐÚNG ngữ pháp:",
+                "q": "Chọn câu dùng '-(으)면서' ĐÚNG ngữ pháp:",
                 "opts": [
                   "음악을 들으면서 청소해요.",
                   "음악을 듣으면서 청소해요.",
@@ -3028,7 +3028,7 @@
           "workbook": {
             "vocabGrammarDrills": [
               {
-                "q": "[Sách bài tập Q2-B02] Chọn câu diễn tả 'Chúng tôi đã quyết định đi ăn thịt nướng tối nay':",
+                "q": "Chọn câu diễn tả 'Chúng tôi đã quyết định đi ăn thịt nướng tối nay':",
                 "opts": [
                   "오늘 저녁에 삼겹살을 먹기로 했어요.",
                   "오늘 저녁에 삼겹살을 먹을까 했어요.",
@@ -3039,7 +3039,7 @@
                 "exp": "'V-기로 하다' dùng để nói về kế hoạch/lời hẹn đã chốt."
               },
               {
-                "q": "[Sách bài tập Q2-B02] Cấu trúc '-(으)ㄹ게요' chỉ dùng được với chủ ngữ nào?",
+                "q": "Cấu trúc '-(으)ㄹ게요' chỉ dùng được với chủ ngữ nào?",
                 "opts": [
                   "Ngôi thứ nhất (저 / 나 / 우리)",
                   "Ngôi thứ hai (당신 / 씨)",
@@ -3133,7 +3133,7 @@
           "workbook": {
             "vocabGrammarDrills": [
               {
-                "q": "[Sách bài tập Q2-B03] Chia '-(으)ㄴ/는데' đúng cho tính từ '비싸다' và động từ '찾다':",
+                "q": "Chia '-(으)ㄴ/는데' đúng cho tính từ '비싸다' và động từ '찾다':",
                 "opts": [
                   "비싼데 / 찾는데",
                   "비싸는데 / 찾은데",
@@ -3144,7 +3144,7 @@
                 "exp": "Tính từ không patchim + -ㄴ데 (비싼데); Động từ luôn + -는데 (찾는데)."
               },
               {
-                "q": "[Sách bài tập Q2-B03] Câu nào mang nghĩa 'Tôi mặc thử chiếc váy này nhé?':",
+                "q": "Câu nào mang nghĩa 'Tôi mặc thử chiếc váy này nhé?':",
                 "opts": [
                   "이 치마를 입어 볼까요?",
                   "이 치마를 신어 볼까요?",
@@ -3238,7 +3238,7 @@
           "workbook": {
             "vocabGrammarDrills": [
               {
-                "q": "[Sách bài tập Q2-B04] Trong tiếng Hàn, cụm từ 'uống thuốc' và 'tiêm thuốc' dùng động từ nào?",
+                "q": "Trong tiếng Hàn, cụm từ 'uống thuốc' và 'tiêm thuốc' dùng động từ nào?",
                 "opts": [
                   "약을 먹다 / 주사를 맞다",
                   "약을 마시다 / 주사를 치다",
@@ -3249,7 +3249,7 @@
                 "exp": "Uống thuốc là '약을 먹다 (드시다)' và tiêm là '주사를 맞다'."
               },
               {
-                "q": "[Sách bài tập Q2-B04] Chọn câu nghĩa 'Trong thư viện không được nói chuyện to':",
+                "q": "Chọn câu nghĩa 'Trong thư viện không được nói chuyện to':",
                 "opts": [
                   "도서관에서 크게 이야기하면 안 돼요.",
                   "도서관에서 크게 이야기해야 해요.",
@@ -3343,7 +3343,7 @@
           "workbook": {
             "vocabGrammarDrills": [
               {
-                "q": "[Sách bài tập Q2-B05] Chia '-(으)면' đúng cho động từ '만들다' (làm) và '듣다' (nghe):",
+                "q": "Chia '-(으)면' đúng cho động từ '만들다' (làm) và '듣다' (nghe):",
                 "opts": [
                   "만들면 / 들으면",
                   "만들으면 / 들으면",
@@ -3354,7 +3354,7 @@
                 "exp": "Thân ㄹ ('만들다') cộng thẳng '면' → 만들면; bất quy tắc ㄷ ('듣다') → 들으면."
               },
               {
-                "q": "[Sách bài tập Q2-B05] Chọn câu đúng cho 'Trước khi đi ngủ tôi viết nhật ký':",
+                "q": "Chọn câu đúng cho 'Trước khi đi ngủ tôi viết nhật ký':",
                 "opts": [
                   "자기 전에 일기를 써요.",
                   "자 전에 일기를 써요.",
@@ -3447,7 +3447,7 @@
           "workbook": {
             "vocabGrammarDrills": [
               {
-                "q": "[Sách bài tập Q2-B06] Chia '-(으)ㄴ 후에' đúng cho động từ '내리다' (xuống xe) và '먹다' (ăn):",
+                "q": "Chia '-(으)ㄴ 후에' đúng cho động từ '내리다' (xuống xe) và '먹다' (ăn):",
                 "opts": [
                   "내린 후에 / 먹은 후에",
                   "내리는 후에 / 먹은 후에",
@@ -3539,7 +3539,7 @@
           "workbook": {
             "vocabGrammarDrills": [
               {
-                "q": "[Sách bài tập Q2-B07] Chọn câu đúng nghĩa 'Tôi chưa từng ăn thử món mì lạnh':",
+                "q": "Chọn câu đúng nghĩa 'Tôi chưa từng ăn thử món mì lạnh':",
                 "opts": [
                   "냉면을 먹어 본 적이 없어요.",
                   "냉면을 먹는 적이 없어요.",
@@ -3631,7 +3631,7 @@
           "workbook": {
             "vocabGrammarDrills": [
               {
-                "q": "[Sách bài tập Q2-B08] Chia '-(으)ㄹ 때' đúng với động từ '살다' (sống) và '듣다' (nghe):",
+                "q": "Chia '-(으)ㄹ 때' đúng với động từ '살다' (sống) và '듣다' (nghe):",
                 "opts": [
                   "살 때 / 들을 때",
                   "살을 때 / 들을 때",
@@ -3723,7 +3723,7 @@
           "workbook": {
             "vocabGrammarDrills": [
               {
-                "q": "[Sách bài tập Q2-B09] Chọn cặp cấu trúc Xin phép – Trả lời tự nhiên nhất:",
+                "q": "Chọn cặp cấu trúc Xin phép – Trả lời tự nhiên nhất:",
                 "opts": [
                   "여기에 앉아도 돼요? — 네, 앉으세요.",
                   "여기에 앉으면 안 돼요? — 네, 안 돼요.",
@@ -3816,7 +3816,7 @@
           "workbook": {
             "vocabGrammarDrills": [
               {
-                "q": "[Sách bài tập Q2-B10] Chọn câu đúng nghĩa 'Tôi đến Hàn Quốc đã được 1 năm':",
+                "q": "Chọn câu đúng nghĩa 'Tôi đến Hàn Quốc đã được 1 năm':",
                 "opts": [
                   "한국에 온 지 일 년이 됐어요.",
                   "한국에 오는 지 일 년이 됐어요.",
@@ -3894,11 +3894,23 @@
                 "lesson": 11,
                 "lessonTitle": "Phim ảnh & Văn hóa đại chúng",
                 "pattern": "-기 때문에",
-                "meaning": "Bởi vì... nên...",
-                "construction": "Động từ / Tính từ + -기 때문에, Danh từ + 때문에",
-                "usage": "Nêu lý do rõ ràng trong cả văn nói và văn viết.",
-                "example1Ko": "교통이 편리하기 때문에 이 집을 선택했어요.",
-                "example1Vi": "Vì giao thông thuận tiện nên tôi đã chọn ngôi nhà này."
+                "meaning": "Vì... nên...",
+                "construction": "V/A + -기 때문에 · N + 때문에",
+                "usage": "Nêu lý do khách quan rõ ràng; không đi với câu mệnh lệnh/rủ rê.",
+                "example1Ko": "배우 연기가 훌륭하기 때문에 이 영화가 인기가 많아요.",
+                "example1Vi": "Vì diễn xuất của diễn viên xuất sắc nên bộ phim này rất được yêu thích."
+              },
+              {
+                "id": "q2_g_11_2",
+                "book": "q2",
+                "lesson": 11,
+                "lessonTitle": "Phim ảnh & Văn hóa đại chúng",
+                "pattern": "-(으)ㄴ/는 것 같다",
+                "meaning": "Hình như / Có vẻ...",
+                "construction": "A + -(으)ㄴ 것 같다 · V hiện tại + -는 것 같다 · V quá khứ + -(으)ㄴ 것 같다",
+                "usage": "Đưa ra phỏng đoán hoặc nhận xét nhẹ nhàng.",
+                "example1Ko": "주말이라서 영화관에 사람이 많은 것 같아요.",
+                "example1Vi": "Vì là cuối tuần nên có vẻ rạp chiếu phim đông người."
               }
             ],
             "dialogue": [
@@ -3918,15 +3930,26 @@
           "workbook": {
             "vocabGrammarDrills": [
               {
-                "q": "[Sách bài tập Q2-B11] Chọn cách kết hợp danh từ với '때문에' đúng ngữ pháp:",
+                "q": "Chọn cách kết hợp đúng với \"때문에\":",
                 "opts": [
-                  "비 때문에 소풍을 못 갔어요.",
-                  "비가 때문에 소풍을 못 갔어요.",
-                  "비기 때문에 소풍을 못 갔어요.",
-                  "비아서 소풍을 못 갔어요."
+                  "비 때문에 콘서트가 취소되었어요.",
+                  "비가 때문에 콘서트가 취소되었어요.",
+                  "비기 때문에 콘서트가 취소되었어요.",
+                  "비아서 콘서트가 취소되었어요."
                 ],
                 "ans": 0,
-                "exp": "Danh từ gắn trực tiếp với '때문에' (비 때문에, 시험 때문에)."
+                "exp": "Danh từ gắn trực tiếp với \"때문에\" (비 때문에)."
+              },
+              {
+                "q": "Điền dạng phỏng đoán hiện tại đúng cho tính từ \"재미있다\": \"이 드라마는 정말 (       ).\"",
+                "opts": [
+                  "재미있는 것 같아요",
+                  "재미있은 것 같아요",
+                  "재미있던 것 같아요",
+                  "재미있기 같아요"
+                ],
+                "ans": 0,
+                "exp": "있다/없다 (kể cả 재미있다, 맛있다) luôn kết hợp với \"-는 것 같다\"."
               }
             ]
           }
@@ -3995,12 +4018,24 @@
                 "book": "q2",
                 "lesson": 12,
                 "lessonTitle": "Tìm nhà & Chuyển chỗ ở",
-                "pattern": "-기 때문에",
-                "meaning": "Bởi vì... nên...",
-                "construction": "Động từ / Tính từ + -기 때문에, Danh từ + 때문에",
-                "usage": "Nêu lý do rõ ràng trong cả văn nói và văn viết.",
-                "example1Ko": "교통이 편리하기 때문에 이 집을 선택했어요.",
-                "example1Vi": "Vì giao thông thuận tiện nên tôi đã chọn ngôi nhà này."
+                "pattern": "-(으)ㄹ까 하다",
+                "meaning": "Đang tính là sẽ...",
+                "construction": "V + -(으)ㄹ까 하다",
+                "usage": "Diễn tả dự định còn đang cân nhắc, chưa chốt hẳn.",
+                "example1Ko": "학교 근처 원룸으로 이사할까 해요.",
+                "example1Vi": "Tôi đang tính chuyển sang phòng trọ khép kín gần trường."
+              },
+              {
+                "id": "q2_g_12_2",
+                "book": "q2",
+                "lesson": 12,
+                "lessonTitle": "Tìm nhà & Chuyển chỗ ở",
+                "pattern": "-거든(요)",
+                "meaning": "Bởi vì... đấy (giải thích lý do)",
+                "construction": "V/A + -거든(요) · N + (이)거든요",
+                "usage": "Giải thích lý do hoặc đưa thông tin nền trong hội thoại thân mật.",
+                "example1Ko": "이 집을 계약했어요. 지하철역에서 아주 가깝거든요.",
+                "example1Vi": "Tôi đã ký thuê nhà này rồi. Vì nó rất gần ga tàu điện ngầm đấy."
               }
             ],
             "dialogue": [
@@ -4020,15 +4055,26 @@
           "workbook": {
             "vocabGrammarDrills": [
               {
-                "q": "[Sách bài tập Q2-B12] Chọn cách kết hợp danh từ với '때문에' đúng ngữ pháp:",
+                "q": "Chọn câu diễn tả dự định đang cân nhắc \"Tôi đang tính cuối tuần này đi xem nhà\":",
                 "opts": [
-                  "비 때문에 소풍을 못 갔어요.",
-                  "비가 때문에 소풍을 못 갔어요.",
-                  "비기 때문에 소풍을 못 갔어요.",
-                  "비아서 소풍을 못 갔어요."
+                  "이번 주말에 집을 보러 갈까 해요.",
+                  "이번 주말에 집을 보러 가자마자 해요.",
+                  "이번 주말에 집을 보러 가는 바람에 해요.",
+                  "이번 주말에 집을 보러 간 적이 해요."
                 ],
                 "ans": 0,
-                "exp": "Danh từ gắn trực tiếp với '때문에' (비 때문에, 시험 때문에)."
+                "exp": "V-(으)ㄹ까 하다 diễn tả ý định đang suy tính."
+              },
+              {
+                "q": "Hoàn thành hội thoại: \"왜 하숙집을 옮겼어요? — 방이 너무 (       ).\"",
+                "opts": [
+                  "좁았거든요",
+                  "좁았으니까요",
+                  "좁으려고요",
+                  "좁도록이요"
+                ],
+                "ans": 0,
+                "exp": "-거든요 dùng ở cuối câu trả lời để giải thích lý do cho người nghe."
               }
             ]
           }
@@ -4097,12 +4143,24 @@
                 "book": "q2",
                 "lesson": 13,
                 "lessonTitle": "Thư mời & Chúc mừng",
-                "pattern": "-기 때문에",
-                "meaning": "Bởi vì... nên...",
-                "construction": "Động từ / Tính từ + -기 때문에, Danh từ + 때문에",
-                "usage": "Nêu lý do rõ ràng trong cả văn nói và văn viết.",
-                "example1Ko": "교통이 편리하기 때문에 이 집을 선택했어요.",
-                "example1Vi": "Vì giao thông thuận tiện nên tôi đã chọn ngôi nhà này."
+                "pattern": "-네요",
+                "meaning": "Thế nhỉ! / Quá nhỉ! (cảm thán)",
+                "construction": "V/A + -네요 · N + (이)네요",
+                "usage": "Bày tỏ sự ngạc nhiên, khen ngợi ngay khi trực tiếp nhận ra điều gì.",
+                "example1Ko": "결혼식 사진이 정말 아름답네요!",
+                "example1Vi": "Ảnh cưới đẹp thật đấy nhỉ!"
+              },
+              {
+                "id": "q2_g_13_2",
+                "book": "q2",
+                "lesson": 13,
+                "lessonTitle": "Thư mời & Chúc mừng",
+                "pattern": "-지 말다 (-지 마세요)",
+                "meaning": "Đừng làm gì...",
+                "construction": "V + -지 마세요 / -지 맙시다",
+                "usage": "Khuyên can hoặc yêu cầu lịch sự ai đó không làm hành động gì.",
+                "example1Ko": "선물은 부담 갖지 말고 편하게 오세요.",
+                "example1Vi": "Đừng bận tâm chuyện quà cáp, cứ đến thoải mái nhé."
               }
             ],
             "dialogue": [
@@ -4122,15 +4180,26 @@
           "workbook": {
             "vocabGrammarDrills": [
               {
-                "q": "[Sách bài tập Q2-B13] Chọn cách kết hợp danh từ với '때문에' đúng ngữ pháp:",
+                "q": "Chọn câu khuyên nhủ lịch sự \"Xin đừng lo lắng quá nhiều\":",
                 "opts": [
-                  "비 때문에 소풍을 못 갔어요.",
-                  "비가 때문에 소풍을 못 갔어요.",
-                  "비기 때문에 소풍을 못 갔어요.",
-                  "비아서 소풍을 못 갔어요."
+                  "너무 걱정하지 마세요.",
+                  "너무 걱정안 하세요.",
+                  "너무 걱정 못 하세요.",
+                  "너무 걱정하지 않으세요."
                 ],
                 "ans": 0,
-                "exp": "Danh từ gắn trực tiếp với '때문에' (비 때문에, 시험 때문에)."
+                "exp": "Câu mệnh lệnh phủ định bắt buộc dùng V-지 마세요 (không dùng 안/못 với -(으)세요)."
+              },
+              {
+                "q": "Khi nhìn thấy bạn mặc áo mới rất hợp, câu cảm thán tự nhiên nhất là:",
+                "opts": [
+                  "새 옷이 정말 잘 어울리네요!",
+                  "새 옷이 정말 잘 어울리기로 해요!",
+                  "새 옷이 정말 잘 어울리는 바람에!",
+                  "새 옷이 정말 잘 어울릴 줄 알아요!"
+                ],
+                "ans": 0,
+                "exp": "-네요 diễn tả cảm xúc ngạc nhiên/khen ngợi trực tiếp."
               }
             ]
           }
@@ -4199,12 +4268,24 @@
                 "book": "q2",
                 "lesson": 14,
                 "lessonTitle": "Sở thích nâng cao & CLB",
-                "pattern": "-기 때문에",
-                "meaning": "Bởi vì... nên...",
-                "construction": "Động từ / Tính từ + -기 때문에, Danh từ + 때문에",
-                "usage": "Nêu lý do rõ ràng trong cả văn nói và văn viết.",
-                "example1Ko": "교통이 편리하기 때문에 이 집을 선택했어요.",
-                "example1Vi": "Vì giao thông thuận tiện nên tôi đã chọn ngôi nhà này."
+                "pattern": "-는 동안",
+                "meaning": "Trong lúc / Trong khoảng thời gian...",
+                "construction": "V + -는 동안 · N + 동안",
+                "usage": "Chỉ khoảng thời gian một hành động đang diễn ra (2 vế có thể khác chủ ngữ).",
+                "example1Ko": "방학 동안 사진 동아리에서 활동했어요.",
+                "example1Vi": "Trong suốt kỳ nghỉ tôi đã sinh hoạt ở CLB nhiếp ảnh."
+              },
+              {
+                "id": "q2_g_14_2",
+                "book": "q2",
+                "lesson": 14,
+                "lessonTitle": "Sở thích nâng cao & CLB",
+                "pattern": "-거나",
+                "meaning": "Hoặc là... (lựa chọn hành động)",
+                "construction": "V/A + -거나 · N + (이)나",
+                "usage": "Nối hai hay nhiều hành động/trạng thái để lựa chọn.",
+                "example1Ko": "주말에는 등산을 하거나 배드민턴을 쳐요.",
+                "example1Vi": "Cuối tuần tôi đi leo núi hoặc đánh cầu lông."
               }
             ],
             "dialogue": [
@@ -4224,15 +4305,26 @@
           "workbook": {
             "vocabGrammarDrills": [
               {
-                "q": "[Sách bài tập Q2-B14] Chọn cách kết hợp danh từ với '때문에' đúng ngữ pháp:",
+                "q": "Chọn cấu trúc đúng: \"Mẹ nấu ăn trong lúc em bé ngủ\" → \"아기가 (       ) 어머니가 요리해요.\"",
                 "opts": [
-                  "비 때문에 소풍을 못 갔어요.",
-                  "비가 때문에 소풍을 못 갔어요.",
-                  "비기 때문에 소풍을 못 갔어요.",
-                  "비아서 소풍을 못 갔어요."
+                  "자는 동안",
+                  "자면서",
+                  "자자마자",
+                  "자려고"
                 ],
                 "ans": 0,
-                "exp": "Danh từ gắn trực tiếp với '때문에' (비 때문에, 시험 때문에)."
+                "exp": "Hai vế khác chủ ngữ (아기 vs 어머니) nên bắt buộc dùng \"-는 동안\", không dùng \"-(으)면서\"."
+              },
+              {
+                "q": "Chọn từ nối đúng cho 2 động từ: \"Khi rảnh tôi nghe nhạc hoặc đọc sách\":",
+                "opts": [
+                  "음악을 듣거나 책을 읽어요.",
+                  "음악을 듣이나 책을 읽어요.",
+                  "음악을 듣지만 책을 읽어요.",
+                  "음악을 듣기 전에 책을 읽어요."
+                ],
+                "ans": 0,
+                "exp": "Lựa chọn giữa 2 động từ dùng V-거나 (danh từ mới dùng N(이)나)."
               }
             ]
           }
@@ -4300,13 +4392,25 @@
                 "id": "q2_g_15_1",
                 "book": "q2",
                 "lesson": 15,
-                "lessonTitle": "Tổng ôn Sơ cấp 2 · Chinh phục 140+ TOPIK I",
-                "pattern": "-기 때문에",
-                "meaning": "Bởi vì... nên...",
-                "construction": "Động từ / Tính từ + -기 때문에, Danh từ + 때문에",
-                "usage": "Nêu lý do rõ ràng trong cả văn nói và văn viết.",
-                "example1Ko": "교통이 편리하기 때문에 이 집을 선택했어요.",
-                "example1Vi": "Vì giao thông thuận tiện nên tôi đã chọn ngôi nhà này."
+                "lessonTitle": "Tổng ôn Sơ cấp 2 · Chinh phục TOPIK I",
+                "pattern": "-아/어도",
+                "meaning": "Dù / Cho dù... thì vẫn...",
+                "construction": "V/A + -아/어도",
+                "usage": "Diễn tả sự nhượng bộ: kết quả vế sau không phụ thuộc điều kiện vế trước.",
+                "example1Ko": "바빠도 아침 밥은 꼭 챙겨 먹어요.",
+                "example1Vi": "Dù bận rộn tôi vẫn luôn ăn bữa sáng đầy đủ."
+              },
+              {
+                "id": "q2_g_15_2",
+                "book": "q2",
+                "lesson": 15,
+                "lessonTitle": "Tổng ôn Sơ cấp 2 · Chinh phục TOPIK I",
+                "pattern": "-(으)ㄹ 때마다",
+                "meaning": "Mỗi khi / Cứ mỗi lần...",
+                "construction": "V + -(으)ㄹ 때마다 · N + 마다",
+                "usage": "Diễn tả hành động lặp lại mỗi khi tình huống đó xảy ra.",
+                "example1Ko": "스트레스를 받을 때마다 공원을 산책해요.",
+                "example1Vi": "Mỗi khi bị căng thẳng tôi lại đi dạo công viên."
               }
             ],
             "dialogue": [
@@ -4326,15 +4430,26 @@
           "workbook": {
             "vocabGrammarDrills": [
               {
-                "q": "[Sách bài tập Q2-B15] Chọn cách kết hợp danh từ với '때문에' đúng ngữ pháp:",
+                "q": "Chọn câu đúng nghĩa \"Dù trời mưa tôi vẫn sẽ đi tập thể dục\":",
                 "opts": [
-                  "비 때문에 소풍을 못 갔어요.",
-                  "비가 때문에 소풍을 못 갔어요.",
-                  "비기 때문에 소풍을 못 갔어요.",
-                  "비아서 소풍을 못 갔어요."
+                  "비가 와도 운동하러 갈 거예요.",
+                  "비가 오니까 운동하러 갈 거예요.",
+                  "비가 오면 운동하러 갈 거예요.",
+                  "비가 오느라고 운동하러 갈 거예요."
                 ],
                 "ans": 0,
-                "exp": "Danh từ gắn trực tiếp với '때문에' (비 때문에, 시험 때문에)."
+                "exp": "-아/어도 mang nghĩa nhượng bộ \"Dù... vẫn...\"."
+              },
+              {
+                "q": "Cấu trúc đồng nghĩa với \"고향 생각이 날 때 늘\" (Mỗi khi nhớ quê) là:",
+                "opts": [
+                  "고향 생각이 날 때마다",
+                  "고향 생각이 나기 전에",
+                  "고향 생각이 난 지",
+                  "고향 생각이 날까 봐"
+                ],
+                "ans": 0,
+                "exp": "-(으)ㄹ 때마다 = mỗi khi / cứ mỗi lần."
               }
             ]
           }
@@ -8724,7 +8839,7 @@
           "workbook": {
             "vocabGrammarDrills": [
               {
-                "q": "[Sách bài tập Q3-B01] Chọn cấu trúc đồng nghĩa gần nhất với '시험에 늦지 않게 일찍 잤다':",
+                "q": "Chọn cấu trúc đồng nghĩa gần nhất với '시험에 늦지 않게 일찍 잤다':",
                 "opts": [
                   "시험에 늦지 않도록 일찍 잤다.",
                   "시험에 늦기 때문에 일찍 잤다.",
@@ -8813,7 +8928,7 @@
           "workbook": {
             "vocabGrammarDrills": [
               {
-                "q": "[Sách bài tập Q3-B02] Chọn vế sau phù hợp với '늦잠을 자는 바람에 (               )':",
+                "q": "Chọn vế sau phù hợp với '늦잠을 자는 바람에 (               )':",
                 "opts": [
                   "기차를 놓치고 말았어요.",
                   "일찍 도착할 수 있었어요.",
@@ -8900,7 +9015,7 @@
           "workbook": {
             "vocabGrammarDrills": [
               {
-                "q": "[Sách bài tập Q3-B03] Chuyển câu trực tiếp sau sang gián tiếp: 민수: '내일 같이 도서관에 갑시다.'",
+                "q": "Chuyển câu trực tiếp sau sang gián tiếp: 민수: '내일 같이 도서관에 갑시다.'",
                 "opts": [
                   "민수 씨가 내일 같이 도서관에 가자고 했어요.",
                   "민수 씨가 내일 같이 도서관에 가라고 했어요.",
@@ -8987,7 +9102,7 @@
           "workbook": {
             "vocabGrammarDrills": [
               {
-                "q": "[Sách bài tập Q3-B04] Điền vào chỗ trống: '목표를 달성하(       ) 구체적인 계획부터 세우세요.'",
+                "q": "Điền vào chỗ trống: '목표를 달성하(       ) 구체적인 계획부터 세우세요.'",
                 "opts": [
                   "려면",
                   "느라고",
@@ -9062,7 +9177,7 @@
           "workbook": {
             "vocabGrammarDrills": [
               {
-                "q": "[Sách bài tập Q3-B05] Từ nào chỉ khoản tiền đặt cọc được hoàn lại khi kết thúc hợp đồng thuê nhà?",
+                "q": "Từ nào chỉ khoản tiền đặt cọc được hoàn lại khi kết thúc hợp đồng thuê nhà?",
                 "opts": [
                   "보증금",
                   "관리비",
@@ -9136,7 +9251,7 @@
           "workbook": {
             "vocabGrammarDrills": [
               {
-                "q": "[Sách bài tập Q3-B06] Chọn cách kết hợp '-자마자' đúng ngữ pháp:",
+                "q": "Chọn cách kết hợp '-자마자' đúng ngữ pháp:",
                 "opts": [
                   "도착하자마자 부모님께 전화했어요.",
                   "도착했자마자 부모님께 전화했어요.",
@@ -10252,7 +10367,7 @@
           "workbook": {
             "vocabGrammarDrills": [
               {
-                "q": "[Sách bài tập Q4-B01] Chọn câu viết chuẩn trang trọng dùng trong bài luận TOPIK II:",
+                "q": "Chọn câu viết chuẩn trang trọng dùng trong bài luận TOPIK II:",
                 "opts": [
                   "독서는 지식을 넓혀 줄 뿐만 아니라 상상력도 키워 준다.",
                   "독서는 지식을 넓혀 줄 뿐만 아니라 상상력을 키워 주자.",
@@ -10339,7 +10454,7 @@
           "workbook": {
             "vocabGrammarDrills": [
               {
-                "q": "[Sách bài tập Q4-B02] Chọn từ điền chuẩn nhất vào bài viết Câu 53: '2030년에는 시장 규모가 10조 원에 이를 (          ).'",
+                "q": "Chọn từ điền chuẩn nhất vào bài viết Câu 53: '2030년에는 시장 규모가 10조 원에 이를 (          ).'",
                 "opts": [
                   "전망이다",
                   "바람이다",
@@ -10413,7 +10528,7 @@
           "workbook": {
             "vocabGrammarDrills": [
               {
-                "q": "[Sách bài tập Q4-B03] Cụm từ nào đi hợp nhất với '캠페인을 (          )'?",
+                "q": "Cụm từ nào đi hợp nhất với '캠페인을 (          )'?",
                 "opts": [
                   "벌이다",
                   "차지하다",
@@ -10488,7 +10603,7 @@
           "workbook": {
             "vocabGrammarDrills": [
               {
-                "q": "[Sách bài tập Q4-B04] Chọn quán dụng ngữ mang nghĩa 'tích cực chủ động đứng ra giải quyết':",
+                "q": "Chọn quán dụng ngữ mang nghĩa 'tích cực chủ động đứng ra giải quyết':",
                 "opts": [
                   "발 벗고 나서다",
                   "한눈을 팔다",
@@ -10562,7 +10677,7 @@
           "workbook": {
             "vocabGrammarDrills": [
               {
-                "q": "[Sách bài tập Q4-B05] Cụm từ nào chỉ việc 'xâm phạm quyền riêng tư cá nhân' trên không gian mạng?",
+                "q": "Cụm từ nào chỉ việc 'xâm phạm quyền riêng tư cá nhân' trên không gian mạng?",
                 "opts": [
                   "사생활 침해",
                   "저작권 보호",
@@ -10636,7 +10751,7 @@
           "workbook": {
             "vocabGrammarDrills": [
               {
-                "q": "[Sách bài tập Q4-B06] Điền từ đúng: '무조건 혼내기만 하면 아이가 반발심을 가져 오히려 (          )가 날 수 있다.'",
+                "q": "Điền từ đúng: '무조건 혼내기만 하면 아이가 반발심을 가져 오히려 (          )가 날 수 있다.'",
                 "opts": [
                   "역효과",
                   "잠재력",
@@ -11644,7 +11759,7 @@
           "workbook": {
             "vocabGrammarDrills": [
               {
-                "q": "[Sách bài tập Q5-B01] Tiêu đề báo '신사업 추진, 예산 부족으로 제동' có nghĩa gần nhất với câu nào?",
+                "q": "Tiêu đề báo '신사업 추진, 예산 부족으로 제동' có nghĩa gần nhất với câu nào?",
                 "opts": [
                   "예산이 부족해 새로운 사업을 진행하는 데 어려움을 겪고 있다.",
                   "예산이 충분해 새로운 사업이 빠르게 진행되고 있다.",
@@ -11718,7 +11833,7 @@
           "workbook": {
             "vocabGrammarDrills": [
               {
-                "q": "[Sách bài tập Q5-B02] Cụm nào phù hợp nhất để kết luận giải pháp từ phía Nhà nước trong Câu 54?",
+                "q": "Cụm nào phù hợp nhất để kết luận giải pháp từ phía Nhà nước trong Câu 54?",
                 "opts": [
                   "제도적 뒷받침이 마련되어야 한다.",
                   "충동구매를 자제해야 한다.",
@@ -11792,7 +11907,7 @@
           "workbook": {
             "vocabGrammarDrills": [
               {
-                "q": "[Sách bài tập Q5-B03] Động từ nào mang sắc thái tích cực ('đóng góp vào kết quả tốt') trái ngược với '초래하다'?",
+                "q": "Động từ nào mang sắc thái tích cực ('đóng góp vào kết quả tốt') trái ngược với '초래하다'?",
                 "opts": [
                   "기여하다",
                   "악화시키다",
@@ -11866,7 +11981,7 @@
           "workbook": {
             "vocabGrammarDrills": [
               {
-                "q": "[Sách bài tập Q5-B04] Từ nào trái nghĩa với '혹평을 받다' (bị chê bai gay gắt)?",
+                "q": "Từ nào trái nghĩa với '혹평을 받다' (bị chê bai gay gắt)?",
                 "opts": [
                   "호평을 받다",
                   "제동이 걸리다",
@@ -11940,7 +12055,7 @@
           "workbook": {
             "vocabGrammarDrills": [
               {
-                "q": "[Sách bài tập Q5-B05] Từ nào mang nghĩa 'cùng tồn tại và hỗ trợ nhau cùng phát triển'?",
+                "q": "Từ nào mang nghĩa 'cùng tồn tại và hỗ trợ nhau cùng phát triển'?",
                 "opts": [
                   "상생하다",
                   "침체하다",
@@ -12013,7 +12128,7 @@
           "workbook": {
             "vocabGrammarDrills": [
               {
-                "q": "[Sách bài tập Q5-B06] Nếu câu <보기> bắt đầu bằng '이러한 부작용을 막기 위해...', thì câu ĐỨNG NGAY TRƯỚC vị trí chèn bắt buộc phải nói về nội dung gì?",
+                "q": "Nếu câu <보기> bắt đầu bằng '이러한 부작용을 막기 위해...', thì câu ĐỨNG NGAY TRƯỚC vị trí chèn bắt buộc phải nói về nội dung gì?",
                 "opts": [
                   "Một tác dụng phụ / hệ lụy tiêu cực cụ thể",
                   "Một giải pháp đã thành công mỹ mãn",
@@ -12973,7 +13088,7 @@
           "workbook": {
             "vocabGrammarDrills": [
               {
-                "q": "[Sách bài tập Q6-B01] Tình huống 'Đã bị cảm lạnh lại còn phải làm thêm giờ đêm khuya' ứng với thành ngữ nào?",
+                "q": "Tình huống 'Đã bị cảm lạnh lại còn phải làm thêm giờ đêm khuya' ứng với thành ngữ nào?",
                 "opts": [
                   "설상가상",
                   "금상첨화",
@@ -13048,7 +13163,7 @@
           "workbook": {
             "vocabGrammarDrills": [
               {
-                "q": "[Sách bài tập Q6-B02] Khi tác giả cho rằng một chính sách khó thành công trên thực tế, thái độ của tác giả được gọi là gì?",
+                "q": "Khi tác giả cho rằng một chính sách khó thành công trên thực tế, thái độ của tác giả được gọi là gì?",
                 "opts": [
                   "회의적이다",
                   "낙관적이다",
@@ -13122,7 +13237,7 @@
           "workbook": {
             "vocabGrammarDrills": [
               {
-                "q": "[Sách bài tập Q6-B03] Chọn từ điền đúng collocation ngoại giao: '양국이 전략적 동반자 협약을 (          ).'",
+                "q": "Chọn từ điền đúng collocation ngoại giao: '양국이 전략적 동반자 협약을 (          ).'",
                 "opts": [
                   "체결했다",
                   "발병했다",
@@ -13196,7 +13311,7 @@
           "workbook": {
             "vocabGrammarDrills": [
               {
-                "q": "[Sách bài tập Q6-B04] Chọn câu mang nghĩa 'Mọi việc thành bại đều tùy thuộc vào cách suy nghĩ':",
+                "q": "Chọn câu mang nghĩa 'Mọi việc thành bại đều tùy thuộc vào cách suy nghĩ':",
                 "opts": [
                   "모든 일은 마음먹기 나름이다.",
                   "모든 일은 마음먹는 바람이다.",

@@ -668,14 +668,44 @@ export function evaluateRoadmapScore(db) {
   };
 }
 
-// ===== ZERO-LATENCY PRELOAD AUDIO ENGINE (LRU Cache) =====
+// ===== ZERO-LATENCY PRELOAD AUDIO ENGINE (LRU Cache + Cloud Korean TTS) =====
 const audioCache = new Map();
 const MAX_AUDIO_CACHE = 90;
 let currentAudio = null;
+let activeTtsSeq = 0;
+
+const BANNED_NOVELTY_VOICES = [
+  "eddy", "flo", "grandma", "grandpa", "reed", "rocko", "sandy", "shelley",
+  "albert", "bad news", "bahh", "bells", "boing", "bubbles", "cellos",
+  "good news", "jester", "organ", "superstar", "trinoids", "whisper", "wobble", "zarvox"
+];
+
+if (typeof window !== "undefined" && "speechSynthesis" in window) {
+  try {
+    window.speechSynthesis.getVoices?.();
+    window.speechSynthesis.addEventListener?.("voiceschanged", () => {
+      window.speechSynthesis.getVoices?.();
+    });
+  } catch {}
+}
 
 function normalizeAudioPath(src) {
   if (!src) return "";
   return src.startsWith("/") || src.startsWith("http") ? src : `/${src}`;
+}
+
+export function stopAllAudio() {
+  activeTtsSeq += 1;
+  if (currentAudio) {
+    try {
+      currentAudio.pause();
+      currentAudio.currentTime = 0;
+    } catch {}
+    currentAudio = null;
+  }
+  if (typeof window !== "undefined" && "speechSynthesis" in window) {
+    try { window.speechSynthesis.cancel(); } catch {}
+  }
 }
 
 export function preloadAudioUrls(urls = []) {
@@ -697,6 +727,11 @@ export function preloadAudioUrls(urls = []) {
 export function playAudio(src, rate = 1.0) {
   const cleanSrc = normalizeAudioPath(src);
   if (!cleanSrc) return null;
+
+  activeTtsSeq += 1;
+  if (typeof window !== "undefined" && "speechSynthesis" in window) {
+    try { window.speechSynthesis.cancel(); } catch {}
+  }
 
   if (currentAudio && currentAudio.src !== cleanSrc) {
     currentAudio.pause();
@@ -721,15 +756,124 @@ export function playAudio(src, rate = 1.0) {
   return audio;
 }
 
-export function speakKoreanTTS(text, rate = 0.96) {
-  if (!("speechSynthesis" in window) || !text) return;
+function sanitizeKoreanSpeechText(raw) {
+  if (!raw) return "";
+  return String(raw)
+    // Remove parentheticals containing Latin/Vietnamese notes while keeping pure Hangul notes
+    .replace(/\([^)]*[A-Za-zÀ-ỹ][^)]*\)/g, " ")
+    .replace(/\[[^\]]*[A-Za-zÀ-ỹ][^\]]*\]/g, " ")
+    .replace(/[＝=↔·/]/g, ", ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function splitSpeechChunks(text, maxLen = 165) {
+  const sentences = text.split(/(?<=[.?!])\s+/).filter(Boolean);
+  const chunks = [];
+  let buf = "";
+  for (const s of sentences) {
+    if (!buf) {
+      buf = s;
+    } else if ((buf + " " + s).length <= maxLen) {
+      buf += " " + s;
+    } else {
+      chunks.push(buf);
+      buf = s;
+    }
+  }
+  if (buf) chunks.push(buf);
+  return chunks.flatMap((c) => {
+    if (c.length <= maxLen) return [c];
+    const words = c.split(" ");
+    const sub = [];
+    let cur = "";
+    for (const w of words) {
+      if ((cur + " " + w).trim().length <= maxLen) cur = (cur + " " + w).trim();
+      else {
+        if (cur) sub.push(cur);
+        cur = w;
+      }
+    }
+    if (cur) sub.push(cur);
+    return sub;
+  });
+}
+
+function pickCleanKoreanVoice(voices) {
+  const koVoices = (voices || []).filter((v) => {
+    if (!v?.lang?.toLowerCase().startsWith("ko")) return false;
+    const nm = (v.name || "").toLowerCase();
+    return !BANNED_NOVELTY_VOICES.some((bad) => nm.includes(bad));
+  });
+  return koVoices.find((v) => /sunhi|natural|online/i.test(v.name))
+    || koVoices.find((v) => /google/i.test(v.name))
+    || koVoices.find((v) => /yuna|sora|minsu|siri/i.test(v.name))
+    || koVoices[0]
+    || null;
+}
+
+function speakWebSpeechFallback(cleanText, rate = 0.96) {
+  if (typeof window === "undefined" || !("speechSynthesis" in window) || !cleanText) return;
   window.speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = "ko-KR";
-  u.rate = rate;
-  const voices = window.speechSynthesis.getVoices?.() || [];
-  const bestKo = voices.find((v) => v.lang.startsWith("ko") && (v.name.includes("Natural") || v.name.includes("Google") || v.name.includes("Siri")))
-    || voices.find((v) => v.lang.startsWith("ko"));
-  if (bestKo) u.voice = bestKo;
-  window.speechSynthesis.speak(u);
+  const speakNow = () => {
+    const u = new SpeechSynthesisUtterance(cleanText);
+    u.lang = "ko-KR";
+    u.rate = rate;
+    const best = pickCleanKoreanVoice(window.speechSynthesis.getVoices?.() || []);
+    if (best) u.voice = best;
+    window.speechSynthesis.speak(u);
+  };
+  const loaded = window.speechSynthesis.getVoices?.() || [];
+  if (loaded.length > 0) {
+    speakNow();
+  } else {
+    let fired = false;
+    const onReady = () => {
+      if (fired) return;
+      fired = true;
+      window.speechSynthesis.removeEventListener?.("voiceschanged", onReady);
+      speakNow();
+    };
+    window.speechSynthesis.addEventListener?.("voiceschanged", onReady);
+    setTimeout(onReady, 220);
+  }
+}
+
+export function speakKoreanTTS(text, rate = 0.96) {
+  const cleanText = sanitizeKoreanSpeechText(text);
+  if (!cleanText || typeof window === "undefined") return;
+
+  stopAllAudio();
+  const mySeq = activeTtsSeq;
+  const chunks = splitSpeechChunks(cleanText, 165);
+  if (!chunks.length) return;
+
+  const playChunkAt = (idx) => {
+    if (mySeq !== activeTtsSeq || idx >= chunks.length) return;
+    const url = `/api/tts?q=${encodeURIComponent(chunks[idx])}`;
+    let audio = audioCache.get(url);
+    if (!audio) {
+      audio = new Audio(url);
+      audio.preload = "auto";
+      if (audioCache.size >= MAX_AUDIO_CACHE) {
+        audioCache.delete(audioCache.keys().next().value);
+      }
+      audioCache.set(url, audio);
+    }
+    audio.pause();
+    audio.currentTime = 0;
+    audio.playbackRate = rate;
+    currentAudio = audio;
+    audio.onended = () => {
+      if (mySeq === activeTtsSeq) playChunkAt(idx + 1);
+    };
+    audio.onerror = () => {
+      if (mySeq === activeTtsSeq) speakWebSpeechFallback(chunks.slice(idx).join(" "), rate);
+    };
+    audio.play().catch(() => {
+      if (mySeq === activeTtsSeq) speakWebSpeechFallback(chunks.slice(idx).join(" "), rate);
+    });
+  };
+
+  playChunkAt(0);
 }

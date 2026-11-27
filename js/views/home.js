@@ -1,8 +1,8 @@
-import { store, getBookWords, evaluateRoadmapScore } from "../store.js?v=20261127-09";
-import { ico, daisyLogoSVG } from "../icons.js?v=20261127-09";
-import { getGuidedStudyPlan, STAGE_LABELS } from "./roadmap.js?v=20261127-09";
+import { store, getBookWords, evaluateRoadmapScore } from "../store.js?v=20261127-10";
+import { ico, daisyLogoSVG } from "../icons.js?v=20261127-10";
+import { getGuidedStudyPlan, STAGE_LABELS } from "./roadmap.js?v=20261127-10";
 
-export const ADMIN_QR_IMG_SRC = "/media/vietqr_admin_v2.jpg?v=20261127-09";
+export const ADMIN_QR_IMG_SRC = "/media/vietqr_admin_v2.jpg?v=20261127-10";
 
 export function renderAdminSupportCardHTML(extraStyle = "") {
   return `
@@ -252,48 +252,48 @@ export function renderHomeView(root, db, navigate, startGuidedStep = null, openP
 
       <!-- 4 Core Study Modules (Distinct Popping Icon Colors!) -->
       <div class="section-head">
-        <h2>Học nhanh theo kỹ năng</h2>
+        <h2>Học nhanh</h2>
       </div>
       <div class="grid-2">
         <div class="theory-card" data-quick="vocab-review">
-          <div style="display:flex;align-items:center;gap:13px;min-width:0;">
-            <div class="icon-vocab-badge">${ico("cards", 25)}</div>
+          <div style="display:flex;align-items:center;gap:12px;min-width:0;">
+            <div class="icon-vocab-badge">${ico("cards", 24)}</div>
             <div style="min-width:0;">
-              <strong style="font-size:15.5px;display:block;">Lật thẻ từ vựng 3D</strong>
-              <span style="font-size:13px;color:var(--text-muted);">Chia theo phần nhỏ 8–15 từ, tự phát âm</span>
+              <strong style="font-size:15px;display:block;">Lật thẻ từ vựng</strong>
+              <span style="font-size:12.5px;color:var(--text-muted);">Chia phần 8–15 từ · SRS</span>
+            </div>
+          </div>
+          <span class="card-chevron">›</span>
+        </div>
+
+        <div class="theory-card" data-quick="grammar-studio">
+          <div style="display:flex;align-items:center;gap:12px;min-width:0;">
+            <div class="icon-grammar-badge">${ico("layers", 24)}</div>
+            <div style="min-width:0;">
+              <strong style="font-size:15px;display:block;">Ngữ pháp &amp; So sánh</strong>
+              <span style="font-size:12.5px;color:var(--text-muted);">Theo bài · Thi TOPIK · Tương đồng</span>
             </div>
           </div>
           <span class="card-chevron">›</span>
         </div>
 
         <div class="theory-card" data-quick="chapter-translate">
-          <div style="display:flex;align-items:center;gap:13px;min-width:0;">
-            <div class="icon-grammar-badge">${ico("workbook", 25)}</div>
+          <div style="display:flex;align-items:center;gap:12px;min-width:0;">
+            <div class="icon-vocab-badge">${ico("workbook", 24)}</div>
             <div style="min-width:0;">
-              <strong style="font-size:15.5px;display:block;">Sách bài tập &amp; Dịch câu</strong>
-              <span style="font-size:13px;color:var(--text-muted);">Thực hành ngữ pháp 익힘책 và ghép câu Hàn</span>
-            </div>
-          </div>
-          <span class="card-chevron">›</span>
-        </div>
-
-        <div class="theory-card" data-quick="shorts-shadowing" style="opacity:0.9;">
-          <div style="display:flex;align-items:center;gap:13px;min-width:0;">
-            <div class="icon-vocab-badge">${ico("lock", 24)}</div>
-            <div style="min-width:0;">
-              <strong style="font-size:15.5px;display:block;">Shadowing</strong>
-              <span style="font-size:13px;color:var(--primary-1);font-weight:600;">Đang nâng cấp, đợi tớ nhé</span>
+              <strong style="font-size:15px;display:block;">Bài tập &amp; Dịch câu</strong>
+              <span style="font-size:12.5px;color:var(--text-muted);">익힘책 &amp; ghép câu Việt–Hàn</span>
             </div>
           </div>
           <span class="card-chevron">›</span>
         </div>
 
         <div class="theory-card" data-quick="exams-20">
-          <div style="display:flex;align-items:center;gap:13px;min-width:0;">
-            <div class="icon-grammar-badge">${ico("exam", 25)}</div>
+          <div style="display:flex;align-items:center;gap:12px;min-width:0;">
+            <div class="icon-grammar-badge">${ico("exam", 24)}</div>
             <div style="min-width:0;">
-              <strong style="font-size:15.5px;display:block;">Kho 30 Đề thi TOPIK</strong>
-              <span style="font-size:13px;color:var(--text-muted);">Làm full đề 70/104 câu hoặc luyện từng dạng</span>
+              <strong style="font-size:15px;display:block;">30 Đề thi TOPIK</strong>
+              <span style="font-size:12.5px;color:var(--text-muted);">Full 70/104 câu &amp; từng dạng</span>
             </div>
           </div>
           <span class="card-chevron">›</span>
@@ -386,6 +386,7 @@ export function renderHomeView(root, db, navigate, startGuidedStep = null, openP
     el.addEventListener("click", () => {
       const q = el.dataset.quick;
       if (q === "vocab-review") navigate("theory", { sub: "vocab-review", book: bookId, lesson: s.lastLesson?.lesson || 1, part: 1 });
+      if (q === "grammar-studio") navigate("theory", { sub: "grammar-list", mode: "topik", book: bookId, lesson: s.lastLesson?.lesson || 1 });
       if (q === "chapter-translate") navigate("theory", { sub: "lesson-detail", book: bookId, lesson: s.lastLesson?.lesson || 1, tab: "workbook" });
       if (q === "shorts-shadowing") navigate("practice", { sub: "skills", skill: "shadowing" });
       if (q === "exams-20") navigate("mock-test", { sub: evalObj.examLevel, viewMode: "exams", category: "curated" });

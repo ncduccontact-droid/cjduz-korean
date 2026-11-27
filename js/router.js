@@ -29,7 +29,13 @@ export function buildUrl(route, params = {}) {
       return `/ly-thuyet/on-tu-vung/${bk}/${mode}`;
     }
     if (sub === "hangeul") return "/ly-thuyet/hangeul";
-    if (sub === "grammar-list") return `/ly-thuyet/ngu-phap/${encodeURIComponent(params.mode || "sc1")}`;
+    if (sub === "grammar-list") {
+      const m = encodeURIComponent(params.mode || "lesson");
+      if (m === "lesson" && params.book && params.lesson) {
+        return `/ly-thuyet/ngu-phap/lesson/${encodeURIComponent(params.book)}/bai-${Number(params.lesson)}`;
+      }
+      return `/ly-thuyet/ngu-phap/${m}`;
+    }
     if (sub === "frequent") return "/ly-thuyet/cau-thuong-gap";
     if (sub === "hanja") return "/ly-thuyet/am-han-han";
     if (sub === "textbook-detail") return `/ly-thuyet/sach/${encodeURIComponent(params.bookId || "q2")}`;
@@ -116,7 +122,13 @@ export function parseUrl(pathname = "/") {
       return { route: "theory", params: { sub: "vocab-review", book, mode } };
     }
     if (segs[1] === "hangeul") return { route: "theory", params: { sub: "hangeul" } };
-    if (segs[1] === "ngu-phap") return { route: "theory", params: { sub: "grammar-list", mode: segs[2] || "sc1" } };
+    if (segs[1] === "ngu-phap") {
+      const mode = segs[2] || "lesson";
+      const book = segs[3] || undefined;
+      const m = (segs[4] || "").match(/^bai-(\d+)$/);
+      const lesson = m ? Number(m[1]) : undefined;
+      return { route: "theory", params: { sub: "grammar-list", mode, book, lesson } };
+    }
     if (segs[1] === "cau-thuong-gap") return { route: "theory", params: { sub: "frequent" } };
     if (segs[1] === "am-han-han") return { route: "theory", params: { sub: "hanja" } };
     return { route: "theory", params: { sub: "index" } };

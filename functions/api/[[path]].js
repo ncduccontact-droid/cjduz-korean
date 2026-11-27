@@ -124,6 +124,27 @@ export async function onRequest(context) {
   const path = url.pathname;
   const sender = env.GMAIL_SENDER || "nguyenchiduc2808@gmail.com";
 
+  if (request.method === "GET" && path === "/api/tts") {
+    const q = (url.searchParams.get("q") || "").trim().slice(0, 200);
+    if (!q) return new Response("Missing q", { status: 400 });
+    try {
+      const ttsUrl = `https://translate.googleapis.com/translate_tts?ie=UTF-8&client=tw-ob&tl=ko&q=${encodeURIComponent(q)}`;
+      const upstream = await fetch(ttsUrl, {
+        headers: { "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36" }
+      });
+      if (!upstream.ok) return new Response("TTS upstream error", { status: 502 });
+      return new Response(upstream.body, {
+        status: 200,
+        headers: {
+          "Content-Type": "audio/mpeg",
+          "Cache-Control": "public, max-age=2592000, immutable"
+        }
+      });
+    } catch {
+      return new Response("TTS fetch failed", { status: 502 });
+    }
+  }
+
   if (request.method === "GET" && path === "/api/auth/config") {
     return jsonResp({
       ok: true,

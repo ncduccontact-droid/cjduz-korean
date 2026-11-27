@@ -339,6 +339,31 @@ class CJDUZKoreanHandler(SimpleHTTPRequestHandler):
         load_dotenv()
         path = unquote(self.path.split("?", 1)[0])
 
+        if path == "/api/tts":
+            from urllib.parse import parse_qs, quote
+            qs = parse_qs(self.path.split("?", 1)[1] if "?" in self.path else "")
+            q = (qs.get("q", [""])[0] or "").strip()[:200]
+            if not q:
+                self.send_response(400)
+                self.end_headers()
+                return
+            try:
+                tts_url = "https://translate.googleapis.com/translate_tts?ie=UTF-8&client=tw-ob&tl=ko&q=" + quote(q)
+                req = urllib.request.Request(tts_url, headers={"User-Agent": "Mozilla/5.0"})
+                with urllib.request.urlopen(req, timeout=8) as r:
+                    audio_bytes = r.read()
+                self.send_response(200)
+                self.send_header("Content-Type", "audio/mpeg")
+                self.send_header("Cache-Control", "public, max-age=2592000")
+                self.send_header("Content-Length", str(len(audio_bytes)))
+                self.end_headers()
+                self.wfile.write(audio_bytes)
+                return
+            except Exception:
+                self.send_response(502)
+                self.end_headers()
+                return
+
         if path == "/api/auth/config":
             return self.send_json(200, {
                 "ok": True,
