@@ -2,23 +2,17 @@
 <html lang="vi" data-theme="jade_grad">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>D ● TOPIK · Tiếng Hàn Tổng Hợp &amp; Luyện Thi TOPIK</title>
   <link rel="icon" type="image/png" href="/media/d_topik_mascot.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
-  <link rel="stylesheet" href="/css/migii.css?v=20261127-10" />
+  <link rel="stylesheet" href="/css/migii.css?v=20261127-12" />
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
-  <div id="sakura-intro-veil" aria-hidden="true">
-    <div class="sakura-veil-badge">
-      <img src="/media/d_topik_logo.png" alt="D ● TOPIK" style="height:56px;width:auto;object-fit:contain;" />
-      <span>한국어 · Tiếng Hàn Tổng Hợp &amp; TOPIK</span>
-    </div>
-  </div>
   <header class="migii-navbar">
     <div class="navbar-inner">
       <div class="brand-logo" id="brand-home-btn" role="button" tabindex="0" aria-label="D ● TOPIK Trang chủ">
@@ -26,31 +20,31 @@
       </div>
 
       <nav class="nav-links" aria-label="Điều hướng chính">
-        <button class="nav-pill active" data-route="home"><span data-dico="home"></span><span>Trang chủ</span></button>
-        <button class="nav-pill" data-route="theory"><span data-dico="book"></span><span>Lý thuyết</span></button>
-        <button class="nav-pill" data-route="roadmap"><span data-dico="compass"></span><span>Lộ trình</span></button>
+        <button type="button" class="nav-pill active" data-route="home"><span data-dico="home"></span><span>Trang chủ</span></button>
+        <button type="button" class="nav-pill" data-route="theory"><span data-dico="book"></span><span>Lý thuyết</span></button>
+        <button type="button" class="nav-pill" data-route="roadmap"><span data-dico="compass"></span><span>Lộ trình</span></button>
 
         <div class="nav-item-wrap">
-          <button class="nav-pill" data-route="practice"><span data-dico="video"></span><span>Luyện tập ▾</span></button>
+          <button type="button" class="nav-pill" data-route="practice"><span data-dico="video"></span><span>Luyện tập ▾</span></button>
           <div class="nav-dropdown">
-            <button class="dropdown-link" data-route="practice" data-sub="skills">Kỹ năng &amp; Dịch câu</button>
-            <button class="dropdown-link" data-route="theory" data-sub="grammar-list">Ngữ pháp &amp; So sánh</button>
-            <button class="dropdown-link" data-route="practice" data-sub="topik1">TOPIK I</button>
-            <button class="dropdown-link" data-route="practice" data-sub="topik2">TOPIK II &amp; Speaking</button>
+            <button type="button" class="dropdown-link" data-route="practice" data-sub="skills">Bài tập &amp; Dịch câu</button>
+            <button type="button" class="dropdown-link" data-route="theory" data-sub="grammar-list">Ngữ pháp &amp; So sánh</button>
+            <button type="button" class="dropdown-link" data-route="practice" data-sub="topik1">Luyện dạng TOPIK I</button>
+            <button type="button" class="dropdown-link" data-route="practice" data-sub="topik2">Luyện dạng TOPIK II</button>
           </div>
         </div>
 
         <div class="nav-item-wrap">
-          <button class="nav-pill" data-route="mock-test"><span data-dico="exam"></span><span>Đề thi ▾</span></button>
+          <button type="button" class="nav-pill" data-route="mock-test"><span data-dico="exam"></span><span>Đề thi ▾</span></button>
           <div class="nav-dropdown">
-            <button class="dropdown-link" data-route="mock-test" data-sub="topik1" data-vmode="exams" data-cat="curated">Đề tuyển chọn</button>
-            <button class="dropdown-link" data-route="mock-test" data-sub="topik1" data-vmode="exams" data-cat="all">TOPIK I (70 câu)</button>
-            <button class="dropdown-link" data-route="mock-test" data-sub="topik2" data-vmode="exams" data-cat="all">TOPIK II (104 câu)</button>
-            <button class="dropdown-link" data-route="mock-test" data-sub="topik1" data-vmode="segments">Luyện từng dạng</button>
+            <button type="button" class="dropdown-link" data-route="mock-test" data-sub="topik1" data-vmode="exams" data-cat="curated">Đề tuyển chọn</button>
+            <button type="button" class="dropdown-link" data-route="mock-test" data-sub="topik1" data-vmode="exams" data-cat="all">TOPIK I (70 câu)</button>
+            <button type="button" class="dropdown-link" data-route="mock-test" data-sub="topik2" data-vmode="exams" data-cat="all">TOPIK II (104 câu)</button>
+            <button type="button" class="dropdown-link" data-route="mock-test" data-sub="topik1" data-vmode="segments">Luyện từng dạng</button>
           </div>
         </div>
 
-        <button class="nav-pill" data-route="check-tools"><span data-dico="sparkle"></span><span>Công cụ</span></button>
+        <button type="button" class="nav-pill" data-route="check-tools"><span data-dico="sparkle"></span><span>Công cụ</span></button>
       </nav>
 
       <div class="nav-actions">
@@ -60,14 +54,14 @@
         </div>
 
         <div class="theme-Menu-wrap" id="theme-menu-wrap">
-          <button class="btn-theme-pill" id="btn-theme-toggle" type="button" title="Xem thử bảng màu">
+          <button class="btn-theme-pill" id="btn-theme-toggle" type="button" title="Đổi dải màu Xanh Ngọc" aria-label="Đổi dải màu Xanh Ngọc">
             <span id="theme-ico"></span>
             <span class="hide-sm">Màu</span>
           </button>
           <div class="theme-popover" id="theme-popover"></div>
         </div>
 
-        <button class="btn-quick-dict" id="open-quick-tool-btn" type="button">
+        <button class="btn-quick-dict" id="open-quick-tool-btn" type="button" aria-label="Tra từ điển và chia động từ">
           <span id="search-ico"></span>
           <span class="hide-sm">Tra từ</span>
         </button>
@@ -82,7 +76,7 @@
 
   <div id="trial-banner-slot"></div>
 
-  <main id="app-root" style="min-height: calc(100vh - 240px);"></main>
+  <main id="app-root" style="min-height: calc(100vh - 210px);"></main>
 
   <div id="bottom-support-slot"></div>
 
@@ -111,19 +105,16 @@
 
   <footer class="migii-footer">
     <div class="footer-inner">
-      <div style="display:flex;align-items:center;gap:10px;">
+      <div style="display:flex;align-items:center;gap:8px;">
         <span id="footer-mascot"></span>
-        <div>
-          <strong style="color:var(--text-main);">D <span style="color:var(--primary);">●</span> TOPIK · Tiếng Hàn Tổng Hợp &amp; Luyện Thi TOPIK</strong>
-          <span style="margin-left:8px;">Giáo trình Quyển 1–6 · Lật thẻ SRS · 30 Đề Full TOPIK</span>
-        </div>
+        <strong style="color:var(--text-main);">D <span style="color:var(--primary);">●</span> TOPIK · Tiếng Hàn Tổng Hợp &amp; Luyện Thi TOPIK</strong>
       </div>
       <div style="font-weight:500;color:var(--text-muted);" id="footer-sync-badge">
-        Tiến độ lưu tự động theo tài khoản Cloud
+        Lưu tiến độ tự động
       </div>
     </div>
   </footer>
 
-  <script type="module" src="/js/app.js?v=20261127-10"></script>
+  <script type="module" src="/js/app.js?v=20261127-12"></script>
 </body>
 </html>

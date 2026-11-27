@@ -1,5 +1,4 @@
-import { store, DEFAULT_ROADMAP_PROFILE, normalizeBookId, getBookWords, getBookCurriculum, evaluateRoadmapScore } from "../store.js?v=20261127-10";
-import { ico, daisyLogoSVG } from "../icons.js?v=20261127-10";
+import { store, DEFAULT_ROADMAP_PROFILE, normalizeBookId, getBookWords, getBookCurriculum, evaluateRoadmapScore, renderQuizHistoryPillHTML } from "../store.js?v=20261127-12";
 
 const PLACEMENT_QUESTIONS = [
   { q: "1. Chọn câu chào lịch sự khi mới gặp lần đầu:", opts: ["안녕히 가세요.", "만나서 반갑습니다.", "잘 먹겠습니다.", "주말 잘 보내세요."], ans: 1 },
@@ -30,13 +29,6 @@ export const TRACK_LABELS = {
   speaking_first: "Ưu tiên Nghe – Nói"
 };
 
-/**
- * Standardized 4-Step Daily Study Plan Engine across ALL 6 BOOKS (Quyển 1 -> Quyển 6):
- *   1. Học từ vựng (theo từng Phần nhỏ 8–15 từ của Chương đang học)
- *   2. Làm bài tập (Sách bài tập 익힘책 Phần I: Từ vựng & Ngữ pháp)
- *   3. Luyện dịch câu (Việt → Hàn theo ngữ pháp chương)
- *   4. Luyện đề sau cùng (Dạng câu / Đề thi chuẩn đúng cấp của Quyển đang học)
- */
 export function getGuidedStudyPlan(db, navigate, startGuidedStep = null) {
   const profile = store.state.roadmapProfile || DEFAULT_ROADMAP_PROFILE;
   const startBookRaw = profile.startBook || "q1";
@@ -45,10 +37,8 @@ export function getGuidedStudyPlan(db, navigate, startGuidedStep = null) {
   const bookCur = getBookCurriculum(db, bookId);
   const bookPool = getBookWords(db, bookId);
   const chapters = bookCur?.chapters || [];
-  const chapCount = Math.max(1, chapters.length || 15);
   const isTopik2 = ["q3", "q4", "q5", "q6"].includes(bookId);
 
-  // Flatten all (lesson, part) pairs across the chosen Book so each day advances cleanly part-by-part!
   const allSubUnits = [];
   chapters.forEach((ch) => {
     const chWords = bookPool.filter((w) => w.lesson === ch.lesson);
@@ -83,7 +73,6 @@ export function getGuidedStudyPlan(db, navigate, startGuidedStep = null) {
     const wbStat = store.state.workbookScores?.[`${bookId}_${lsNum}`];
     const trCnt = store.state.translationDone?.[`${bookId}_${lsNum}`] || 0;
 
-    // Determine Exam Type calibrated to the active Book
     const maxType = isTopik2 ? 10 : 8;
     const typeRanges = {
       q1: [1, 2, 3, 4],
@@ -102,44 +91,44 @@ export function getGuidedStudyPlan(db, navigate, startGuidedStep = null) {
     let shortTopic = "";
 
     if (isHangeulIntro && day <= 3) {
-      const hTopics = ["14 Phụ âm & Nguyên âm đơn", "Phụ âm căng & Patchim", "7 Quy tắc nối âm & căng âm"];
+      const hTopics = ["14 Phụ âm & Nguyên âm đơn", "Phụ âm căng & Patchim", "7 Quy tắc biến âm"];
       shortTopic = `Nhập môn · ${hTopics[day - 1]}`;
       rawTasks = [
         {
-          tag: "Bước 1 · Học từ & Chữ",
+          tag: "Bước 1 · Từ & Chữ",
           icon: "book",
-          label: `Lab Hangeul (${hTopics[day - 1]}) & ${unit.partTitle}`,
+          label: `Hangeul (${hTopics[day - 1]}) & ${unit.partTitle}`,
           route: "theory",
           params: day === 1 ? { sub: "hangeul" } : { sub: "vocab-review", book: "q1", lesson: 1, part: day - 1, mode: "flashcard" },
           autoDone: pMast >= Math.min(5, Math.max(1, unit.words.length)),
-          hint: `${unit.words.length} từ nhỏ gọn`
+          hint: `${unit.words.length} từ`
         },
         {
-          tag: "Bước 2 · Làm bài tập",
+          tag: "Bước 2 · Bài tập",
           icon: "layers",
-          label: `Làm Sách bài tập Bài 01 (${unit.lessonTitle})`,
+          label: `Bài tập B01: ${unit.lessonTitle}`,
           route: "theory",
           params: { sub: "lesson-detail", book: "q1", lesson: 1, tab: "workbook" },
           autoDone: Boolean(wbStat),
-          hint: wbStat ? `Đạt ${wbStat.pct}%` : "Bài tập Từ & Ngữ pháp"
+          hint: wbStat ? `Đạt ${wbStat.pct}%` : "Từ vựng & Ngữ pháp"
         },
         {
           tag: "Bước 3 · Dịch câu",
           icon: "pen",
-          label: "Luyện dịch câu Việt → Hàn Bài 01",
+          label: "Dịch câu Bài 01",
           route: "theory",
           params: { sub: "lesson-detail", book: "q1", lesson: 1, tab: "translate" },
           autoDone: trCnt >= 2,
-          hint: trCnt ? `Đã dịch ${trCnt} câu` : "Ghép cụm từ chuẩn"
+          hint: trCnt ? `Đã dịch ${trCnt} câu` : "Việt → Hàn"
         },
         {
-          tag: "Bước 4 · Luyện đề cuối",
+          tag: "Bước 4 · Luyện đề",
           icon: "exam",
-          label: `Làm quen Nghe TOPIK I · Dạng ${dNum}`,
+          label: `Nghe TOPIK I · Dạng ${dNum}`,
           route: "mock-test",
           params: { sub: "topik1", viewMode: "segments", skill: "listening", typeId: `t1_l_d${dNum}` },
           autoDone: (store.state.partStats?.[`t1_l_d${dNum}`]?.total || 0) >= 3,
-          hint: "Chốt ngày chuẩn cấu trúc thi"
+          hint: "Cấu trúc đề thi"
         }
       ];
     } else {
@@ -154,7 +143,7 @@ export function getGuidedStudyPlan(db, navigate, startGuidedStep = null) {
         {
           tag: "Bước 1 · Từ vựng",
           icon: "cards",
-          label: `B${lsPad} · Phần ${unit.part}: ${cleanPartName}`,
+          label: `Bài ${lsPad} · Phần ${unit.part}: ${cleanPartName}`,
           route: "theory",
           params: { sub: "vocab-review", book: bookId, lesson: lsNum, part: unit.part, mode: "flashcard" },
           autoDone: pMast >= Math.min(6, Math.max(1, Math.ceil(unit.words.length * 0.6))),
@@ -167,31 +156,31 @@ export function getGuidedStudyPlan(db, navigate, startGuidedStep = null) {
           route: "theory",
           params: { sub: "lesson-detail", book: bookId, lesson: lsNum, tab: "workbook" },
           autoDone: Boolean(wbStat && wbStat.total > 0),
-          hint: wbStat ? `Điểm: ${wbStat.pct}%` : "Từ vựng & Ngữ pháp"
+          hint: wbStat ? `Điểm ${wbStat.pct}%` : "Từ vựng & Ngữ pháp"
         },
         {
           tag: "Bước 3 · Dịch câu",
           icon: "pen",
-          label: `Dịch câu Việt → Hàn · Bài ${lsPad}`,
+          label: `Dịch câu Bài ${lsPad}`,
           route: "theory",
           params: { sub: "lesson-detail", book: bookId, lesson: lsNum, tab: "translate" },
           autoDone: trCnt >= 2,
-          hint: trCnt ? `Đã dịch ${trCnt} câu` : "Ghép cụm từ chuẩn"
+          hint: trCnt ? `Đã dịch ${trCnt} câu` : "Việt → Hàn"
         },
         isMilestone
           ? {
               tag: "Bước 4 · Luyện đề",
               icon: "exam",
-              label: `Thi đề tuyển chọn ${isTopik2 ? "TOPIK II" : "TOPIK I"}`,
+              label: `Đề tuyển chọn ${isTopik2 ? "TOPIK II" : "TOPIK I"}`,
               route: "mock-test",
               params: { sub: isTopik2 ? "topik2" : "topik1", viewMode: "exams", category: "curated" },
               autoDone: (store.state.examHistory?.length || 0) >= Math.floor(day / 5),
-              hint: "Đánh giá cuối chặng"
+              hint: "Kiểm tra cuối chặng"
             }
           : {
               tag: "Bước 4 · Luyện đề",
               icon: "exam",
-              label: `Luyện ${skillKey === "listening" ? "Nghe" : "Đọc"} ${isTopik2 ? "TOPIK II" : "TOPIK I"} · Dạng ${dNum}`,
+              label: `${skillKey === "listening" ? "Nghe" : "Đọc"} ${isTopik2 ? "TOPIK II" : "TOPIK I"} · Dạng ${dNum}`,
               route: "mock-test",
               params: { sub: isTopik2 ? "topik2" : "topik1", viewMode: "segments", skill: skillKey, typeId: segTypeId },
               autoDone: (store.state.partStats?.[segTypeId]?.total || 0) >= 3,
@@ -247,44 +236,14 @@ export function getGuidedStudyPlan(db, navigate, startGuidedStep = null) {
 
 export function renderRoadmapScoreCardHTML(evalObj) {
   const pctBar = Math.min(100, Math.round((evalObj.estimatedScore / evalObj.maxScore) * 100));
-  const passLinePct = Math.round((evalObj.passScore / evalObj.maxScore) * 100);
   return `
     <div class="box-kind">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
-        <div>
-          <span style="font-size:12.5px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:2px;">Đánh giá năng lực · ${evalObj.label}</span>
-          <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;">
-            <strong class="stat-num" style="color:var(--text-main);">${evalObj.estimatedScore} <span style="font-size:14px;color:var(--text-muted);font-weight:600;">/ ${evalObj.maxScore} điểm</span></strong>
-            <span style="font-size:12.5px;font-weight:600;color:${evalObj.passed ? "var(--success)" : "var(--primary-1)"};">
-              · ${evalObj.statusLabel}
-            </span>
-          </div>
-        </div>
-        <span class="badge-orange">
-          Chuẩn ${evalObj.gradeName}: ≥ ${evalObj.passScore}đ
-        </span>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:8px;">
+        <strong style="font-size:15.5px;color:var(--text-main);">${evalObj.label}</strong>
+        <span style="font-size:14px;font-weight:700;color:var(--primary-1);">${evalObj.estimatedScore}/${evalObj.maxScore}đ (Mốc đỗ ${evalObj.passScore}đ)</span>
       </div>
-
-      <div style="position:relative;padding-top:2px;margin-bottom:14px;">
-        <div class="progress-track" style="height:8px;background:#E2E8F0;">
-          <div class="progress-fill" style="width:${pctBar}%;${evalObj.passed ? "background:var(--success);" : ""}"></div>
-        </div>
-        <div style="position:absolute;left:${passLinePct}%;top:0;bottom:-3px;width:2px;background:#475569;border-radius:2px;" title="Mốc đạt ${evalObj.passScore}đ"></div>
-      </div>
-
-      <div class="pillar-grid-4">
-        ${evalObj.pillars.map((p) => `
-          <div style="background:#F8FAFC;border-radius:12px;padding:10px 12px;">
-            <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:4px;">
-              <strong style="color:var(--text-main);">${p.label}</strong>
-              <span style="font-weight:750;color:var(--primary-1);">${p.pct}%</span>
-            </div>
-            <div class="progress-track" style="height:5px;margin-bottom:5px;">
-              <div class="progress-fill" style="width:${p.pct}%"></div>
-            </div>
-            <span style="font-size:11.5px;color:var(--text-muted);">${p.detail}</span>
-          </div>
-        `).join("")}
+      <div class="progress-track" style="height:7px;">
+        <div class="progress-fill" style="width:${pctBar}%;${evalObj.passed ? "background:var(--success);" : ""}"></div>
       </div>
     </div>
   `;
@@ -292,6 +251,7 @@ export function renderRoadmapScoreCardHTML(evalObj) {
 
 export function renderRoadmapView(root, db, navigate, openAccountCustomizer) {
   let takingPlacement = false;
+  let placementSubmitted = false;
   let userAnswers = {};
   let placementResult = null;
 
@@ -300,119 +260,126 @@ export function renderRoadmapView(root, db, navigate, openAccountCustomizer) {
     const evalObj = evaluateRoadmapScore(db);
     const { profile, days, activeDay, nextTask, completedDaysCount } = plan;
     const pct = Math.round((completedDaysCount / days.length) * 100);
-    const userName = store.session.user?.name || "bạn";
 
     root.innerHTML = `
       <div class="container-narrow">
-        <div class="box-kind" style="margin-bottom:16px;">
-          <div class="roadmap-hero-grid">
-            <div style="background:#F8FAFC;border-radius:16px;padding:18px;text-align:center;">
-              <div style="display:inline-grid;place-items:center;width:58px;height:58px;border-radius:16px;background:#FFFFFF;border:1px solid var(--border-card);">
-                ${daisyLogoSVG(38)}
-              </div>
-              <strong style="display:block;margin-top:8px;color:var(--text-main);font-size:15px;">Lộ trình của ${userName}</strong>
-              <span style="font-size:12.5px;color:var(--text-muted);">Ngày ${activeDay.day}/30 · Xong ${completedDaysCount} ngày</span>
-              <div class="progress-track" style="margin-top:8px;">
-                <div class="progress-fill" style="width:${pct}%"></div>
-              </div>
-            </div>
-
-            <div>
-              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
-                <span class="badge-orange">${STAGE_LABELS[profile.startBook] || STAGE_LABELS.q1}</span>
-                <span class="meta-chip">Từ vựng → Bài tập → Dịch câu → Luyện đề</span>
-              </div>
-              <h1 class="title-hero" style="margin-bottom:5px;">Ngày ${activeDay.day}: ${activeDay.shortTopic}</h1>
-              <p style="margin:0 0 14px;color:var(--text-muted);font-size:14px;">
-                Bước tiếp theo: <strong style="color:var(--text-main);">${nextTask.label}</strong>
-              </p>
-              <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                <button class="btn-primary" id="btn-rm-continue-next">
-                  Học tiếp Bước ${nextTask.stepIdx + 1}/${nextTask.totalSteps}
-                </button>
-                <button class="btn-outline-teal" id="btn-start-placement">
-                  ${ico("sparkle", 14)} Test xếp quyển
-                </button>
-                <button class="btn-outline-teal" id="btn-customize-roadmap">
-                  ${ico("user", 14)} Đổi quyển học
-                </button>
-              </div>
-            </div>
+        <div class="box-kind" style="margin-bottom:18px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+            <span style="font-size:13px;font-weight:650;color:var(--primary);">
+              ${STAGE_LABELS[profile.startBook] || STAGE_LABELS.q1} · Hoàn thành ${completedDaysCount}/30 ngày
+            </span>
+            <span class="meta-chip">${evalObj.estimatedScore}/${evalObj.maxScore}đ</span>
           </div>
-        </div>
 
-        <div style="margin-bottom:20px;">
-          ${renderRoadmapScoreCardHTML(evalObj)}
+          <h1 class="title-hero ko" style="margin-bottom:6px;">Ngày ${activeDay.day}: ${nextTask.label}</h1>
+          <div class="progress-track" style="margin:10px 0 16px;">
+            <div class="progress-fill" style="width:${pct}%"></div>
+          </div>
+
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button type="button" class="btn-primary" id="btn-rm-continue-next">
+              Học tiếp
+            </button>
+            <button type="button" class="btn-outline-teal" id="btn-start-placement">
+              Test xếp quyển
+            </button>
+            <button type="button" class="btn-outline-teal" id="btn-customize-roadmap">
+              Đổi quyển
+            </button>
+          </div>
+          ${placementResult ? `<div style="margin-top:10px;font-weight:650;color:var(--primary-1);font-size:14px;">${placementResult}</div>` : ""}
         </div>
 
         ${takingPlacement ? `
-          <div class="box-kind" style="border-color:rgba(13,148,136,0.38);margin-bottom:22px;">
-            <h3 style="margin:0 0 14px;font-size:17px;">Bài test xếp quyển nhanh (6 câu)</h3>
+          <div class="box-kind" style="margin-bottom:20px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
+              <h3 style="margin:0;font-size:17px;">Bài test xếp quyển (6 câu)</h3>
+              ${renderQuizHistoryPillHTML("placement_test")}
+            </div>
             <div style="display:flex;flex-direction:column;gap:14px;">
               ${PLACEMENT_QUESTIONS.map((item, qi) => `
                 <div style="background:#F8FAFC;padding:14px;border-radius:12px;">
                   <div style="font-weight:650;margin-bottom:8px;">${item.q}</div>
-                  <div class="grid-2" style="gap:8px;">
-                    ${item.opts.map((opt, oi) => `
-                      <button type="button" class="ko mcq-opt-btn" data-q="${qi}" data-o="${oi}" style="${userAnswers[qi] === oi ? "border-color:var(--primary);background:var(--primary-3);font-weight:650;" : ""}">
-                        ${["①", "②", "③", "④"][oi]} ${opt}
-                      </button>
-                    `).join("")}
+                  <div class="grid-2" style="gap:10px;">
+                    ${item.opts.map((opt, oi) => {
+                      let cls = "ko mcq-opt-btn";
+                      if (placementSubmitted) {
+                        if (oi === item.ans) cls += " is-correct";
+                        else if (userAnswers[qi] === oi) cls += " is-wrong";
+                      } else if (userAnswers[qi] === oi) {
+                        cls += " is-selected";
+                      }
+                      return `
+                        <button type="button" class="${cls}" data-q="${qi}" data-o="${oi}" ${placementSubmitted ? "disabled" : ""}>
+                          ${["①", "②", "③", "④"][oi]} ${opt}
+                        </button>
+                      `;
+                    }).join("")}
                   </div>
                 </div>
               `).join("")}
             </div>
-            <div style="margin-top:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
-              <button class="btn-primary" id="btn-submit-placement">Chấm điểm &amp; Áp dụng quyển phù hợp</button>
-              ${placementResult ? `<div style="font-weight:650;color:var(--primary-1);">${placementResult}</div>` : ""}
+            <div style="margin-top:16px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+              ${!placementSubmitted ? `
+                <span style="font-size:13.5px;color:var(--text-muted);">Đã chọn <strong>${Object.keys(userAnswers).length}/${PLACEMENT_QUESTIONS.length}</strong> câu</span>
+                <button type="button" class="btn-primary" id="btn-submit-placement" ${Object.keys(userAnswers).length === 0 ? "disabled" : ""}>Chấm điểm &amp; Áp dụng</button>
+              ` : `
+                <strong style="color:var(--primary-1);font-size:15px;">${placementResult || ""}</strong>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                  <button type="button" class="btn-outline-teal" id="btn-retry-placement">Làm lại test</button>
+                  <button type="button" class="btn-primary" id="btn-close-placement">Đóng &amp; Vào lộ trình</button>
+                </div>
+              `}
             </div>
           </div>
         ` : ""}
 
         <div class="section-head" style="margin-top:0;">
-          <h2>Kế hoạch 30 ngày (${STAGE_LABELS[profile.startBook] || "Quyển 1"})</h2>
+          <h2>Kế hoạch 30 ngày</h2>
         </div>
 
-        <div style="display:flex;flex-direction:column;gap:12px;">
+        <div style="display:flex;flex-direction:column;gap:10px;">
           ${days.map((d) => {
             const isToday = d.day === activeDay.day;
             return `
-              <div class="box-kind" style="${isToday ? "border-color:rgba(13,148,136,0.38);" : ""}">
-                <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
-                  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <details class="roadmap-day-details ${isToday ? "is-today" : ""}" ${isToday ? "open" : ""}>
+                <summary>
+                  <div style="display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap;">
                     ${isToday ? `<span class="badge-orange">Hôm nay</span>` : ""}
-                    <strong style="font-size:15.5px;color:${d.isDayComplete ? "var(--success)" : "var(--text-main)"};">
+                    <strong style="font-size:15px;color:${d.isDayComplete ? "var(--success)" : "var(--text-main)"};">
                       ${d.title}
                     </strong>
                   </div>
-                  <span class="meta-chip" style="color:${d.isDayComplete ? "var(--success)" : "var(--text-muted)"};">
-                    ${d.isDayComplete ? "Đã xong 4/4" : `${d.doneSteps}/${d.totalSteps} bước`}
+                  <span class="meta-chip nw" style="color:${d.isDayComplete ? "var(--success)" : "var(--text-muted)"};">
+                    ${d.isDayComplete ? "Xong 4/4" : `${d.doneSteps}/${d.totalSteps} bước ▾`}
                   </span>
-                </div>
+                </summary>
 
-                <div class="today-stepper">
-                  ${d.tasks.map((t) => {
-                    const isNextHere = isToday && !t.done && t.stepIdx === nextTask.stepIdx;
-                    const cleanCat = t.tag.replace(/^Bước\s*\d+\s*·\s*/i, "");
-                    return `
-                      <div class="today-step-row ${t.done ? "is-done" : (isNextHere ? "is-next" : "")}">
-                        <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1;">
-                          <button type="button" class="step-check-btn ${t.done ? "checked" : ""}" data-rm-chk="${d.day}" data-sidx="${t.stepIdx}" data-stotal="${d.totalSteps}" title="Đánh dấu hoàn thành">
-                            ${t.done ? ico("check", 24) : (t.stepIdx + 1)}
-                          </button>
-                          <div style="min-width:0;flex:1;">
-                            <div style="font-size:14px;font-weight:650;${t.done ? "text-decoration:line-through;color:var(--text-muted);" : "color:var(--text-main);"}">${t.label}</div>
-                            <div style="font-size:12px;color:var(--text-muted);">${cleanCat} · ${t.hint}</div>
+                <div class="roadmap-day-body">
+                  <div class="today-stepper">
+                    ${d.tasks.map((t) => {
+                      const isNextHere = isToday && !t.done && t.stepIdx === nextTask.stepIdx;
+                      const cleanCat = t.tag.replace(/^Bước\s*\d+\s*·\s*/i, "");
+                      return `
+                        <div class="today-step-row ${t.done ? "is-done" : (isNextHere ? "is-next" : "")}">
+                          <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1;">
+                            <button type="button" class="step-check-btn ${t.done ? "checked" : ""}" data-rm-chk="${d.day}" data-sidx="${t.stepIdx}" data-stotal="${d.totalSteps}" aria-label="Đánh dấu bước ${t.stepIdx + 1}">
+                              ${t.done ? "✓" : (t.stepIdx + 1)}
+                            </button>
+                            <div style="min-width:0;flex:1;">
+                              <div class="ko" style="font-size:14.5px;font-weight:650;${t.done ? "text-decoration:line-through;color:var(--text-muted);" : "color:var(--text-main);"}">${t.label}</div>
+                              <div style="font-size:12.5px;color:var(--text-muted);">${cleanCat} · ${t.hint}</div>
+                            </div>
                           </div>
+                          <button type="button" class="${isNextHere ? "btn-soft-jade" : "btn-step-quiet"} nw" data-day="${d.day}" data-ti="${t.stepIdx}">
+                            ${t.done ? "Xem lại" : (isNextHere ? "Học tiếp" : "Mở")}
+                          </button>
                         </div>
-                        <button type="button" class="${isNextHere ? "btn-soft-jade" : "btn-outline-teal"}" data-day="${d.day}" data-ti="${t.stepIdx}" style="padding:6px 12px;font-size:12.5px;border-radius:9px;flex-shrink:0;">
-                          ${t.done ? "Xem lại" : (isNextHere ? "Học ngay" : "Mở")}
-                        </button>
-                      </div>
-                    `;
-                  }).join("")}
+                      `;
+                    }).join("")}
+                  </div>
                 </div>
-              </div>
+              </details>
             `;
           }).join("")}
         </div>
@@ -422,6 +389,7 @@ export function renderRoadmapView(root, db, navigate, openAccountCustomizer) {
     root.querySelector("#btn-rm-continue-next").addEventListener("click", () => nextTask.go());
     root.querySelector("#btn-start-placement").addEventListener("click", () => {
       takingPlacement = !takingPlacement;
+      if (!takingPlacement) placementSubmitted = false;
       render();
     });
     root.querySelector("#btn-customize-roadmap").addEventListener("click", () => {
@@ -431,26 +399,50 @@ export function renderRoadmapView(root, db, navigate, openAccountCustomizer) {
     if (takingPlacement) {
       root.querySelectorAll("[data-q]").forEach((btn) => {
         btn.addEventListener("click", () => {
+          if (placementSubmitted) return;
           userAnswers[Number(btn.dataset.q)] = Number(btn.dataset.o);
           render();
         });
       });
-      root.querySelector("#btn-submit-placement").addEventListener("click", () => {
+      root.querySelector("#btn-submit-placement")?.addEventListener("click", () => {
         let correct = 0;
         PLACEMENT_QUESTIONS.forEach((it, i) => {
           if (userAnswers[i] === it.ans) correct += 1;
         });
+        const pctScore = Math.round((correct / PLACEMENT_QUESTIONS.length) * 100);
         const recommendedBook = correct <= 2 ? "q1" : (correct <= 4 ? "q2" : "q3");
         const recTarget = correct <= 2 ? "TOPIK I - Cấp 1" : (correct <= 4 ? "TOPIK I - Cấp 2" : "TOPIK II - Cấp 4");
         store.updateRoadmapProfile({ startBook: recommendedBook, targetLevel: recTarget }, true);
-        placementResult = `Đúng ${correct}/6 câu → Đã chuyển sang ${STAGE_LABELS[recommendedBook]}!`;
+        store.recordScoreHistory({
+          quizKey: "placement_test",
+          category: "Test xếp quyển",
+          title: "Bài test xếp quyển đầu vào (6 câu)",
+          score: pctScore,
+          maxScore: 100,
+          correctCount: correct,
+          totalCount: PLACEMENT_QUESTIONS.length,
+          route: "roadmap",
+          params: {}
+        });
+        placementResult = `Điểm: ${pctScore}/100đ (Đúng ${correct}/6 câu) → Xếp vào ${STAGE_LABELS[recommendedBook]}`;
+        placementSubmitted = true;
+        render();
+      });
+      root.querySelector("#btn-retry-placement")?.addEventListener("click", () => {
+        userAnswers = {};
+        placementSubmitted = false;
+        render();
+      });
+      root.querySelector("#btn-close-placement")?.addEventListener("click", () => {
         takingPlacement = false;
+        placementSubmitted = false;
         render();
       });
     }
 
     root.querySelectorAll("[data-rm-chk]").forEach((chk) => {
-      chk.addEventListener("click", () => {
+      chk.addEventListener("click", (e) => {
+        e.stopPropagation();
         const dNum = Number(chk.dataset.rmChk);
         const sIdx = Number(chk.dataset.sidx);
         const sTot = Number(chk.dataset.stotal);

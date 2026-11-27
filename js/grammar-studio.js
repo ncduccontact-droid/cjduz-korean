@@ -1,7 +1,7 @@
-import { store, normalizeBookId, getBookCurriculum, playAudio, speakKoreanTTS } from "./store.js?v=20261127-10";
-import { appendJamoToText } from "./korean-engine.js?v=20261127-10";
-import { HANGEUL_DATA } from "./curated-content.js?v=20261127-10";
-import { ico } from "./icons.js?v=20261127-10";
+import { store, normalizeBookId, getBookCurriculum, playAudio, speakKoreanTTS, bindHangulEnter, renderExplainDisclosure, renderQuizHistoryPillHTML } from "./store.js?v=20261127-12";
+import { appendJamoToText } from "./korean-engine.js?v=20261127-12";
+import { HANGEUL_DATA } from "./curated-content.js?v=20261127-12";
+import { ico } from "./icons.js?v=20261127-12";
 
 // ============================================================================
 // 1. HIGH-FREQUENCY TOPIK EXAM GRAMMAR BANK (Ôn ngữ pháp trọng tâm thi TOPIK)
@@ -351,85 +351,151 @@ function buildWordBank(targetSentence, seedIdx) {
   return combined.sort((a, b) => ((a.text.charCodeAt(0) * 19 + seedIdx * 7) % 13) - ((b.text.charCodeAt(0) * 19 + seedIdx * 7) % 13));
 }
 
-// Shared Interactive MCQ List Renderer for Grammar Drills
-function renderGrammarMcqArena(container, drills, stateKeyPrefix) {
+// Shared Interactive MCQ List Renderer for Grammar Drills (End-of-Quiz Grading + Score History)
+function renderGrammarMcqArena(container, drills, stateKeyPrefix, meta = {}) {
   let queue = [...drills];
   let round = 0;
+  let submitted = false;
   const picked = {};
+  const baseQuizKey = `gram_${stateKeyPrefix}`;
 
   function draw() {
     const doneCnt = queue.filter((q) => picked[q.id] !== undefined).length;
     const correctCnt = queue.filter((q) => picked[q.id] === q.answer).length;
-    const wrongItems = queue.filter((q) => picked[q.id] !== undefined && picked[q.id] !== q.answer);
+    const pctScore = queue.length > 0 ? Math.round((correctCnt / queue.length) * 100) : 0;
+    const wrongItems = submitted ? queue.filter((q) => picked[q.id] !== q.answer) : [];
+    const histPill = renderQuizHistoryPillHTML(baseQuizKey);
 
     container.innerHTML = `
-      <div style="display:flex;flex-direction:column;gap:12px;">
-        <div class="box-kind" style="background:var(--primary-3);padding:11px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
-          <strong style="font-size:14px;color:var(--primary-4);">
-            Đúng ${correctCnt}/${queue.length} câu ${round > 0 ? `(Vòng ôn câu sai #${round})` : ""}
-          </strong>
-          ${wrongItems.length > 0 ? `
-            <button type="button" class="btn-orange" id="btn-gram-retry-wrong" style="padding:5px 12px;font-size:12.5px;">
-              ${ico("refresh", 14)} Làm lại ${wrongItems.length} câu sai
-            </button>
-          ` : (doneCnt === queue.length && queue.length > 0 ? `
-            <span class="badge-orange">${ico("trophy", 14)} Hoàn thành 100%</span>
-          ` : `<span style="font-size:12.5px;color:var(--text-muted);">Chọn đáp án để chấm ngay</span>`)}
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div class="box-kind" style="background:var(--primary-3);padding:14px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <strong style="font-size:15px;color:var(--primary-4);">
+              ${submitted
+                ? `Điểm số: ${pctScore}/100đ · Đúng ${correctCnt}/${queue.length} câu ${round > 0 ? `(Ôn câu sai #${round})` : ""}`
+                : `Đã chọn ${doneCnt}/${queue.length} câu ${round > 0 ? `(Ôn câu sai #${round})` : ""} · Bấm Nộp bài để chấm điểm`}
+            </strong>
+            ${histPill ? `<div>${histPill}</div>` : ""}
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            ${!submitted ? `
+              <button type="button" class="btn-primary" data-gram-submit="1" ${doneCnt === 0 ? "disabled" : ""}>
+                Nộp bài &amp; Chấm điểm
+              </button>
+            ` : `
+              ${wrongItems.length > 0 ? `
+                <button type="button" class="btn-orange" id="btn-gram-retry-wrong">
+                  Ôn ${wrongItems.length} câu sai
+                </button>
+              ` : ""}
+              <button type="button" class="btn-outline-teal" id="btn-gram-reset-all">
+                Làm lại
+              </button>
+            `}
+          </div>
         </div>
 
         ${queue.map((q, qi) => {
           const u = picked[q.id];
           const answered = u !== undefined;
+          const ansNum = ["①", "②", "③", "④"][q.answer] || `${q.answer + 1}`;
           return `
-            <div class="box-kind" style="padding:16px 18px;">
-              <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
-                <span class="meta-chip" style="color:var(--primary-1);">Câu ${qi + 1}${q.tag ? ` · ${q.tag}` : ""}</span>
-                ${q.audio ? `<button type="button" class="btn-audio" data-gaud="${q.audio}" style="width:30px;height:30px;">${ico("speaker", 15)}</button>` : ""}
+            <div class="box-kind" style="padding:18px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+                <span class="meta-chip" style="color:var(--primary-1);">Câu ${qi + 1}/${queue.length}${q.tag ? ` · ${q.tag}` : ""}</span>
+                ${q.audio ? `<button type="button" class="btn-audio" aria-label="Nghe câu ${qi + 1}" data-gaud="${q.audio}">${ico("speaker", 16)}</button>` : ""}
               </div>
-              <div class="ko" style="font-weight:700;font-size:15.5px;margin-bottom:10px;">${q.question}</div>
-              <div class="grid-2" style="gap:8px;">
+              <div class="ko" style="font-weight:700;font-size:16px;margin-bottom:12px;">${q.question}</div>
+              <div class="grid-2" style="gap:10px;">
                 ${q.options.map((opt, oi) => {
                   let cls = "mcq-opt-btn";
-                  if (answered) {
+                  if (submitted) {
                     if (oi === q.answer) cls += " is-correct";
                     else if (oi === u) cls += " is-wrong";
+                  } else if (oi === u) {
+                    cls += " is-selected";
                   }
                   return `
-                    <button type="button" class="ko ${cls}" data-gq="${q.id}" data-goi="${oi}">
+                    <button type="button" class="ko ${cls}" data-gq="${q.id}" data-goi="${oi}" ${submitted ? "disabled" : ""}>
                       ${["①", "②", "③", "④"][oi]} ${opt}
                     </button>
                   `;
                 }).join("")}
               </div>
-              ${answered ? `
-                <div style="margin-top:10px;background:var(--primary-3);border-radius:10px;padding:9px 13px;font-size:13.5px;color:var(--primary-4);">
-                  <strong>${u === q.answer ? `${ico("check", 14)} Chính xác!` : `${ico("cross", 14)} Giải thích:`}</strong> ${q.explain}
-                </div>
-              ` : ""}
+              ${submitted ? renderExplainDisclosure({
+                isCorrect: u === q.answer,
+                statusHtml: u === q.answer
+                  ? "Chính xác"
+                  : (answered ? `Chưa đúng · Đáp án ${ansNum}` : `Chưa chọn · Đáp án ${ansNum}`),
+                explainHtml: q.explain
+              }) : ""}
             </div>
           `;
         }).join("")}
+
+        ${!submitted && queue.length > 0 ? `
+          <div style="display:flex;justify-content:flex-end;align-items:center;gap:10px;flex-wrap:wrap;">
+            <span style="font-size:13.5px;color:var(--text-muted);">Đã chọn <strong>${doneCnt}/${queue.length}</strong> câu</span>
+            <button type="button" class="btn-primary" data-gram-submit="1" ${doneCnt === 0 ? "disabled" : ""}>
+              Nộp bài &amp; Chấm điểm
+            </button>
+          </div>
+        ` : ""}
       </div>
     `;
 
-    const retryBtn = container.querySelector("#btn-gram-retry-wrong");
-    if (retryBtn) {
-      retryBtn.addEventListener("click", () => {
-        queue = [...wrongItems];
-        queue.forEach((w) => { delete picked[w.id]; });
-        round += 1;
-        draw();
+    const submitGrammarNow = () => {
+      submitted = true;
+      const corr = queue.filter((q) => picked[q.id] === q.answer).length;
+      const finalPct = queue.length > 0 ? Math.round((corr / queue.length) * 100) : 0;
+      queue.forEach((qObj) => {
+        if (picked[qObj.id] !== undefined) {
+          store.recordQuestionResult(stateKeyPrefix, meta.title || "Luyện Ngữ pháp", qObj, picked[qObj.id], { deferSave: true });
+        }
       });
-    }
+      store.recordScoreHistory({
+        quizKey: round === 0 ? baseQuizKey : `${baseQuizKey}_retry`,
+        category: "Ngữ pháp",
+        title: round > 0 ? `${meta.title || "Bài tập Ngữ pháp"} (Ôn câu sai)` : (meta.title || "Bài tập Ngữ pháp"),
+        score: finalPct,
+        maxScore: 100,
+        correctCount: corr,
+        totalCount: queue.length,
+        route: meta.route || "theory",
+        params: meta.params || { sub: "grammar-list" }
+      });
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      draw();
+    };
+
+    container.querySelectorAll("[data-gram-submit]").forEach((b) => {
+      b.addEventListener("click", submitGrammarNow);
+    });
+    container.querySelector("#btn-gram-retry-wrong")?.addEventListener("click", () => {
+      queue = [...wrongItems];
+      queue.forEach((w) => { delete picked[w.id]; });
+      submitted = false;
+      round += 1;
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      draw();
+    });
+    container.querySelector("#btn-gram-reset-all")?.addEventListener("click", () => {
+      queue = [...drills];
+      Object.keys(picked).forEach((k) => { delete picked[k]; });
+      submitted = false;
+      round = 0;
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      draw();
+    });
     container.querySelectorAll("[data-gaud]").forEach((b) => {
       b.addEventListener("click", () => playAudio(b.dataset.gaud));
     });
     container.querySelectorAll("[data-gq]").forEach((btn) => {
       btn.addEventListener("click", () => {
+        if (submitted) return;
         const qObj = queue.find((x) => x.id === btn.dataset.gq);
-        const oi = Number(btn.dataset.goi);
-        picked[qObj.id] = oi;
-        store.recordQuestionResult(stateKeyPrefix, "Luyện Ngữ pháp", qObj, oi);
+        if (!qObj) return;
+        picked[qObj.id] = Number(btn.dataset.goi);
         draw();
       });
     });
@@ -439,7 +505,7 @@ function renderGrammarMcqArena(container, drills, stateKeyPrefix) {
 }
 
 // Shared Interactive Sentence Translation Renderer for Grammar Application
-function renderGrammarTranslationArena(container, items, bookForSave = "q1", lessonForSave = 1) {
+function renderGrammarTranslationArena(container, items, bookForSave = "q1", lessonForSave = 1, meta = {}) {
   if (!items.length) {
     container.innerHTML = `<div class="box-kind">Chưa có câu luyện dịch cho phần này.</div>`;
     return;
@@ -450,19 +516,85 @@ function renderGrammarTranslationArena(container, items, bookForSave = "q1", les
   let typingDraft = "";
   let showVk = false;
   let checked = null;
+  let summaryMode = false;
+  const solvedMap = {};
+  const countedIds = new Set();
+  const quizKey = `gtr_${meta.key || `${bookForSave}_${lessonForSave}`}`;
 
   function draw() {
-    const cur = items[idx % items.length];
+    const doneCnt = Object.keys(solvedMap).length;
+    const correctCnt = items.filter((it) => solvedMap[it.id] === true).length;
+    const pctScore = Math.round((correctCnt / items.length) * 100);
+    const histPill = renderQuizHistoryPillHTML(quizKey);
+
+    const finishSet = () => {
+      summaryMode = true;
+      store.recordScoreHistory({
+        quizKey,
+        category: "Dịch ngữ pháp",
+        title: meta.title || "Dịch câu áp dụng ngữ pháp",
+        score: pctScore,
+        maxScore: 100,
+        correctCount: correctCnt,
+        totalCount: items.length,
+        route: meta.route || "theory",
+        params: meta.params || { sub: "grammar-list" }
+      });
+      draw();
+    };
+
+    if (summaryMode) {
+      container.innerHTML = `
+        <div class="box-kind" style="max-width:780px;margin:0 auto;padding:20px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+            <div>
+              <h3 style="margin:0 0 4px;font-size:18.5px;color:var(--primary-1);">
+                Điểm dịch ngữ pháp: ${pctScore}/100đ · Đúng ${correctCnt}/${items.length} câu
+              </h3>
+              ${renderQuizHistoryPillHTML(quizKey)}
+            </div>
+            <button type="button" class="btn-primary" id="gt-restart-all">Làm lại từ đầu</button>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            ${items.map((it, ii) => {
+              const ok = solvedMap[it.id] === true;
+              return `
+                <div style="padding:11px 14px;border-radius:10px;background:${ok ? "rgba(22,163,74,0.08)" : "rgba(225,29,72,0.06)"};border:1px solid ${ok ? "rgba(22,163,74,0.3)" : "rgba(225,29,72,0.28)"};">
+                  <div style="font-size:13px;color:var(--text-muted);">${ii + 1}. ${it.vi}</div>
+                  <div class="ko" style="font-size:15.5px;font-weight:700;margin-top:2px;">${it.ko}</div>
+                </div>
+              `;
+            }).join("")}
+          </div>
+        </div>
+      `;
+      container.querySelector("#gt-restart-all")?.addEventListener("click", () => {
+        Object.keys(solvedMap).forEach((k) => delete solvedMap[k]);
+        summaryMode = false;
+        idx = 0;
+        selectedBlocks = [];
+        typingDraft = "";
+        checked = null;
+        draw();
+      });
+      return;
+    }
+
+    idx = Math.min(Math.max(0, idx), items.length - 1);
+    const cur = items[idx];
     const bank = buildWordBank(cur.ko, idx);
+    const isLast = idx === items.length - 1;
 
     container.innerHTML = `
       <div class="box-kind" style="max-width:780px;margin:0 auto;padding:20px;">
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-            <span style="font-size:13px;font-weight:700;color:var(--primary-1);">Câu ${(idx % items.length) + 1}/${items.length}</span>
+            <span style="font-size:13px;font-weight:700;color:var(--primary-1);">Câu ${idx + 1}/${items.length}</span>
             <span class="badge-orange ko">${cur.grammarBadge}</span>
+            ${histPill}
           </div>
-          <div style="display:flex;gap:6px;">
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            ${doneCnt > 0 ? `<button type="button" class="btn-soft-jade" id="gt-finish-set" style="padding:4px 11px;font-size:12.5px;">Tổng kết (${doneCnt}/${items.length})</button>` : ""}
             <button type="button" class="btn-outline-teal" data-gtmode="blocks" style="padding:4px 11px;font-size:12.5px;${transMode === "blocks" ? "background:var(--primary);color:#FFF;border-color:var(--primary-1);" : ""}">Ghép từ</button>
             <button type="button" class="btn-outline-teal" data-gtmode="typing" style="padding:4px 11px;font-size:12.5px;${transMode === "typing" ? "background:var(--primary);color:#FFF;border-color:var(--primary-1);" : ""}">Tự gõ</button>
           </div>
@@ -520,11 +652,11 @@ function renderGrammarTranslationArena(container, items, bookForSave = "q1", les
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
           <div style="display:flex;gap:8px;">
             <button type="button" class="btn-primary" id="gt-check">Kiểm tra</button>
-            <button type="button" class="btn-outline-teal" id="gt-reset">Làm lại</button>
+            <button type="button" class="btn-outline-teal" id="gt-reset">Xóa nháp</button>
           </div>
           <div style="display:flex;gap:8px;">
-            <button type="button" class="btn-outline-teal" id="gt-prev">← Trước</button>
-            <button type="button" class="btn-soft-jade" id="gt-next">Câu tiếp →</button>
+            <button type="button" class="btn-outline-teal" id="gt-prev" ${idx === 0 ? "disabled" : ""}>← Trước</button>
+            <button type="button" class="${isLast ? "btn-primary" : "btn-soft-jade"}" id="gt-next">${isLast ? "Hoàn thành &amp; Chấm điểm →" : "Câu tiếp →"}</button>
           </div>
         </div>
 
@@ -567,10 +699,7 @@ function renderGrammarTranslationArena(container, items, bookForSave = "q1", les
     const inp = container.querySelector("#gt-inp");
     if (inp) {
       inp.addEventListener("input", (e) => { typingDraft = e.target.value; });
-      inp.addEventListener("keydown", (e) => {
-        if (e.isComposing || e.keyCode === 229) return;
-        if (e.key === "Enter") { e.preventDefault(); verifyNow(); }
-      });
+      bindHangulEnter(inp, verifyNow);
       container.querySelector("#gt-vk-btn")?.addEventListener("click", () => { showVk = !showVk; draw(); });
       container.querySelectorAll("[data-jamo]").forEach((k) => {
         k.addEventListener("click", () => {
@@ -596,16 +725,44 @@ function renderGrammarTranslationArena(container, items, bookForSave = "q1", les
       typingDraft = container.querySelector("#gt-inp")?.value ?? typingDraft;
       const ok = normalizeKo(uStr) === normalizeKo(cur.ko);
       checked = { ok };
-      if (ok) store.recordTranslationSolved(bookForSave, lessonForSave);
+      solvedMap[cur.id] = ok;
+      if (ok && !countedIds.has(cur.id)) {
+        countedIds.add(cur.id);
+        store.recordTranslationSolved(bookForSave, lessonForSave);
+      }
       if (cur.audio) playAudio(cur.audio);
       else speakKoreanTTS(cur.ko);
       draw();
     }
 
+    container.querySelector("#gt-finish-set")?.addEventListener("click", finishSet);
     container.querySelector("#gt-check").addEventListener("click", verifyNow);
     container.querySelector("#gt-reset").addEventListener("click", () => { selectedBlocks = []; typingDraft = ""; checked = null; draw(); });
-    container.querySelector("#gt-prev").addEventListener("click", () => { idx = (idx - 1 + items.length) % items.length; selectedBlocks = []; typingDraft = ""; checked = null; draw(); });
-    container.querySelector("#gt-next").addEventListener("click", () => { idx = (idx + 1) % items.length; selectedBlocks = []; typingDraft = ""; checked = null; draw(); });
+    container.querySelector("#gt-prev").addEventListener("click", () => {
+      if (idx > 0) { idx -= 1; selectedBlocks = []; typingDraft = ""; checked = null; draw(); }
+    });
+    container.querySelector("#gt-next").addEventListener("click", () => {
+      if (isLast) {
+        if (checked === null && (selectedBlocks.length > 0 || (container.querySelector("#gt-inp")?.value || typingDraft).trim())) {
+          const uStr = transMode === "blocks"
+            ? selectedBlocks.map((x) => x.text).join(" ")
+            : (container.querySelector("#gt-inp")?.value || typingDraft);
+          const ok = normalizeKo(uStr) === normalizeKo(cur.ko);
+          solvedMap[cur.id] = ok;
+          if (ok && !countedIds.has(cur.id)) {
+            countedIds.add(cur.id);
+            store.recordTranslationSolved(bookForSave, lessonForSave);
+          }
+        }
+        finishSet();
+        return;
+      }
+      idx += 1;
+      selectedBlocks = [];
+      typingDraft = "";
+      checked = null;
+      draw();
+    });
     container.querySelector("#gt-speak")?.addEventListener("click", () => {
       if (cur.audio) playAudio(cur.audio);
       else speakKoreanTTS(cur.ko);
@@ -751,7 +908,7 @@ export function renderInlineLessonGrammarSection(container, db, rawBookKey, less
                       <div class="ko" style="font-weight:700;font-size:15px;">${g.example1Ko}</div>
                       <div style="font-size:12.5px;color:var(--text-muted);">${g.example1Vi || ""}</div>
                     </div>
-                    <button type="button" class="btn-audio" style="width:30px;height:30px;" data-play="${g.example1Audio || ""}" data-tts="${g.example1Ko}">${ico("speaker", 15)}</button>
+                    <button type="button" class="btn-audio" aria-label="Nghe câu ví dụ" data-play="${g.example1Audio || ""}" data-tts="${g.example1Ko}">${ico("speaker", 15)}</button>
                   </div>
                 ` : ""}
                 ${g.example2Ko ? `
@@ -760,7 +917,7 @@ export function renderInlineLessonGrammarSection(container, db, rawBookKey, less
                       <div class="ko" style="font-weight:700;font-size:15px;">${g.example2Ko}</div>
                       <div style="font-size:12.5px;color:var(--text-muted);">${g.example2Vi || ""}</div>
                     </div>
-                    <button type="button" class="btn-audio" style="width:30px;height:30px;" data-play="${g.example2Audio || ""}" data-tts="${g.example2Ko}">${ico("speaker", 15)}</button>
+                    <button type="button" class="btn-audio" aria-label="Nghe câu ví dụ" data-play="${g.example2Audio || ""}" data-tts="${g.example2Ko}">${ico("speaker", 15)}</button>
                   </div>
                 ` : ""}
                 ${g.note ? `<div style="font-size:12px;color:var(--primary-1);margin-top:2px;">Lưu ý: ${g.note}</div>` : ""}
@@ -769,12 +926,9 @@ export function renderInlineLessonGrammarSection(container, db, rawBookKey, less
           `).join("")}
         </div>
 
-        <div class="box-kind" style="background:var(--primary-3);padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
-          <span style="font-size:13.5px;font-weight:600;color:var(--primary-4);">Đã xem xong lý thuyết Bài ${String(lessonNum).padStart(2, "0")} — thực hành ngay để nhớ lâu:</span>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <button type="button" class="btn-primary" id="btn-go-lg-quiz" style="padding:7px 14px;font-size:13px;">Làm ${drills.length} bài tập →</button>
-            <button type="button" class="btn-outline-teal" id="btn-go-lg-trans" style="padding:7px 14px;font-size:13px;">Dịch ${translations.length} câu →</button>
-          </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button type="button" class="btn-primary" id="btn-go-lg-quiz">Làm ${drills.length} bài tập</button>
+          <button type="button" class="btn-outline-teal" id="btn-go-lg-trans">Dịch ${translations.length} câu</button>
         </div>
       `;
 
@@ -787,9 +941,18 @@ export function renderInlineLessonGrammarSection(container, db, rawBookKey, less
       stage.querySelector("#btn-go-lg-quiz")?.addEventListener("click", () => { subTab = "quiz"; draw(); });
       stage.querySelector("#btn-go-lg-trans")?.addEventListener("click", () => { subTab = "translate"; draw(); });
     } else if (subTab === "quiz") {
-      renderGrammarMcqArena(stage, drills, `gram_${bookKey}_b${lessonNum}`);
+      renderGrammarMcqArena(stage, drills, `${bookKey}_b${lessonNum}`, {
+        title: `Ngữ pháp · Quyển ${bookKey.replace("q", "")} Bài ${String(lessonNum).padStart(2, "0")}`,
+        route: "theory",
+        params: { sub: "grammar-list", mode: "lesson", book: bookKey, lesson: lessonNum, subTab: "quiz" }
+      });
     } else {
-      renderGrammarTranslationArena(stage, translations, bookKey, lessonNum);
+      renderGrammarTranslationArena(stage, translations, bookKey, lessonNum, {
+        key: `${bookKey}_b${lessonNum}`,
+        title: `Dịch ngữ pháp · Quyển ${bookKey.replace("q", "")} Bài ${String(lessonNum).padStart(2, "0")}`,
+        route: "theory",
+        params: { sub: "grammar-list", mode: "lesson", book: bookKey, lesson: lessonNum, subTab: "translate" }
+      });
     }
   }
 
@@ -821,36 +984,21 @@ export function renderGrammarStudioView(root, db, navigate, params = {}) {
 
     root.innerHTML = `
       <div class="container-web">
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
-          <div class="breadcrumb-bar" style="margin-bottom:0;">
-            <button type="button" id="bc-gram-back">Lý thuyết</button>
-            <span>/</span>
-            <span>Ngữ pháp &amp; Luyện thi</span>
-          </div>
-          <span style="font-size:12.5px;color:var(--text-muted);">Ôn công thức · Bài tập trắc nghiệm · Dịch câu áp dụng</span>
+        <div class="breadcrumb-bar" style="margin-bottom:10px;">
+          <button type="button" id="bc-gram-back">Giáo trình</button>
+          <span>/</span>
+          <span>Ngữ pháp</span>
         </div>
 
-        <!-- 3 CORE GRAMMAR PILLARS -->
-        <div class="grid-3" style="gap:10px;margin-bottom:16px;">
-          <button type="button" class="box-kind clickable" data-gmode="lesson" style="text-align:left;padding:12px 15px;border-color:${activeMode === "lesson" ? "var(--primary)" : "var(--border-card)"};background:${activeMode === "lesson" ? "var(--primary-3)" : "#FFFFFF"};">
-            <strong style="font-size:14.5px;display:flex;align-items:center;gap:6px;color:var(--text-main);">
-              ${ico("book", 17)} Học theo từng bài
-            </strong>
-            <span style="font-size:12px;color:var(--text-muted);">Quyển 1–6 · Kèm bài tập &amp; dịch câu</span>
+        <div class="skill-pills-row" style="margin-bottom:16px;">
+          <button type="button" class="btn-skill ${activeMode === "lesson" ? "active" : ""}" data-gmode="lesson">
+            Theo bài (Quyển 1–6)
           </button>
-
-          <button type="button" class="box-kind clickable" data-gmode="topik" style="text-align:left;padding:12px 15px;border-color:${activeMode === "topik" ? "var(--primary)" : "var(--border-card)"};background:${activeMode === "topik" ? "var(--primary-3)" : "#FFFFFF"};">
-            <strong style="font-size:14.5px;display:flex;align-items:center;gap:6px;color:var(--text-main);">
-              ${ico("exam", 17)} Trọng tâm thi TOPIK
-            </strong>
-            <span style="font-size:12px;color:var(--text-muted);">20 mẫu hay ra đề nhất · Đọc &amp; Viết</span>
+          <button type="button" class="btn-skill ${activeMode === "topik" ? "active" : ""}" data-gmode="topik">
+            Trọng tâm TOPIK (20)
           </button>
-
-          <button type="button" class="box-kind clickable" data-gmode="similar" style="text-align:left;padding:12px 15px;border-color:${activeMode === "similar" ? "var(--primary)" : "var(--border-card)"};background:${activeMode === "similar" ? "var(--primary-3)" : "#FFFFFF"};">
-            <strong style="font-size:14.5px;display:flex;align-items:center;gap:6px;color:var(--text-main);">
-              ${ico("layers", 17)} Ngữ pháp tương đồng
-            </strong>
-            <span style="font-size:12px;color:var(--text-muted);">12 nhóm dễ nhầm · So sánh &amp; phân biệt</span>
+          <button type="button" class="btn-skill ${activeMode === "similar" ? "active" : ""}" data-gmode="similar">
+            Ngữ pháp tương đồng (12)
           </button>
         </div>
 
@@ -999,9 +1147,18 @@ export function renderGrammarStudioView(root, db, navigate, params = {}) {
           });
         });
       } else if (subTab === "quiz") {
-        renderGrammarMcqArena(stage, topikDrills, "topik_exam_grammar");
+        renderGrammarMcqArena(stage, topikDrills, `topik_exam_${topikTier}`, {
+          title: `Ngữ pháp trọng tâm TOPIK (${topikTier === "all" ? "Tất cả" : topikTier})`,
+          route: "theory",
+          params: { sub: "grammar-list", mode: "topik", subTab: "quiz" }
+        });
       } else {
-        renderGrammarTranslationArena(stage, topikTranslations, "q2", 1);
+        renderGrammarTranslationArena(stage, topikTranslations, "q2", 1, {
+          key: `topik_${topikTier}`,
+          title: `Dịch ngữ pháp trọng tâm TOPIK (${topikTier === "all" ? "Tất cả" : topikTier})`,
+          route: "theory",
+          params: { sub: "grammar-list", mode: "topik", subTab: "translate" }
+        });
       }
       return;
     }
@@ -1096,9 +1253,18 @@ export function renderGrammarStudioView(root, db, navigate, params = {}) {
         b.addEventListener("click", () => speakKoreanTTS(b.dataset.tts));
       });
     } else if (subTab === "quiz") {
-      renderGrammarMcqArena(stage, simDrills, "similar_grammar");
+      renderGrammarMcqArena(stage, simDrills, `similar_${simFilter}`, {
+        title: `Ngữ pháp tương đồng (${simFilter === "all" ? "Tất cả" : simFilter})`,
+        route: "theory",
+        params: { sub: "grammar-list", mode: "similar", subTab: "quiz" }
+      });
     } else {
-      renderGrammarTranslationArena(stage, simTranslations, "q2", 2);
+      renderGrammarTranslationArena(stage, simTranslations, "q2", 2, {
+        key: `sim_${simFilter}`,
+        title: `Dịch ngữ pháp tương đồng (${simFilter === "all" ? "Tất cả" : simFilter})`,
+        route: "theory",
+        params: { sub: "grammar-list", mode: "similar", subTab: "translate" }
+      });
     }
   }
 

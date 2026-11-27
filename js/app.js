@@ -1,16 +1,16 @@
-import { store, UI_THEMES, isLocalPreviewHost, playAudio, preloadAudioUrls, stopAllAudio, speakKoreanTTS } from "./store.js?v=20261127-10";
-import { ico, daisyLogoSVG } from "./icons.js?v=20261127-10";
-import { conjugateKoreanPredicate } from "./korean-engine.js?v=20261127-10";
-import { openAuthModal, renderMandatoryAuthGate, renderOnboardingSurvey } from "./auth-modal.js?v=20261127-10";
-import { playSakuraPageIntro } from "./sakura-intro.js?v=20261127-10";
-import { buildUrl, parseUrl, getAncestorChain } from "./router.js?v=20261127-10";
-import { renderHomeView, renderAdminSupportCardHTML, bindAdminSupportCardEvents } from "./views/home.js?v=20261127-10";
-import { renderTheoryView } from "./views/theory.js?v=20261127-10";
-import { renderRoadmapView, getGuidedStudyPlan } from "./views/roadmap.js?v=20261127-10";
-import { renderSkillsPracticeView } from "./views/skills-practice.js?v=20261127-10";
-import { renderTopikPracticeView } from "./views/topik-practice.js?v=20261127-10";
-import { renderMockTestView } from "./views/mocktest.js?v=20261127-10";
-import { renderCheckAndToolsView } from "./views/check-tools.js?v=20261127-10";
+import { store, UI_THEMES, isLocalPreviewHost, playAudio, preloadAudioUrls, stopAllAudio, speakKoreanTTS, bindHangulEnter } from "./store.js?v=20261127-12";
+import { ico, daisyLogoSVG } from "./icons.js?v=20261127-12";
+import { conjugateKoreanPredicate } from "./korean-engine.js?v=20261127-12";
+import { openAuthModal } from "./auth-modal.js?v=20261127-12";
+import { playSakuraPageIntro } from "./sakura-intro.js?v=20261127-12";
+import { buildUrl, parseUrl, getAncestorChain } from "./router.js?v=20261127-12";
+import { renderHomeView, renderAdminSupportCardHTML, bindAdminSupportCardEvents } from "./views/home.js?v=20261127-12";
+import { renderTheoryView } from "./views/theory.js?v=20261127-12";
+import { renderRoadmapView, getGuidedStudyPlan } from "./views/roadmap.js?v=20261127-12";
+import { renderSkillsPracticeView } from "./views/skills-practice.js?v=20261127-12";
+import { renderTopikPracticeView } from "./views/topik-practice.js?v=20261127-12";
+import { renderMockTestView } from "./views/mocktest.js?v=20261127-12";
+import { renderCheckAndToolsView } from "./views/check-tools.js?v=20261127-12";
 
 const appRoot = document.getElementById("app-root");
 const modalRoot = document.getElementById("modal-root");
@@ -31,17 +31,17 @@ const db = {
 let currentRoute = "home";
 let currentParams = {};
 let activeCleanups = [];
-let activeGuidedSession = null; // { day, stepIdx, totalSteps, label }
+let activeGuidedSession = null;
 let isDataBooted = false;
 let navWired = false;
 
 const ROUTE_LABELS = {
   home: "Trang chủ",
-  theory: "Lý thuyết & Sách 1–6",
-  practice: "Luyện tập kỹ năng",
+  theory: "Giáo trình",
+  practice: "Luyện tập",
   "mock-test": "Đề thi TOPIK",
-  roadmap: "Lộ trình 30 ngày",
-  "check-tools": "Công cụ tiếng Hàn"
+  roadmap: "Lộ trình",
+  "check-tools": "Công cụ"
 };
 
 function startGuidedStep(meta) {
@@ -51,30 +51,6 @@ function startGuidedStep(meta) {
 function renderGuidedRibbon() {
   if (!trialSlot) return;
 
-  if (!store.isAuthenticated() && currentRoute === "home") {
-    trialSlot.innerHTML = `
-      <div class="guided-active-bar">
-        <div class="guided-active-inner">
-          <div style="display:flex;align-items:center;gap:8px;font-size:13px;min-width:0;flex-wrap:wrap;">
-            <span class="badge-orange">${ico("cloud", 13)} Học thử ngay</span>
-            <span style="color:var(--text-secondary);font-weight:500;">Đăng nhập để lưu tiến độ Cloud theo tài khoản cá nhân</span>
-          </div>
-          <button type="button" class="btn-soft-jade" id="btn-banner-login" style="padding:5px 13px;font-size:12.5px;flex-shrink:0;">
-            Đăng nhập
-          </button>
-        </div>
-      </div>
-    `;
-    trialSlot.querySelector("#btn-banner-login")?.addEventListener("click", () => {
-      openAuthModal(modalRoot, "login", () => {
-        updateNavUI();
-        navigate(currentRoute, currentParams, { replace: true });
-      });
-    });
-    return;
-  }
-
-  // Only show guided step bar when learner explicitly launched a guided step from Trang chủ / Lộ trình
   if (!isDataBooted || !activeGuidedSession || currentRoute === "home" || currentRoute === "roadmap") {
     trialSlot.innerHTML = "";
     return;
@@ -91,15 +67,15 @@ function renderGuidedRibbon() {
   trialSlot.innerHTML = `
     <div class="guided-active-bar">
       <div class="guided-active-inner" style="flex-wrap:nowrap;">
-        <div style="display:flex;align-items:center;gap:8px;font-size:13px;min-width:0;flex:1;">
+        <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;min-width:0;flex:1;">
           <span class="badge-orange" style="flex-shrink:0;">Bước ${curStep.stepIdx + 1}/${dayObj.totalSteps}</span>
           <span style="color:var(--text-main);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${curStep.label}</span>
         </div>
-        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
-          <button type="button" class="btn-primary" id="btn-complete-guided-step" style="padding:6px 13px;font-size:12.5px;border-radius:9px;">
-            ${isLastStepInDay ? `Xong Ngày ${dayObj.day}` : `Qua Bước ${curStep.stepIdx + 2} →`}
+        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+          <button type="button" class="btn-primary" id="btn-complete-guided-step" style="min-height:38px;padding:6px 14px;font-size:13px;">
+            ${isLastStepInDay ? `Hoàn thành Ngày ${dayObj.day}` : `Bước ${curStep.stepIdx + 2} →`}
           </button>
-          <button type="button" id="btn-guided-close" title="Đóng thanh lộ trình" style="background:#F1F5F9;border:none;width:28px;height:28px;border-radius:50%;font-size:15px;cursor:pointer;color:var(--text-secondary);">×</button>
+          <button type="button" id="btn-guided-close" aria-label="Đóng thanh lộ trình" style="background:#F1F5F9;border:none;width:36px;height:36px;border-radius:50%;font-size:16px;cursor:pointer;color:var(--text-secondary);">×</button>
         </div>
       </div>
     </div>
@@ -151,14 +127,14 @@ function hydrateStaticChromeIcons() {
   const qIco = document.getElementById("search-ico");
   if (qIco) qIco.innerHTML = ico("search", 17);
   const fMascot = document.getElementById("footer-mascot");
-  if (fMascot) fMascot.innerHTML = daisyLogoSVG(28);
+  if (fMascot) fMascot.innerHTML = daisyLogoSVG(24);
 
   document.querySelectorAll("[data-dico]").forEach((el) => {
     el.innerHTML = ico(el.dataset.dico, 17);
   });
 
   document.querySelectorAll("[data-mico]").forEach((el) => {
-    el.innerHTML = ico(el.dataset.mico, 21);
+    el.innerHTML = ico(el.dataset.mico, 20);
   });
 }
 
@@ -167,16 +143,14 @@ function renderThemePopover() {
   if (!pop) return;
   const activeId = store.state.uiTheme || "jade_grad";
   pop.innerHTML = `
-    <div style="font-size:12.5px;font-weight:800;color:var(--text-muted);padding:2px 4px 4px;">
-      Chọn dải màu Xanh Ngọc (Gradient)
+    <div style="font-size:12px;font-weight:700;color:var(--text-muted);padding:2px 4px 4px;">
+      Chọn dải màu Xanh Ngọc
     </div>
     ${UI_THEMES.map((t) => `
       <button type="button" class="theme-opt-btn ${t.id === activeId ? "active" : ""}" data-pick-theme="${t.id}">
-        <span style="width:24px;height:24px;border-radius:8px;background:${t.swatch};border:2px solid rgba(0,0,0,0.08);flex-shrink:0;position:relative;">
-          <span style="position:absolute;right:-3px;bottom:-3px;width:10px;height:10px;border-radius:50%;background:${t.accent};border:1.5px solid #FFF;"></span>
-        </span>
+        <span style="width:22px;height:22px;border-radius:7px;background:${t.swatch};border:1.5px solid rgba(15,23,42,0.08);flex-shrink:0;"></span>
         <span style="line-height:1.25;">
-          <strong style="font-size:13.5px;display:block;color:var(--text-main);">${t.name}</strong>
+          <strong style="font-size:13px;display:block;color:var(--text-main);">${t.name}</strong>
           <span style="font-size:11.5px;color:var(--text-muted);">${t.desc}</span>
         </span>
       </button>
@@ -224,19 +198,19 @@ function updateNavUI() {
   const dot = document.getElementById("cloud-sync-dot");
   if (dot) {
     dot.classList.toggle("syncing", store.syncStatus === "syncing");
-    dot.title = store.syncStatus === "syncing" ? "Đang lưu lên tài khoản..." : (authed ? "Đã lưu an toàn trên tài khoản" : "Chạm để đăng nhập đồng bộ Cloud");
+    dot.title = store.syncStatus === "syncing" ? "Đang lưu..." : (authed ? "Đã lưu tiến độ" : "Đăng nhập đồng bộ");
   }
 
   const footerBadge = document.getElementById("footer-sync-badge");
   if (footerBadge) {
     if (isLocalPreviewHost() && !store.hasCloudAccount()) {
-      footerBadge.innerHTML = `${ico("cloud", 15)} Chế độ Review Local · Đã bỏ qua đăng nhập`;
+      footerBadge.textContent = "Chế độ Local · Tự động lưu trên trình duyệt";
     } else if (authed) {
-      footerBadge.innerHTML = store.syncStatus === "syncing"
-        ? `${ico("cloud", 15)} Đang đồng bộ lên tài khoản...`
-        : `${ico("cloud", 15)} Tiến độ lưu theo tài khoản (${store.session.user.email})`;
+      footerBadge.textContent = store.syncStatus === "syncing"
+        ? "Đang đồng bộ..."
+        : `Đã lưu (${store.session.user.email})`;
     } else {
-      footerBadge.innerHTML = `${ico("cloud", 15)} Đăng nhập để đồng bộ tiến độ lên Cloud`;
+      footerBadge.textContent = "Đăng nhập để lưu Cloud";
     }
   }
 
@@ -268,7 +242,7 @@ export function navigate(route, params = {}, opts = {}) {
   window.scrollTo({ top: 0, behavior: "auto" });
 
   if (!isDataBooted) {
-    appRoot.innerHTML = `<div class="container-web"><div class="box-kind" style="text-align:center;padding:36px;">Đang mở mục <strong>${ROUTE_LABELS[currentRoute] || "học tập"}</strong>...</div></div>`;
+    appRoot.innerHTML = `<div class="container-web"><div class="box-kind" style="text-align:center;padding:36px;">Đang mở <strong>${ROUTE_LABELS[currentRoute] || "bài học"}</strong>...</div></div>`;
     return;
   }
 
@@ -281,9 +255,7 @@ export function navigate(route, params = {}, opts = {}) {
 
   if (currentRoute === "home") return renderHomeView(appRoot, db, navigate, startGuidedStep, openProfileSettings, modalRoot);
   if (currentRoute === "theory") return renderTheoryView(appRoot, db, navigate, currentParams);
-  if (currentRoute === "roadmap") {
-    return renderRoadmapView(appRoot, db, navigate, openProfileSettings);
-  }
+  if (currentRoute === "roadmap") return renderRoadmapView(appRoot, db, navigate, openProfileSettings);
   if (currentRoute === "practice") {
     if (currentParams.sub === "topik1" || currentParams.sub === "topik2") {
       return renderTopikPracticeView(appRoot, db, navigate, currentParams, registerCleanup);
@@ -328,11 +300,11 @@ function openQuickLookupModal() {
     <div class="modal-backdrop" id="quick-modal-bg">
       <div class="modal-panel">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-          <strong style="font-size:17px;color:var(--text-main);">${ico("search", 17)} Tra từ &amp; Chia động từ</strong>
-          <button type="button" id="close-quick-modal" style="background:#F1F5F9;border:none;width:32px;height:32px;border-radius:50%;font-size:18px;cursor:pointer;color:var(--text-secondary);">×</button>
+          <strong style="font-size:17px;color:var(--text-main);">Tra từ &amp; Chia động từ</strong>
+          <button type="button" id="close-quick-modal" aria-label="Đóng tra từ" style="background:#F1F5F9;border:none;width:38px;height:38px;border-radius:50%;font-size:18px;cursor:pointer;color:var(--text-secondary);">×</button>
         </div>
 
-        <input id="quick-dict-inp" class="ko" value="" placeholder="Nhập tiếng Hàn (학교, 듣다, 춥다...) hoặc tiếng Việt..." style="width:100%;padding:11px 15px;border-radius:12px;font-size:15px;margin-bottom:14px;" />
+        <input id="quick-dict-inp" class="ko" value="" placeholder="Nhập tiếng Hàn (학교, 듣다, 춥다...) hoặc nghĩa tiếng Việt..." style="width:100%;padding:12px 15px;border-radius:12px;font-size:15.5px;margin-bottom:14px;" />
 
         <div id="quick-dict-results"></div>
       </div>
@@ -357,35 +329,35 @@ function openQuickLookupModal() {
 
     resultsSlot.innerHTML = `
       ${conj ? `
-        <div style="background:var(--primary-3);border-radius:12px;padding:12px 14px;margin-bottom:12px;">
-          <strong style="color:var(--text-main);display:block;margin-bottom:6px;font-size:13.5px;">Chia tự động "${conj.dictForm}" (${conj.irregularNote}):</strong>
+        <div style="background:var(--primary-3);border:1px solid var(--powder-border);border-radius:12px;padding:12px 14px;margin-bottom:12px;">
+          <strong style="color:var(--text-main);display:block;margin-bottom:6px;font-size:13.5px;">Chia động từ "${conj.dictForm}" (${conj.irregularNote})</strong>
           <div class="grid-2" style="gap:6px;">
             ${conj.forms.slice(0, 6).map((f) => `
-              <div style="font-size:13px;">• ${f.label}: <strong class="ko" style="color:var(--primary-1);">${f.ko}</strong></div>
+              <div style="font-size:13.5px;">• ${f.label}: <strong class="ko" style="color:var(--primary-1);">${f.ko}</strong></div>
             `).join("")}
           </div>
         </div>
       ` : ""}
 
-      <div style="display:flex;flex-direction:column;gap:6px;">
-        ${matches.length === 0 ? `<div style="color:var(--text-muted);font-size:14px;padding:8px 4px;">Không tìm thấy mục từ khớp với "${q}".</div>` : matches.map((m) => `
-          <div style="background:#F8FAFC;padding:10px 14px;border-radius:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;">
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        ${matches.length === 0 ? `<div style="color:var(--text-muted);font-size:14.5px;padding:8px 4px;">Không tìm thấy từ khớp với "${q}".</div>` : matches.map((m) => `
+          <div style="background:#F8FAFC;border:1px solid var(--border-light);padding:11px 14px;border-radius:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;">
             <div>
               <div>
                 <strong class="ko" style="font-size:17.5px;color:var(--primary-1);">${m.korean}</strong>
                 ${m.pronunciation ? `<span style="font-size:12.5px;color:var(--text-muted);margin-left:6px;">/${m.pronunciation}/</span>` : ""}
                 <span style="font-weight:600;margin-left:8px;">${m.vietnamese}</span>
               </div>
-              ${m.exampleKo ? `<div class="ko" style="font-size:13px;color:var(--text-muted);margin-top:2px;">${m.exampleKo} — ${m.exampleVi}</div>` : ""}
+              ${m.exampleKo ? `<div class="ko" style="font-size:13.5px;color:var(--text-muted);margin-top:3px;">${m.exampleKo} — ${m.exampleVi}</div>` : ""}
             </div>
-            <button type="button" class="btn-audio" data-mplay="${m.wordAudio || m.exampleAudio || ""}" data-mtts="${m.korean}">${ico("speaker", 16)}</button>
+            <button type="button" class="btn-audio" aria-label="Nghe ${m.korean}" data-mplay="${m.wordAudio || m.exampleAudio || ""}" data-mtts="${m.korean}">${ico("speaker", 16)}</button>
           </div>
         `).join("")}
       </div>
     `;
 
     resultsSlot.querySelectorAll("[data-mplay]").forEach((b) => {
-      b.addEventListener("pointerdown", () => {
+      b.addEventListener("click", () => {
         if (b.dataset.mplay) playAudio(b.dataset.mplay);
         else speakKoreanTTS(b.dataset.mtts);
       });
@@ -396,6 +368,9 @@ function openQuickLookupModal() {
   inp.focus();
   inp.addEventListener("input", (e) => {
     q = e.target.value;
+    renderLookupResults();
+  });
+  bindHangulEnter(inp, () => {
     renderLookupResults();
   });
   inp.addEventListener("keydown", (e) => {
@@ -433,7 +408,6 @@ function wireNavigationEventsOnce() {
     else navigate(r);
   };
 
-  // Delegated click handler on document so mobile bottom tabs & desktop pills ALWAYS fire on first tap!
   document.addEventListener("click", (e) => {
     const mBtn = e.target.closest(".mobile-tab-btn[data-mroute]");
     if (mBtn) {
@@ -493,14 +467,14 @@ async function initApp() {
   wireNavigationEventsOnce();
   updateNavUI();
 
-  appRoot.innerHTML = `<div class="container-web"><div class="box-kind" style="text-align:center;padding:36px;">Đang tải dữ liệu học tập D ● TOPIK...</div></div>`;
+  appRoot.innerHTML = `<div class="container-web"><div class="box-kind" style="text-align:center;padding:36px;">Đang tải dữ liệu học tập...</div></div>`;
 
   const [sc1V, sc1G, sjV, tp1, books6Res, fullSys, custom] = await Promise.all([
     safeJsonFetch("/data/sc1_vocab.json", []),
     safeJsonFetch("/data/sc1_grammar.json", []),
     safeJsonFetch("/data/sejong_vocab.json", []),
     safeJsonFetch("/data/topik1_bank.json", []),
-    safeJsonFetch("/data/books_1_to_6_curriculum.json?v=20261127-10", { books: [] }),
+    safeJsonFetch("/data/books_1_to_6_curriculum.json?v=20261127-12", { books: [] }),
     safeJsonFetch("/data/topik_full_system.json", { taxonomy: { topik1: {}, topik2: {} }, itemPool: {}, exams: { topik1: [], topik2: [] } }),
     safeJsonFetch("/api/custom-decks", [])
   ]);
@@ -517,10 +491,8 @@ async function initApp() {
   isDataBooted = true;
   store.subscribe(updateNavUI);
 
-  // Render immediately so user never waits on cloud auth network roundtrip
   navigate(currentRoute, currentParams, { fromPopState: true });
 
-  // Restore Cloud session in background & refresh UI smoothly if logged in
   store.restoreCloudSession().then(() => {
     if (store.isAuthenticated()) {
       store.touchStreak();

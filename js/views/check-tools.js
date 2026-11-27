@@ -1,7 +1,6 @@
-import { store, evaluateRoadmapScore, speakKoreanTTS } from "../store.js?v=20261127-10";
-import { ico } from "../icons.js?v=20261127-10";
-import { analyzePronunciationRules, conjugateKoreanPredicate } from "../korean-engine.js?v=20261127-10";
-import { renderRoadmapScoreCardHTML } from "./roadmap.js?v=20261127-10";
+import { store, speakKoreanTTS } from "../store.js?v=20261127-12";
+import { ico } from "../icons.js?v=20261127-12";
+import { analyzePronunciationRules, conjugateKoreanPredicate } from "../korean-engine.js?v=20261127-12";
 
 const PARTICLE_NOTES = [
   { suffix: "에서는", role: "Tiểu từ Nơi diễn ra hành động + Nhấn mạnh chủ đề" },
@@ -84,6 +83,7 @@ export function xrayKoreanSentence(sentence, vocabList) {
 
 export function renderCheckAndToolsView(root, db, navigate, params = {}) {
   let tab = params.tab || "analytics"; // analytics | mistakes | xray | import
+  let histFilter = "all"; // all | exam | vocab | grammar_wb | skills
   let sentenceInput = "저는 오늘 도서관에서 한국어를 공부합니다.";
   let verbQuery = "듣다";
 
@@ -98,11 +98,11 @@ export function renderCheckAndToolsView(root, db, navigate, params = {}) {
         <div class="breadcrumb-bar">
           <span>Công cụ</span>
           <span>/</span>
-          <span>Thống kê &amp; Trợ thủ học tập</span>
+          <span>Điểm số &amp; Trợ thủ học tập</span>
         </div>
 
         <div class="skill-pills-row">
-          <button class="btn-skill ${tab === "analytics" ? "active" : ""}" data-tb="analytics">${ico("chart", 17)} Điểm yếu &amp; Lịch sử thi</button>
+          <button class="btn-skill ${tab === "analytics" ? "active" : ""}" data-tb="analytics">${ico("chart", 17)} Điểm số &amp; Lịch sử làm bài</button>
           <button class="btn-skill ${tab === "mistakes" ? "active" : ""}" data-tb="mistakes">${ico("target", 17)} Sổ tay câu sai (${mistakes.length})</button>
           <button class="btn-skill ${tab === "xray" ? "active" : ""}" data-tb="xray">${ico("xray", 17)} Giải phẫu câu &amp; Chia ĐT</button>
           <button class="btn-skill ${tab === "import" ? "active" : ""}" data-tb="import">${ico("upload", 17)} Nhập gói Anki (.apkg)</button>
@@ -120,43 +120,122 @@ export function renderCheckAndToolsView(root, db, navigate, params = {}) {
 
     if (tab === "analytics") {
       const masteredCount = allVocab.filter((c) => store.isMastered(c.id)).length;
-      const evalObj = evaluateRoadmapScore(db);
+      const tax = db.topikFullSystem?.taxonomy || {};
+      const typeTitleMap = {};
+      [...(tax.topik1?.listening || []), ...(tax.topik1?.reading || []), ...(tax.topik2?.listening || []), ...(tax.topik2?.reading || []), ...(tax.topik2?.writing || [])].forEach((t) => {
+        const secPrefix = String(t.id || "").includes("_l_") ? "Nghe · " : (String(t.id || "").includes("_r_") ? "Đọc · " : "");
+        typeTitleMap[t.id] = `${secPrefix}${t.title.startsWith(t.code) ? t.title : `${t.code} · ${t.title}`}`;
+      });
+
+      const rawScoreHist = Array.isArray(store.state.scoreHistory) ? [...store.state.scoreHistory] : [];
+      const seenExamTitles = new Set(rawScoreHist.map((s) => `${s.title}_${s.score}`));
+      (store.state.examHistory || []).forEach((eh) => {
+        const sig = `${eh.examTitle}_${eh.score}`;
+        if (!seenExamTitles.has(sig)) {
+          rawScoreHist.push({
+            id: `legacy_${eh.examId}_${eh.score}`,
+            category: eh.isFullExam === false ? "Đề TOPIK (Chia phần)" : "Đề thi TOPIK",
+            title: eh.examTitle,
+            score: eh.score,
+            maxScore: eh.maxScore || 200,
+            pct: Math.round(((eh.score || 0) / Math.max(1, eh.maxScore || 200)) * 100),
+            correctCount: eh.correctCount || 0,
+            totalCount: eh.totalCount || 0,
+            date: eh.date || "",
+            route: "mock-test",
+            params: { sub: (eh.maxScore || 200) === 300 ? "topik2" : "topik1", examId: eh.examId, action: "overview" }
+          });
+        }
+      });
+
+      const matchCategoryFilter = (item) => {
+        if (histFilter === "all") return true;
+        const cat = String(item.category || "").toLowerCase();
+        if (histFilter === "exam") return cat.includes("đề") || cat.includes("topik") || cat.includes("viết");
+        if (histFilter === "vocab") return cat.includes("từ vựng");
+        if (histFilter === "grammar_wb") return cat.includes("ngữ pháp") || cat.includes("bài tập") || cat.includes("dịch") || cat.includes("xếp quyển");
+        if (histFilter === "skills") return cat.includes("đọc") || cat.includes("nghe");
+        return true;
+      };
+      const filteredHistory = rawScoreHist.filter(matchCategoryFilter);
+
       body.innerHTML = `
-        <div style="margin-bottom:20px;">
-          ${renderRoadmapScoreCardHTML(evalObj)}
-        </div>
-        <div class="stats-grid-3" style="margin-bottom:20px;">
+        <div class="stats-grid-4" style="margin-bottom:18px;">
           <div class="box-kind">
-            <div style="font-size:12px;color:var(--text-muted);">Từ đã thuộc</div>
+            <div style="font-size:12.5px;color:var(--text-muted);">Từ đã thuộc</div>
             <div class="stat-num" style="color:var(--primary-1);margin-top:4px;">${masteredCount}<span style="font-size:13px;font-weight:600;color:var(--text-muted);">/${allVocab.length}</span></div>
           </div>
           <div class="box-kind">
-            <div style="font-size:12px;color:var(--text-muted);">Đề đã làm</div>
-            <div class="stat-num" style="color:var(--primary-1);margin-top:4px;">${store.state.examHistory.length} <span style="font-size:13px;font-weight:600;color:var(--text-muted);">đề</span></div>
+            <div style="font-size:12.5px;color:var(--text-muted);">Lượt chấm điểm đã lưu</div>
+            <div class="stat-num" style="color:var(--primary-1);margin-top:4px;">${rawScoreHist.length}</div>
           </div>
           <div class="box-kind">
-            <div style="font-size:12px;color:var(--text-muted);">Câu sai</div>
-            <div class="stat-num" style="color:${mistakes.length > 0 ? "var(--danger)" : "var(--success)"};margin-top:4px;">${mistakes.length} <span style="font-size:13px;font-weight:600;color:var(--text-muted);">câu</span></div>
+            <div style="font-size:12.5px;color:var(--text-muted);">Đề thi đã nộp</div>
+            <div class="stat-num" style="color:var(--primary-1);margin-top:4px;">${store.state.examHistory.length}</div>
+          </div>
+          <div class="box-kind">
+            <div style="font-size:12.5px;color:var(--text-muted);">Câu sai cần ôn</div>
+            <div class="stat-num" style="color:${mistakes.length > 0 ? "var(--danger)" : "var(--success)"};margin-top:4px;">${mistakes.length}</div>
           </div>
         </div>
 
+        <div class="box-kind" style="margin-bottom:18px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
+            <h3 style="margin:0;font-size:17.5px;">Lịch sử điểm toàn bộ bài làm (${filteredHistory.length})</h3>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <button type="button" class="btn-outline-teal" data-hfil="all" style="padding:4px 11px;font-size:12.5px;${histFilter === "all" ? "background:var(--primary);color:#FFF;" : ""}">Tất cả (${rawScoreHist.length})</button>
+              <button type="button" class="btn-outline-teal" data-hfil="vocab" style="padding:4px 11px;font-size:12.5px;${histFilter === "vocab" ? "background:var(--primary);color:#FFF;" : ""}">Từ vựng</button>
+              <button type="button" class="btn-outline-teal" data-hfil="grammar_wb" style="padding:4px 11px;font-size:12.5px;${histFilter === "grammar_wb" ? "background:var(--primary);color:#FFF;" : ""}">Bài tập &amp; Ngữ pháp</button>
+              <button type="button" class="btn-outline-teal" data-hfil="exam" style="padding:4px 11px;font-size:12.5px;${histFilter === "exam" ? "background:var(--primary);color:#FFF;" : ""}">Đề &amp; Dạng TOPIK</button>
+              <button type="button" class="btn-outline-teal" data-hfil="skills" style="padding:4px 11px;font-size:12.5px;${histFilter === "skills" ? "background:var(--primary);color:#FFF;" : ""}">Đọc &amp; Nghe</button>
+            </div>
+          </div>
+
+          ${filteredHistory.length === 0 ? `
+            <p style="color:var(--text-muted);font-size:14.5px;margin:0;">Chưa có lịch sử điểm ở mục này. Khi bạn hoàn thành và bấm Nộp bài bất kỳ bài trắc nghiệm, bài tập hay đề thi nào, điểm số sẽ tự động lưu tại đây.</p>
+          ` : `
+            <div style="display:flex;flex-direction:column;gap:9px;max-height:420px;overflow-y:auto;padding-right:2px;">
+              ${filteredHistory.slice(0, 50).map((h, hi) => {
+                const pct = h.pct ?? Math.round(((h.score || 0) / Math.max(1, h.maxScore || 100)) * 100);
+                const scoreColor = pct >= 80 ? "var(--success)" : (pct >= 50 ? "var(--primary-1)" : "var(--danger)");
+                return `
+                  <div style="background:#F8FAFC;border:1px solid var(--border-light);padding:11px 14px;border-radius:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+                    <div style="min-width:0;flex:1 1 220px;">
+                      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:2px;">
+                        <span class="meta-chip" style="color:var(--primary-1);">${h.category || "Bài làm"}</span>
+                        <span style="font-size:12px;color:var(--text-muted);">${h.date || ""}</span>
+                      </div>
+                      <strong class="ko" style="display:block;font-size:14.5px;color:var(--text-main);">${h.title}</strong>
+                      ${h.totalCount > 0 ? `<span style="font-size:12.5px;color:var(--text-muted);">Đúng ${h.correctCount}/${h.totalCount} câu</span>` : ""}
+                    </div>
+                    <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+                      <strong class="nw" style="color:${scoreColor};font-size:16px;">${h.score}/${h.maxScore}đ</strong>
+                      ${h.route ? `<button type="button" class="btn-step-quiet nw" data-open-hist="${hi}">Mở lại</button>` : ""}
+                    </div>
+                  </div>
+                `;
+              }).join("")}
+            </div>
+          `}
+        </div>
+
         <div class="grid-2" style="align-items:start;">
-          <!-- Accuracy by Question Structure -->
           <div class="box-kind">
-            <h3 style="margin:0 0 14px;font-size:18px;display:flex;align-items:center;gap:8px;">${ico("target", 20)} Tỷ lệ đúng theo từng dạng câu TOPIK</h3>
+            <h3 style="margin:0 0 14px;font-size:17px;">Tỷ lệ đúng theo dạng câu</h3>
             ${partEntries.length === 0 ? `
-              <p style="color:var(--text-muted);font-size:14.5px;">Chưa có dữ liệu làm bài. Hãy làm thử vài câu tại mục <strong>Luyện tập</strong> hoặc <strong>Đề thi</strong> để hệ thống tự động bắt bệnh điểm yếu cho bạn!</p>
-              <button class="btn-primary" id="btn-go-prac-now">Đi tới Ôn cấu trúc đề TOPIK →</button>
+              <p style="color:var(--text-muted);font-size:14.5px;margin:0 0 14px;">Chưa có dữ liệu thống kê dạng câu.</p>
+              <button type="button" class="btn-primary" id="btn-go-prac-now">Luyện dạng câu TOPIK</button>
             ` : `
-              <div style="display:flex;flex-direction:column;gap:14px;">
+              <div style="display:flex;flex-direction:column;gap:12px;">
                 ${partEntries.map(([pid, st]) => {
                   const pct = st.total > 0 ? Math.round((st.correct / st.total) * 100) : 0;
                   const cls = pct < 50 ? "danger" : (pct < 75 ? "warn" : "");
+                  const cleanTitle = typeTitleMap[pid] || st.title || pid;
                   return `
                     <div>
-                      <div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:5px;">
-                        <strong>${st.title || pid}</strong>
-                        <span>${st.correct}/${st.total} (${pct}%)</span>
+                      <div style="display:flex;justify-content:space-between;gap:8px;font-size:14px;margin-bottom:5px;">
+                        <strong style="min-width:0;">${cleanTitle}</strong>
+                        <span class="nw">${st.correct}/${st.total} (${pct}%)</span>
                       </div>
                       <div class="progress-track">
                         <div class="progress-fill ${cls}" style="width:${pct}%"></div>
@@ -168,32 +247,15 @@ export function renderCheckAndToolsView(root, db, navigate, params = {}) {
             `}
           </div>
 
-          <!-- Exam History & Backup -->
           <div class="box-kind">
-            <h3 style="margin:0 0 14px;font-size:18px;display:flex;align-items:center;gap:8px;">${ico("trophy", 20)} Lịch sử chấm điểm Đề thi &amp; Sao lưu</h3>
-            ${store.state.examHistory.length === 0 ? `
-              <p style="color:var(--text-muted);font-size:14.5px;">Bạn chưa nộp đề thi thử nào.</p>
-            ` : `
-              <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;">
-                ${store.state.examHistory.slice(0, 6).map((h) => `
-                  <div style="background:#F8FAFB;padding:10px 14px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;">
-                    <div>
-                      <strong style="display:block;font-size:14.5px;">${h.examTitle}</strong>
-                      <span style="font-size:12.5px;color:var(--text-muted);">${h.date} · Đúng ${h.correctCount}/${h.totalCount} câu</span>
-                    </div>
-                    <div style="text-align:right;">
-                      <strong style="color:var(--primary-1);font-size:16px;">${h.score}/${h.maxScore}đ</strong>
-                      <div style="font-size:12px;color:var(--yellow-2);font-weight:700;">${h.grade}</div>
-                    </div>
-                  </div>
-                `).join("")}
-              </div>
-            `}
-
-            <div style="border-top:1px solid #EEE;padding-top:14px;display:flex;gap:10px;flex-wrap:wrap;">
-              <button class="btn-outline-teal" id="btn-export-backup">${ico("save", 16)} Xuất file sao lưu tiến độ (.json)</button>
+            <h3 style="margin:0 0 10px;font-size:17px;">Sao lưu &amp; Khôi phục tiến độ</h3>
+            <p style="color:var(--text-muted);font-size:13.5px;margin:0 0 14px;">
+              Điểm số, lịch sử bài làm và từ vựng đã thuộc tự động đồng bộ theo tài khoản. Bạn cũng có thể tải file <code>.json</code> dự phòng bất cứ lúc nào.
+            </p>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <button type="button" class="btn-outline-teal" id="btn-export-backup">Xuất sao lưu (.json)</button>
               <label class="btn-outline-teal" style="cursor:pointer;">
-                ${ico("folder", 16)} Khôi phục sao lưu
+                Khôi phục sao lưu
                 <input type="file" id="inp-import-backup" accept=".json" style="display:none;" />
               </label>
             </div>
@@ -201,6 +263,18 @@ export function renderCheckAndToolsView(root, db, navigate, params = {}) {
         </div>
       `;
 
+      body.querySelectorAll("[data-hfil]").forEach((b) => {
+        b.addEventListener("click", () => {
+          histFilter = b.dataset.hfil;
+          render();
+        });
+      });
+      body.querySelectorAll("[data-open-hist]").forEach((b) => {
+        b.addEventListener("click", () => {
+          const item = filteredHistory[Number(b.dataset.openHist)];
+          if (item?.route) navigate(item.route, item.params || {});
+        });
+      });
       const goBtn = body.querySelector("#btn-go-prac-now");
       if (goBtn) goBtn.addEventListener("click", () => navigate("practice", { sub: "topik1" }));
       body.querySelector("#btn-export-backup").addEventListener("click", () => store.exportJSON());

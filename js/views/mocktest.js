@@ -1,5 +1,5 @@
-import { store, ROADMAP_SCORE_SCALES, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261127-10";
-import { ico } from "../icons.js?v=20261127-10";
+import { store, ROADMAP_SCORE_SCALES, playAudio, preloadAudioUrls, speakKoreanTTS, bindHangulEnter, renderExplainDisclosure, renderQuizHistoryPillHTML } from "../store.js?v=20261127-12";
+import { ico } from "../icons.js?v=20261127-12";
 
 /**
  * Hydrates a 70-question TOPIK I or 104-question TOPIK II exam from normalized slots + itemPool.
@@ -213,7 +213,7 @@ export function renderMockTestView(root, db, navigate, params = {}, registerClea
 
           <button type="button" id="mode-card-segments" style="text-align:left;padding:10px 14px;border-radius:12px;cursor:pointer;border:1.5px solid ${viewMode === "segments" ? "var(--primary)" : "var(--border-card)"};background:${viewMode === "segments" ? "var(--primary-3)" : "#FFFFFF"};display:flex;justify-content:space-between;align-items:center;gap:8px;">
             <strong style="font-size:14px;color:var(--text-main);display:inline-flex;align-items:center;gap:6px;">${ico("layers", 16)} Luyện từng dạng (Dạng 1–${levelKey === "topik1" ? "8" : "10"})</strong>
-            <span style="font-size:12px;color:var(--text-muted);">Chấm ngay</span>
+            <span style="font-size:12px;color:var(--text-muted);">Chấm cuối bài</span>
           </button>
         </div>
       </div>
@@ -234,28 +234,30 @@ export function renderMockTestView(root, db, navigate, params = {}, registerClea
 
         <div class="grid-2">
           ${filteredExams.map((ex) => {
-            const past = store.state.examHistory.find((h) => h.examId === ex.id);
+            const past = store.state.examHistory.find((h) => h.examId === ex.id && h.isFullExam !== false)
+              || store.state.examHistory.find((h) => h.examId === ex.id);
+            const bestInfo = store.getQuizSummary(`exam_${ex.id}_full`);
             return `
-              <div class="box-kind" style="padding:14px 16px;display:flex;flex-direction:column;justify-content:space-between;gap:12px;">
+              <div class="box-kind" style="padding:16px;display:flex;flex-direction:column;justify-content:space-between;gap:14px;">
                 <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
                   <div>
-                    <h3 style="margin:0;font-size:15.5px;line-height:1.35;">${cleanExamTitle(ex.title)}</h3>
+                    <h3 class="ko" style="margin:0;font-size:16px;line-height:1.36;">${cleanExamTitle(ex.title)}</h3>
                     ${past ? `
-                      <div style="font-size:12px;color:var(--success);font-weight:700;margin-top:4px;display:flex;align-items:center;gap:4px;">
-                        ${ico("check", 14)} <span>Đã làm: ${past.score}/${past.maxScore}đ · ${past.grade}</span>
+                      <div style="font-size:12.5px;color:var(--success);font-weight:700;margin-top:4px;">
+                        Gần nhất: ${past.score}/${past.maxScore}đ${bestInfo && bestInfo.attempts > 1 ? ` · Cao nhất: ${bestInfo.bestScore}/${bestInfo.maxScore}đ` : ` · ${past.grade}`}
                       </div>
                     ` : ""}
                   </div>
-                  <span class="meta-chip" style="flex-shrink:0;${ex.curated ? "color:var(--primary-1);background:var(--primary-3);border-color:rgba(13,148,136,0.2);" : ""}">
+                  <span class="meta-chip" style="flex-shrink:0;${ex.curated ? "color:var(--primary-1);background:var(--primary-3);" : ""}">
                     ${shortSourceBadge(ex)}
                   </span>
                 </div>
 
                 <div style="display:flex;gap:8px;">
-                  <button type="button" class="btn-primary" data-quick-full="${ex.id}" style="flex:1;padding:8px 12px;font-size:13.5px;">
-                    Làm đề
+                  <button type="button" class="btn-primary" data-quick-full="${ex.id}" style="flex:1;">
+                    Bắt đầu bài
                   </button>
-                  <button type="button" class="btn-outline-teal" data-open-seg="${ex.id}" style="padding:8px 12px;font-size:13px;">
+                  <button type="button" class="btn-step-quiet" data-open-seg="${ex.id}">
                     Chia phần
                   </button>
                 </div>
@@ -352,6 +354,7 @@ function renderSingleExamOverview(root, sys, exam, navigate) {
         <div>
           <h2 style="margin:0 0 4px;font-size:18.5px;color:var(--primary-1);">${exam.title}</h2>
           <div style="font-size:13px;color:var(--text-muted);">${exam.totalQuestions} câu · ${exam.minutes} phút · Nguồn: ${exam.sourceOrg}</div>
+          ${renderQuizHistoryPillHTML(`exam_${exam.id}_full`) ? `<div style="margin-top:6px;">${renderQuizHistoryPillHTML(`exam_${exam.id}_full`)}</div>` : ""}
         </div>
         <button type="button" class="btn-primary" id="btn-launch-full" style="font-size:14.5px;padding:10px 20px;">
           ${ico("bolt", 16)} Thi Full Đề (${exam.totalQuestions} câu)
@@ -364,6 +367,7 @@ function renderSingleExamOverview(root, sys, exam, navigate) {
           <div style="font-size:12.5px;color:var(--text-muted);margin-bottom:10px;">
             ${exam.level === "topik1" ? "Câu 1–30 · 40 phút · 100đ" : "Câu 1–50 · 60 phút · 100đ"}
           </div>
+          ${renderQuizHistoryPillHTML(`exam_${exam.id}_listening`) ? `<div style="margin-bottom:8px;">${renderQuizHistoryPillHTML(`exam_${exam.id}_listening`)}</div>` : ""}
           <button type="button" class="btn-outline-teal" data-scope="listening" style="padding:6px 12px;font-size:13px;">Làm phần Nghe →</button>
         </div>
 
@@ -373,6 +377,7 @@ function renderSingleExamOverview(root, sys, exam, navigate) {
             <div style="font-size:12.5px;color:var(--text-muted);margin-bottom:10px;">
               Câu 51–54 · 50 phút · 100đ
             </div>
+            ${renderQuizHistoryPillHTML(`exam_${exam.id}_writing`) ? `<div style="margin-bottom:8px;">${renderQuizHistoryPillHTML(`exam_${exam.id}_writing`)}</div>` : ""}
             <button type="button" class="btn-outline-teal" data-scope="writing" style="padding:6px 12px;font-size:13px;">Làm phần Viết →</button>
           </div>
         ` : ""}
@@ -382,6 +387,7 @@ function renderSingleExamOverview(root, sys, exam, navigate) {
           <div style="font-size:12.5px;color:var(--text-muted);margin-bottom:10px;">
             ${exam.level === "topik1" ? "Câu 31–70 · 60 phút · 100đ" : "Câu 55–104 · 70 phút · 100đ"}
           </div>
+          ${renderQuizHistoryPillHTML(`exam_${exam.id}_reading`) ? `<div style="margin-bottom:8px;">${renderQuizHistoryPillHTML(`exam_${exam.id}_reading`)}</div>` : ""}
           <button type="button" class="btn-outline-teal" data-scope="reading" style="padding:6px 12px;font-size:13px;">Làm phần Đọc →</button>
         </div>
       </div>
@@ -432,15 +438,20 @@ function renderTypeMasteryDrill(root, sys, levelKey, skill, typeId, navigate) {
   const baseItems = Object.values(sys.itemPool).filter((it) => it.typeId === typeId);
   let activeQueue = [...baseItems];
   let retryRound = 0;
+  let submitted = false;
   const pickedMap = {};
   const writingDrafts = {};
+  const typeQuizKey = `type_${typeId}`;
 
   preloadAudioUrls(activeQueue.slice(0, 12).map((q) => q.audioSrc).filter(Boolean));
 
   function draw() {
-    const answeredCount = activeQueue.filter((q) => pickedMap[q.id] !== undefined).length;
-    const wrongItems = activeQueue.filter((q) => !q.subType && pickedMap[q.id] !== undefined && pickedMap[q.id] !== q.answer);
-    const correctCount = activeQueue.filter((q) => !q.subType && pickedMap[q.id] === q.answer).length;
+    const mcqItems = activeQueue.filter((q) => !q.subType);
+    const answeredCount = mcqItems.filter((q) => pickedMap[q.id] !== undefined).length;
+    const wrongItems = submitted ? mcqItems.filter((q) => pickedMap[q.id] !== q.answer) : [];
+    const correctCount = mcqItems.filter((q) => pickedMap[q.id] === q.answer).length;
+    const pctScore = mcqItems.length > 0 ? Math.round((correctCount / mcqItems.length) * 100) : 0;
+    const histPill = renderQuizHistoryPillHTML(typeQuizKey);
 
     root.innerHTML = `
       <div class="container-web">
@@ -450,26 +461,36 @@ function renderTypeMasteryDrill(root, sys, levelKey, skill, typeId, navigate) {
           <span>${tpMeta.title}</span>
         </div>
 
-        <div class="prediction-banner" style="padding:16px 22px;margin-bottom:18px;">
+        <div class="prediction-banner" style="padding:16px 20px;margin-bottom:18px;">
           <div>
-            <span class="badge-orange" style="margin-bottom:6px;">${tpMeta.code} · ${tpMeta.range} (${tpMeta.ptsDesc}) ${retryRound > 0 ? `· Vòng ôn câu sai #${retryRound}` : ""}</span>
+            <span class="badge-orange" style="margin-bottom:6px;">${tpMeta.code} · ${tpMeta.range} (${tpMeta.ptsDesc}) ${retryRound > 0 ? `· Ôn câu sai #${retryRound}` : ""}</span>
             <h2 style="margin:0 0 4px;font-size:19px;color:var(--primary-1);">${tpMeta.title}</h2>
-            <div style="font-size:14px;color:var(--text-muted);display:flex;align-items:center;gap:6px;">${ico("bulb", 16)} <span><strong>Chiến thuật làm nhanh:</strong> ${tpMeta.tip}</span></div>
+            <div style="font-size:14px;color:var(--text-muted);"><strong>Mẹo làm nhanh:</strong> ${tpMeta.tip}</div>
+            ${histPill ? `<div style="margin-top:6px;">${histPill}</div>` : ""}
           </div>
-          <div style="text-align:right;">
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
             ${!tpMeta.id.includes("_w_") ? `
-              <div style="font-weight:800;font-size:16px;color:var(--primary-1);margin-bottom:6px;">
-                Đúng ${correctCount} / ${activeQueue.length} câu
+              <div style="font-weight:800;font-size:15.5px;color:var(--primary-1);">
+                ${submitted
+                  ? `Điểm số: ${pctScore}/100đ · Đúng ${correctCount}/${mcqItems.length} câu`
+                  : `Đã chọn ${answeredCount}/${mcqItems.length} câu`}
               </div>
-              ${wrongItems.length > 0 ? `
-                <button type="button" class="btn-orange" id="btn-retry-wrong">
-                  ${ico("refresh", 16)} Luyện lại ${wrongItems.length} câu sai đến khi thuộc 100%
-                </button>
-              ` : (answeredCount === activeQueue.length && activeQueue.length > 0 ? `
-                <span style="background:rgba(58,202,116,0.18);color:#15803D;padding:6px 14px;border-radius:99px;font-weight:800;display:inline-flex;align-items:center;gap:6px;">
-                  ${ico("trophy", 17)} Đã nhuần nhuyễn 100% dạng này!
-                </span>
-              ` : "")}
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                ${!submitted ? `
+                  <button type="button" class="btn-primary" data-submit-type-drill="1" ${answeredCount === 0 ? "disabled" : ""}>
+                    Nộp bài &amp; Chấm điểm
+                  </button>
+                ` : `
+                  ${wrongItems.length > 0 ? `
+                    <button type="button" class="btn-orange" id="btn-retry-wrong">
+                      Ôn ${wrongItems.length} câu sai
+                    </button>
+                  ` : ""}
+                  <button type="button" class="btn-outline-teal" id="btn-reset-type-drill">
+                    Làm lại
+                  </button>
+                `}
+              </div>
             ` : ""}
           </div>
         </div>
@@ -481,7 +502,10 @@ function renderTypeMasteryDrill(root, sys, levelKey, skill, typeId, navigate) {
               const earned = dr.checked ? scoreWritingResponse(q, dr) : 0;
               return `
                 <div class="box-kind" style="padding:22px;">
-                  <strong class="ko" style="font-size:16.5px;color:var(--primary-1);display:block;margin-bottom:10px;">${q.question}</strong>
+                  <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+                    <strong class="ko" style="font-size:16.5px;color:var(--primary-1);">${q.question}</strong>
+                    ${renderQuizHistoryPillHTML(`write_${q.id}`)}
+                  </div>
                   <pre class="ko" style="white-space:pre-wrap;background:#F8FAFB;padding:14px;border-radius:10px;font-size:15.5px;line-height:1.75;border:1px solid #E2E8F0;margin:0 0 12px;">${q.passage}</pre>
                   ${q.subType === "q51" || q.subType === "q52" ? `
                     <div class="grid-2" style="margin-bottom:12px;">
@@ -514,71 +538,120 @@ function renderTypeMasteryDrill(root, sys, levelKey, skill, typeId, navigate) {
             }
 
             const picked = pickedMap[q.id];
+            const answered = picked !== undefined;
+            const ansNum = ["①", "②", "③", "④"][q.answer] || `${q.answer + 1}`;
             return `
               <div class="box-kind" style="padding:20px;">
                 <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:10px;">
                   <strong class="ko" style="font-size:16.5px;color:var(--primary-1);">Câu ${qi + 1}/${activeQueue.length}. ${q.question}</strong>
                   ${q.audioSrc ? `
-                    <button type="button" class="btn-primary" data-play-mp3="${q.audioSrc}" style="padding:7px 15px;font-size:13.5px;">
-                      ${ico("speaker", 16)} Phát Audio giọng Hàn chuẩn
+                    <button type="button" class="btn-primary" data-play-mp3="${q.audioSrc}">
+                      ${ico("speaker", 16)} Nghe câu hỏi
                     </button>
                   ` : ""}
                 </div>
                 ${q.passage ? `<pre class="ko" style="white-space:pre-wrap;background:#F8FAFB;padding:14px;border-radius:10px;font-size:16px;line-height:1.75;margin:0 0 12px;border-left:3px solid var(--primary);">${q.passage}</pre>` : ""}
-                <div class="grid-2">
+                <div class="grid-2" style="gap:10px;">
                   ${q.options.map((opt, oi) => {
-                    let bg = "#FFFFFF";
-                    let border = "#E5E7EB";
-                    if (picked !== undefined) {
-                      if (oi === q.answer) { bg = "rgba(58,202,116,0.16)"; border = "var(--success)"; }
-                      else if (oi === picked) { bg = "rgba(255,90,96,0.14)"; border = "var(--danger)"; }
+                    let cls = "mcq-opt-btn";
+                    if (submitted) {
+                      if (oi === q.answer) cls += " is-correct";
+                      else if (oi === picked) cls += " is-wrong";
+                    } else if (oi === picked) {
+                      cls += " is-selected";
                     }
                     return `
-                      <button type="button" class="ko" data-pick-q="${q.id}" data-oi="${oi}" style="text-align:left;padding:11px 14px;border-radius:10px;border:1.5px solid ${border};background:${bg};cursor:pointer;font-size:15.5px;font-weight:500;">
+                      <button type="button" class="ko ${cls}" data-pick-q="${q.id}" data-oi="${oi}" ${submitted ? "disabled" : ""}>
                         ${["①", "②", "③", "④"][oi]} ${opt}
                       </button>
                     `;
                   }).join("")}
                 </div>
-                ${picked !== undefined ? `
-                  <div style="margin-top:12px;background:var(--primary-3);padding:11px 14px;border-radius:10px;font-size:14px;color:var(--primary-4);">
-                    <strong>${picked === q.answer ? `${ico("check", 15)} Chính xác!` : `${ico("cross", 15)} Chưa đúng — Hãy đọc kỹ lời thoại/giải thích để nhớ sâu:`}</strong>
-                    ${q.audioText ? `<div class="ko" style="margin-top:4px;"><strong>Lời thoại (대본):</strong> ${q.audioText}</div>` : ""}
-                    <div style="margin-top:4px;"><strong>Giải thích:</strong> ${q.explain}</div>
-                  </div>
-                ` : ""}
+                ${submitted ? renderExplainDisclosure({
+                  isCorrect: picked === q.answer,
+                  statusHtml: picked === q.answer
+                    ? "Chính xác"
+                    : (answered ? `Chưa đúng · Đáp án ${ansNum}` : `Chưa chọn · Đáp án ${ansNum}`),
+                  explainHtml: q.explain,
+                  transcriptHtml: q.audioText || ""
+                }) : ""}
               </div>
             `;
           }).join("")}
+
+          ${!tpMeta.id.includes("_w_") && !submitted && mcqItems.length > 0 ? `
+            <div style="display:flex;justify-content:flex-end;align-items:center;gap:12px;flex-wrap:wrap;">
+              <span style="font-size:14px;color:var(--text-muted);">Đã chọn <strong>${answeredCount}/${mcqItems.length}</strong> câu</span>
+              <button type="button" class="btn-primary" data-submit-type-drill="1" ${answeredCount === 0 ? "disabled" : ""}>
+                Nộp bài &amp; Chấm điểm
+              </button>
+            </div>
+          ` : ""}
         </div>
       </div>
     `;
+
+    const submitTypeDrillNow = () => {
+      submitted = true;
+      const cleanTpLabel = tpMeta.title.startsWith(tpMeta.code) ? tpMeta.title : `${tpMeta.code} · ${tpMeta.title}`;
+      const corr = mcqItems.filter((q) => pickedMap[q.id] === q.answer).length;
+      const finalPct = mcqItems.length > 0 ? Math.round((corr / mcqItems.length) * 100) : 0;
+      mcqItems.forEach((qObj) => {
+        if (pickedMap[qObj.id] !== undefined) {
+          store.recordQuestionResult(typeId, cleanTpLabel, qObj, pickedMap[qObj.id], { deferSave: true });
+        }
+      });
+      store.recordScoreHistory({
+        quizKey: retryRound === 0 ? typeQuizKey : `${typeQuizKey}_retry`,
+        category: "Luyện dạng TOPIK",
+        title: `${levelKey === "topik1" ? "TOPIK I" : "TOPIK II"} · ${cleanTpLabel}${retryRound > 0 ? " (Ôn câu sai)" : ""}`,
+        score: finalPct,
+        maxScore: 100,
+        correctCount: corr,
+        totalCount: mcqItems.length,
+        route: "mock-test",
+        params: { sub: levelKey, viewMode: "segments", skill, typeId }
+      });
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      draw();
+    };
+
+    root.querySelectorAll("[data-submit-type-drill]").forEach((b) => {
+      b.addEventListener("click", submitTypeDrillNow);
+    });
 
     root.querySelector("#bc-seg-hub").addEventListener("click", () => {
       navigate("mock-test", { sub: levelKey, viewMode: "segments", skill });
     });
 
-    const retryBtn = root.querySelector("#btn-retry-wrong");
-    if (retryBtn) {
-      retryBtn.addEventListener("click", () => {
-        activeQueue = [...wrongItems];
-        activeQueue.forEach((w) => { delete pickedMap[w.id]; });
-        retryRound += 1;
-        window.scrollTo({ top: 0, behavior: "smooth" });
-        draw();
-      });
-    }
+    root.querySelector("#btn-retry-wrong")?.addEventListener("click", () => {
+      activeQueue = [...wrongItems];
+      activeQueue.forEach((w) => { delete pickedMap[w.id]; });
+      submitted = false;
+      retryRound += 1;
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      draw();
+    });
+
+    root.querySelector("#btn-reset-type-drill")?.addEventListener("click", () => {
+      activeQueue = [...baseItems];
+      Object.keys(pickedMap).forEach((k) => { delete pickedMap[k]; });
+      submitted = false;
+      retryRound = 0;
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      draw();
+    });
 
     root.querySelectorAll("[data-play-mp3]").forEach((b) => {
-      b.addEventListener("pointerdown", () => playAudio(b.dataset.playMp3));
+      b.addEventListener("click", () => playAudio(b.dataset.playMp3));
     });
 
     root.querySelectorAll("[data-pick-q]").forEach((btn) => {
       btn.addEventListener("click", () => {
+        if (submitted) return;
         const qObj = activeQueue.find((x) => x.id === btn.dataset.pickQ);
-        const oi = Number(btn.dataset.oi);
-        pickedMap[qObj.id] = oi;
-        store.recordQuestionResult(typeId, tpMeta.title, qObj, oi);
+        if (!qObj) return;
+        pickedMap[qObj.id] = Number(btn.dataset.oi);
         draw();
       });
     });
@@ -604,7 +677,18 @@ function renderTypeMasteryDrill(root, sys, levelKey, skill, typeId, navigate) {
         writingDrafts[qid] = { ...(writingDrafts[qid] || {}), checked: true };
         const qObj = activeQueue.find((x) => x.id === qid);
         const pts = scoreWritingResponse(qObj, writingDrafts[qid]);
-        store.recordQuestionResult(typeId, tpMeta.title, { id: qid, question: qObj.question, options: ["Đạt yêu cầu"], answer: 0 }, pts >= qObj.pts * 0.6 ? 0 : -1);
+        store.recordQuestionResult(typeId, tpMeta.title, { id: qid, question: qObj.question, options: ["Đạt yêu cầu"], answer: 0 }, pts >= qObj.pts * 0.6 ? 0 : -1, { deferSave: true });
+        store.recordScoreHistory({
+          quizKey: `write_${qid}`,
+          category: "Viết TOPIK II",
+          title: `Viết ${tpMeta.code} · ${qObj.question.slice(0, 42)}`,
+          score: pts,
+          maxScore: qObj.pts || 10,
+          correctCount: pts >= (qObj.pts || 10) * 0.6 ? 1 : 0,
+          totalCount: 1,
+          route: "mock-test",
+          params: { sub: levelKey, viewMode: "segments", skill, typeId }
+        });
         draw();
       });
     });
@@ -704,6 +788,16 @@ function renderExamRoom(root, sys, exam, scope, navigate, registerCleanup) {
     return "Chưa đạt Cấp 3 (< 120/300đ)";
   }
 
+  const lvTaxForRoom = sys.taxonomy[exam.level] || {};
+  const typeTitleMap = {};
+  [...(lvTaxForRoom.listening || []), ...(lvTaxForRoom.reading || []), ...(lvTaxForRoom.writing || [])].forEach((t) => {
+    const secPrefix = String(t.id || "").includes("_l_") ? "Nghe · " : (String(t.id || "").includes("_r_") ? "Đọc · " : "");
+    typeTitleMap[t.id] = `${secPrefix}${t.title.startsWith(t.code) ? t.title : `${t.code} · ${t.title}`}`;
+  });
+  const cleanRoomTitle = String(exam.title || "")
+    .replace(/\s*Chính Thức NIIED/i, "")
+    .replace(/\s*기출\)/, ")");
+
   let lastSummary = null;
 
   function submitExam() {
@@ -735,24 +829,50 @@ function renderExamRoom(root, sys, exam, scope, navigate, registerCleanup) {
           if (q.section === "listening") listenScore += q.pts;
           if (q.section === "reading") readScore += q.pts;
         }
-        store.recordQuestionResult(q.typeId || exam.id, exam.title, q, u !== undefined ? u : -1);
+        if (u !== undefined) {
+          const tTitle = typeTitleMap[q.typeId] || q.sec || cleanRoomTitle;
+          store.recordQuestionResult(q.typeId || exam.id, tTitle, q, u, { deferSave: true });
+        }
       }
     });
 
     const grade = computeGrade(earnedScore, totalMaxPts);
-    if (isFullExam) {
-      store.state.examHistory.unshift({
-        examId: exam.id,
-        examTitle: exam.title,
-        score: earnedScore,
-        maxScore: totalMaxPts,
-        grade,
-        correctCount,
-        totalCount: questions.length,
-        date: new Date().toLocaleDateString("vi-VN")
-      });
-      store.save();
+    const scopeSuffix = isFullExam
+      ? ""
+      : (scope === "listening"
+          ? " · Phần Nghe"
+          : (scope === "reading"
+              ? " · Phần Đọc"
+              : (scope === "writing" ? " · Phần Viết" : ` · ${typeTitleMap[scope] || scope}`)));
+    const historyTitle = `${cleanRoomTitle}${scopeSuffix}`;
+
+    store.state.examHistory.unshift({
+      examId: exam.id,
+      scope,
+      isFullExam,
+      examTitle: historyTitle,
+      score: earnedScore,
+      maxScore: totalMaxPts,
+      grade,
+      correctCount,
+      totalCount: questions.length,
+      date: new Date().toLocaleDateString("vi-VN")
+    });
+    if (store.state.examHistory.length > 80) {
+      store.state.examHistory = store.state.examHistory.slice(0, 80);
     }
+
+    store.recordScoreHistory({
+      quizKey: `exam_${exam.id}_${scope}`,
+      category: isFullExam ? "Đề thi TOPIK" : "Đề TOPIK (Chia phần)",
+      title: historyTitle,
+      score: earnedScore,
+      maxScore: totalMaxPts,
+      correctCount,
+      totalCount: questions.length,
+      route: "mock-test",
+      params: { sub: exam.level, examId: exam.id, action: "room", scope }
+    });
 
     lastSummary = { score: earnedScore, listenScore, writeScore, readScore, grade, correctCount, answeredWritingCount };
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -785,26 +905,26 @@ function renderExamRoom(root, sys, exam, scope, navigate, registerCleanup) {
     const writeList = questions.map((item, i) => ({ item, i })).filter((x) => x.item.section === "writing");
     const readList = questions.map((item, i) => ({ item, i })).filter((x) => x.item.section === "reading");
 
-    const showAnswerFeedback = submitted || Boolean(instantChecked[q.id]);
+    const showAnswerFeedback = submitted;
+    const roomQuizKey = `exam_${exam.id}_${scope}`;
 
     root.innerHTML = `
       <div class="container-web">
         <!-- Top Exam Action Bar -->
         <div class="exam-topbar">
-          <button type="button" class="btn-outline-teal nw" id="btn-back-overview" style="padding:7px 12px;font-size:13px;">
+          <button type="button" class="btn-outline-teal nw" id="btn-back-overview">
             ← Quay lại
           </button>
-          <div class="exam-top-title" style="text-align:center;min-width:0;">
-            <strong style="font-size:clamp(14.5px,3.8vw,16.5px);display:block;line-height:1.3;">${exam.title}</strong>
-            <span style="font-size:12px;color:var(--text-muted);display:inline-flex;align-items:center;gap:4px;">${ico("pin", 13)} Nguồn: ${exam.sourceOrg}</span>
+          <div class="exam-top-title ko" style="text-align:center;min-width:0;">
+            <strong style="font-size:clamp(15px,3.8vw,17px);display:block;line-height:1.34;">${cleanRoomTitle}</strong>
           </div>
           <div class="exam-top-actions" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-            <span id="exam-clock" class="nw" style="background:var(--primary-3);padding:7px 12px;border-radius:10px;font-weight:750;font-size:13.5px;color:var(--primary-1);font-variant-numeric:tabular-nums;display:inline-flex;align-items:center;gap:5px;">
+            <span id="exam-clock" class="nw" style="background:var(--primary-3);min-height:42px;padding:8px 13px;border-radius:11px;font-weight:750;font-size:14px;color:var(--primary-1);font-variant-numeric:tabular-nums;display:inline-flex;align-items:center;gap:5px;">
               ${ico("clock", 15)} ${m}:${s}
             </span>
             ${!submitted
-              ? `<button type="button" class="btn-primary nw" id="btn-submit-exam" style="padding:8px 14px;font-size:13.5px;">Nộp bài</button>`
-              : `<button type="button" class="btn-outline-teal nw" data-retake-exam="1" style="padding:7px 12px;font-size:13px;">${ico("refresh", 14)} Làm lại</button>`}
+              ? `<button type="button" class="btn-primary nw" id="btn-submit-exam">Nộp bài</button>`
+              : `<button type="button" class="btn-primary nw" data-retake-exam="1">Làm lại</button>`}
           </div>
         </div>
 
@@ -812,13 +932,13 @@ function renderExamRoom(root, sys, exam, scope, navigate, registerCleanup) {
           const answeredNow = getAnsweredCount();
           const remainingNow = Math.max(0, questions.length - answeredNow);
           return `
-            <div id="submit-confirm-box" class="outline-ai" style="margin-bottom:14px;border-color:var(--yellow-2);background:#FFFBEB;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
-              <div style="font-size:14.5px;color:#92400E;">
-                <strong>${ico("warn", 17)} Xác nhận nộp bài:</strong> Bạn mới làm <strong>${answeredNow}/${questions.length}</strong> câu (còn <strong>${remainingNow}</strong> câu bỏ trống). Bạn có chắc chắn muốn nộp ngay không?
+            <div id="submit-confirm-box" class="outline-ai" style="margin-bottom:14px;border-color:var(--primary);background:var(--primary-3);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+              <div style="font-size:14.5px;color:var(--text-main);">
+                Đã chọn <strong>${answeredNow}/${questions.length}</strong> câu (còn <strong>${remainingNow}</strong> câu trống). Nộp bài ngay?
               </div>
               <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                <button type="button" class="btn-orange" id="btn-confirm-submit-yes">Nộp bài ngay</button>
-                <button type="button" class="btn-outline-teal" id="btn-confirm-submit-no">Quay lại làm tiếp</button>
+                <button type="button" class="btn-primary" id="btn-confirm-submit-yes">Nộp bài ngay</button>
+                <button type="button" class="btn-outline-teal" id="btn-confirm-submit-no">Làm tiếp</button>
               </div>
             </div>
           `;
@@ -828,55 +948,41 @@ function renderExamRoom(root, sys, exam, scope, navigate, registerCleanup) {
         <div class="skill-pills-row" style="margin-bottom:14px;">
           ${listenList.length ? `
             <button type="button" class="btn-skill ${q.section === "listening" ? "active" : ""}" id="jump-sec-listen">
-              ${ico("headphones", 16)} 1교시 · 듣기 (${listenList.length} câu)
+              듣기 · Nghe (${listenList.length})
             </button>
           ` : ""}
           ${writeList.length ? `
             <button type="button" class="btn-skill ${q.section === "writing" ? "active" : ""}" id="jump-sec-write">
-              ${ico("pen", 16)} 1교시 · 쓰기 (${writeList.length} câu · 51~54)
+              쓰기 · Viết (${writeList.length})
             </button>
           ` : ""}
           ${readList.length ? `
             <button type="button" class="btn-skill ${q.section === "reading" ? "active" : ""}" id="jump-sec-read">
-              ${ico("book", 16)} ${exam.level === "topik2" ? "2교시" : "1교시"} · 읽기 (${readList.length} câu)
+              읽기 · Đọc (${readList.length})
             </button>
           ` : ""}
         </div>
 
         ${resultSummary ? (() => {
-          const rScale = ROADMAP_SCORE_SCALES[store.state.roadmapProfile?.startBook || "q1"] || ROADMAP_SCORE_SCALES.q1;
           const allWritingScope = questions.every((item) => item.isWriting);
           const countSummaryText = allWritingScope
             ? `Đã làm <strong>${resultSummary.answeredWritingCount || 0}/${questions.length}</strong> câu tự luận`
             : `Đúng <strong>${resultSummary.correctCount}/${questions.length}</strong> câu`;
-          let compareLine = "";
-          if (!isFullExam) {
-            const pct = Math.round((resultSummary.score / Math.max(1, totalMaxPts)) * 100);
-            compareLine = `<div style="font-size:13px;font-weight:700;color:${pct >= 60 ? "var(--success)" : "var(--primary-4)"};">${ico("chart", 15)} Kết quả phân khúc: Đạt <strong>${pct}%</strong> điểm tối đa phần này (${resultSummary.score}/${totalMaxPts}đ).</div>`;
-          } else if (rScale.examLevel === exam.level) {
-            const scaledToRoadmap = Math.round((resultSummary.score / Math.max(1, totalMaxPts)) * rScale.maxScore);
-            const passCheck = scaledToRoadmap >= rScale.passScore;
-            compareLine = `<div style="font-size:13px;font-weight:700;color:${passCheck ? "var(--success)" : "var(--primary-4)"};">${ico("chart", 15)} So với lộ trình đang học (${rScale.label} · Chuẩn ≥ ${rScale.passScore}/${rScale.maxScore}đ): <strong>${scaledToRoadmap}/${rScale.maxScore}đ</strong> — ${passCheck ? `${ico("check", 14)} ĐẠT CHUẨN LỘ TRÌNH!` : `Cần thêm +${rScale.passScore - scaledToRoadmap}đ để đạt chuẩn.`}</div>`;
-          } else {
-            const officialPass = exam.level === "topik2" ? 120 : 80;
-            const passCheck = resultSummary.score >= officialPass;
-            compareLine = `<div style="font-size:13px;font-weight:700;color:${passCheck ? "var(--success)" : "var(--primary-4)"};">${ico("chart", 15)} Thang chuẩn kỳ thi ${exam.level === "topik2" ? "TOPIK II" : "TOPIK I"} (Đạt ≥ ${officialPass}/${totalMaxPts}đ · Lộ trình bạn đang theo: ${rScale.label}): <strong>${resultSummary.score}/${totalMaxPts}đ</strong> — ${passCheck ? `${ico("check", 14)} ĐẠT CHUẨN ĐỀ NÀY!` : `Cần thêm +${officialPass - resultSummary.score}đ để đạt mốc chuẩn.`}</div>`;
-          }
           return `
           <div class="prediction-banner" style="margin-bottom:18px;">
             <div>
-              <h2 style="margin:0 0 6px;color:var(--primary-1);display:flex;align-items:center;gap:8px;">
-                ${ico("trophy", 22)} Tổng điểm: ${resultSummary.score} / ${totalMaxPts} điểm — ${resultSummary.grade}
+              <h2 style="margin:0 0 6px;color:var(--primary-1);font-size:20px;">
+                Điểm số: ${resultSummary.score} / ${totalMaxPts}đ · ${resultSummary.grade}
               </h2>
-              <div style="font-size:14px;margin-bottom:6px;">
+              <div style="font-size:14.5px;color:var(--text-secondary);">
                 ${countSummaryText}
-                ${isFullExam ? ` · Chi tiết: ${ico("headphones", 15)} Nghe <strong>${resultSummary.listenScore}/100đ</strong> ${exam.level === "topik2" ? `· ${ico("pen", 15)} Viết <strong>${resultSummary.writeScore}/100đ</strong>` : ""} · ${ico("book", 15)} Đọc <strong>${resultSummary.readScore}/100đ</strong>` : ""}
+                ${isFullExam ? ` · Nghe <strong>${resultSummary.listenScore}/100đ</strong> ${exam.level === "topik2" ? `· Viết <strong>${resultSummary.writeScore}/100đ</strong>` : ""} · Đọc <strong>${resultSummary.readScore}/100đ</strong>` : ""}
               </div>
-              ${compareLine}
+              ${renderQuizHistoryPillHTML(roomQuizKey) ? `<div style="margin-top:6px;">${renderQuizHistoryPillHTML(roomQuizKey)}</div>` : ""}
             </div>
             <div style="display:flex;gap:10px;flex-wrap:wrap;">
-              <button type="button" class="btn-outline-teal" id="btn-retake-exam" data-retake-exam="1">${ico("refresh", 16)} Làm lại đề này</button>
-              <button type="button" class="btn-primary" id="btn-go-mistakes">Mở Sổ tay câu sai →</button>
+              <button type="button" class="btn-primary" id="btn-retake-exam" data-retake-exam="1">Làm lại</button>
+              <button type="button" class="btn-outline-teal" id="btn-go-mistakes">Xem câu sai</button>
             </div>
           </div>
           `;
@@ -927,60 +1033,54 @@ function renderExamRoom(root, sys, exam, scope, navigate, registerCleanup) {
                 ` : ""}
               `;
             })() : `
-              <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
                 <strong class="ko" style="font-size:17px;">${q.paperNum}. ${q.question}</strong>
                 <div style="display:flex;gap:8px;flex-wrap:wrap;">
                   ${q.audioSrc ? `
-                    <button type="button" class="btn-primary" id="btn-q-play" style="padding:7px 16px;font-size:13.5px;">
-                      ${ico("speaker", 16)} Phát Audio giọng Hàn chuẩn
+                    <button type="button" class="btn-primary" id="btn-q-play">
+                      ${ico("speaker", 16)} Nghe câu hỏi
                     </button>
                   ` : ""}
-                  <button type="button" class="btn-outline-teal" id="btn-q-flag" style="padding:6px 12px;font-size:13px;${flagged.has(q.id) ? "background:var(--primary-3);border-color:var(--primary);color:var(--primary-1);" : ""}">
-                    ${ico("flag", 15)} ${flagged.has(q.id) ? "Đã gắn cờ" : "Gắn cờ"}
+                  <button type="button" class="btn-outline-teal" id="btn-q-flag" style="${flagged.has(q.id) ? "background:var(--primary-3);border-color:var(--primary);color:var(--primary-1);" : ""}">
+                    ${flagged.has(q.id) ? "Đã gắn cờ" : "Gắn cờ"}
                   </button>
                 </div>
               </div>
 
-              ${q.passage ? `<pre class="ko" style="white-space:pre-wrap;background:#F8FAFB;padding:16px;border-radius:10px;font-size:16.5px;line-height:1.78;margin:0 0 16px;border:1px solid #E2E8F0;">${q.passage}</pre>` : ""}
+              ${q.passage ? `<pre class="ko" style="white-space:pre-wrap;background:#F8FAFB;padding:16px;border-radius:12px;font-size:16.5px;line-height:1.78;margin:0 0 16px;border:1px solid #E2E8F0;">${q.passage}</pre>` : ""}
 
-              <div style="display:flex;flex-direction:column;gap:8px;">
+              <div class="mcq-stack">
                 ${q.options.map((opt, oi) => {
                   const chosen = answers[q.id] === oi;
                   let cls = "mcq-opt-btn";
-                  let extraStyle = chosen ? "border-color:var(--primary);background:var(--primary-3);font-weight:650;" : "";
                   if (showAnswerFeedback) {
-                    extraStyle = "";
                     if (oi === q.answer) cls += " is-correct";
                     else if (chosen) cls += " is-wrong";
+                  } else if (chosen) {
+                    cls += " is-selected";
                   }
                   return `
-                    <button type="button" class="ko ${cls}" data-pick="${oi}" style="${extraStyle}">
+                    <button type="button" class="ko ${cls}" data-pick="${oi}" ${submitted ? "disabled" : ""}>
                       ${["①", "②", "③", "④"][oi]} ${opt}
                     </button>
                   `;
                 }).join("")}
               </div>
 
-              ${isSegmentPractice && !submitted && answers[q.id] !== undefined && !instantChecked[q.id] ? `
-                <div style="margin-top:12px;">
-                  <button type="button" class="btn-outline-teal" id="btn-instant-check" style="padding:6px 14px;font-size:13px;">
-                    ${ico("check", 15)} Kiểm tra đáp án &amp; giải thích câu này ngay
-                  </button>
-                </div>
-              ` : ""}
-
-              ${showAnswerFeedback ? `
-                <div style="margin-top:16px;background:var(--primary-3);padding:12px 16px;border-radius:10px;font-size:14px;color:var(--primary-4);">
-                  ${q.audioText ? `<div class="ko" style="margin-bottom:4px;"><strong>Lời thoại Audio (대본):</strong> ${q.audioText}</div>` : ""}
-                  <div><strong>Giải thích đáp án:</strong> ${q.explain}</div>
-                </div>
-              ` : ""}
+              ${showAnswerFeedback ? renderExplainDisclosure({
+                isCorrect: answers[q.id] === q.answer,
+                statusHtml: answers[q.id] === q.answer
+                  ? "Chính xác"
+                  : `Đáp án đúng: ${["①", "②", "③", "④"][q.answer] || (q.answer + 1)}`,
+                explainHtml: q.explain,
+                transcriptHtml: q.audioText || ""
+              }) : ""}
             `}
 
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:18px;gap:8px;">
-              <button type="button" class="btn-outline-teal nw" id="btn-prev-q" style="padding:8px 12px;font-size:13px;" ${qIdx === 0 ? "disabled" : ""}>← Trước</button>
-              <span class="nw" style="font-size:12.5px;color:var(--text-muted);">Đã làm: <strong style="color:var(--text-main);">${getAnsweredCount()}/${questions.length}</strong></span>
-              <button type="button" class="btn-primary nw" id="btn-next-q" style="padding:8px 14px;font-size:13px;" ${qIdx === questions.length - 1 ? "disabled" : ""}>Tiếp theo →</button>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:20px;gap:8px;">
+              <button type="button" class="btn-outline-teal nw" id="btn-prev-q" ${qIdx === 0 ? "disabled" : ""}>← Trước</button>
+              <span class="nw" style="font-size:13px;color:var(--text-muted);">Đã làm <strong style="color:var(--text-main);">${getAnsweredCount()}/${questions.length}</strong></span>
+              <button type="button" class="btn-primary nw" id="btn-next-q" ${qIdx === questions.length - 1 ? "disabled" : ""}>Tiếp theo →</button>
             </div>
           </div>
 
@@ -1030,7 +1130,7 @@ function renderExamRoom(root, sys, exam, scope, navigate, registerCleanup) {
         col = "#FFFFFF";
       }
       return `
-        <button type="button" data-jump="${i}" title="Câu ${item.num}" style="height:31px;border-radius:6px;border:${i === qIdx ? "2px solid #0F172A" : "none"};background:${bg};color:${col};font-weight:700;font-size:12px;cursor:pointer;padding:0;">
+        <button type="button" data-jump="${i}" title="Câu ${item.num}" style="height:38px;border-radius:8px;border:${i === qIdx ? "2px solid #0B2540" : "none"};background:${bg};color:${col};font-weight:700;font-size:13px;cursor:pointer;padding:0;">
           ${item.num}
         </button>
       `;
@@ -1086,7 +1186,7 @@ function renderExamRoom(root, sys, exam, scope, navigate, registerCleanup) {
 
     const playBtn = root.querySelector("#btn-q-play");
     if (playBtn) {
-      playBtn.addEventListener("pointerdown", () => {
+      playBtn.addEventListener("click", () => {
         if (q.audioSrc) playAudio(q.audioSrc);
         else if (q.audioText) speakKoreanTTS(q.audioText, 0.96);
       });
@@ -1101,27 +1201,24 @@ function renderExamRoom(root, sys, exam, scope, navigate, registerCleanup) {
       });
     }
 
-    const instBtn = root.querySelector("#btn-instant-check");
-    if (instBtn) {
-      instBtn.addEventListener("click", () => {
-        instantChecked[q.id] = true;
-        drawRoom(resultSummary);
-      });
-    }
-
     root.querySelectorAll("[data-pick]").forEach((b) => {
       b.addEventListener("click", () => {
         if (submitted) return;
         answers[q.id] = Number(b.dataset.pick);
-        if (isSegmentPractice) instantChecked[q.id] = true;
         drawRoom(resultSummary);
       });
     });
 
     const wa = root.querySelector("#room-wa");
-    if (wa) wa.addEventListener("input", (e) => { writingAnswers[q.id] = { ...(writingAnswers[q.id] || {}), a: e.target.value }; });
     const wb = root.querySelector("#room-wb");
-    if (wb) wb.addEventListener("input", (e) => { writingAnswers[q.id] = { ...(writingAnswers[q.id] || {}), b: e.target.value }; });
+    if (wa) {
+      wa.addEventListener("input", (e) => { writingAnswers[q.id] = { ...(writingAnswers[q.id] || {}), a: e.target.value }; });
+      bindHangulEnter(wa, () => { wb?.focus(); });
+    }
+    if (wb) {
+      wb.addEventListener("input", (e) => { writingAnswers[q.id] = { ...(writingAnswers[q.id] || {}), b: e.target.value }; });
+      bindHangulEnter(wb, () => {});
+    }
     const wessay = root.querySelector("#room-wessay");
     if (wessay) {
       wessay.addEventListener("input", (e) => {

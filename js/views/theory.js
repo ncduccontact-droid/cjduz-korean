@@ -1,9 +1,9 @@
-import { store, normalizeBookId, getBookWords, getBookCurriculum, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261127-10";
-import { ico } from "../icons.js?v=20261127-10";
-import { analyzePronunciationRules, appendJamoToText } from "../korean-engine.js?v=20261127-10";
-import { HANGEUL_DATA, HANJA_ROOTS, FREQUENT_TOPIK_EXPRESSIONS } from "../curated-content.js?v=20261127-10";
-import { renderChapterExercises } from "../chapter-exercises.js?v=20261127-10";
-import { renderGrammarStudioView, renderInlineLessonGrammarSection } from "../grammar-studio.js?v=20261127-10";
+import { store, normalizeBookId, getBookWords, getBookCurriculum, playAudio, preloadAudioUrls, speakKoreanTTS, bindHangulEnter, renderQuizHistoryPillHTML } from "../store.js?v=20261127-12";
+import { ico } from "../icons.js?v=20261127-12";
+import { analyzePronunciationRules, appendJamoToText } from "../korean-engine.js?v=20261127-12";
+import { HANGEUL_DATA, HANJA_ROOTS, FREQUENT_TOPIK_EXPRESSIONS } from "../curated-content.js?v=20261127-12";
+import { renderChapterExercises } from "../chapter-exercises.js?v=20261127-12";
+import { renderGrammarStudioView, renderInlineLessonGrammarSection } from "../grammar-studio.js?v=20261127-12";
 
 function buildSubPartsForLesson(db, bookKey, lessonNum, lessonWords) {
   const bookCur = getBookCurriculum(db, bookKey);
@@ -90,27 +90,27 @@ export function renderTheoryView(root, db, navigate, params = {}) {
 
   root.innerHTML = `
     <div class="container-web">
-      <!-- TOP QUICK SWITCH: VOCAB BOOKS vs GRAMMAR STUDIO vs HANGEUL / HANJA -->
-      <div class="skill-pills-row" style="margin-bottom:12px;">
-        <button type="button" class="btn-skill active">${ico("book", 15)} Giáo trình Quyển 1–6</button>
-        <button type="button" class="btn-skill" id="top-go-gram-lesson">${ico("pen", 15)} Ngữ pháp theo bài</button>
-        <button type="button" class="btn-skill" id="top-go-gram-topik">${ico("exam", 15)} Ngữ pháp thi TOPIK</button>
-        <button type="button" class="btn-skill" id="top-go-gram-sim">${ico("layers", 15)} Ngữ pháp tương đồng</button>
+      <div class="skill-pills-row" style="margin-bottom:14px;">
+        <button type="button" class="btn-skill active">Giáo trình Quyển 1–6</button>
+        <button type="button" class="btn-skill" id="top-go-gram-lesson">Ngữ pháp theo bài</button>
+        <button type="button" class="btn-skill" id="top-go-gram-topik">Ngữ pháp TOPIK</button>
+        <button type="button" class="btn-skill" id="top-go-gram-sim">Ngữ pháp tương đồng</button>
         <button type="button" class="btn-skill" id="top-go-hangeul">Hangeul &amp; Biến âm</button>
         <button type="button" class="btn-skill" id="top-go-hanja">Âm Hán–Hàn</button>
+        <button type="button" class="btn-skill" id="top-go-frequent">Quán dụng ngữ</button>
       </div>
 
-      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
-        <div style="min-width:0;flex:1 1 220px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+        <div style="min-width:0;flex:1 1 200px;">
           <h1 class="title-hero" style="margin-bottom:2px;">
             ${selectedBookKey === "sejong1" ? "Từ vựng Sejong" : activeCur?.shortTitle || "Quyển 1 · Sơ cấp 1"}
           </h1>
-          <span style="font-size:12.5px;color:var(--text-muted);">
+          <span style="font-size:13px;color:var(--text-muted);">
             Đã thuộc <strong class="nw" style="color:var(--primary-1);">${bookMastered}/${activePool.length} từ</strong>
           </span>
         </div>
-        <button type="button" class="btn-primary nw" id="btn-srs-current-part" style="padding:7px 14px;font-size:13px;">
-          ${ico("cards", 15)} Lật thẻ nhanh
+        <button type="button" class="btn-primary nw" id="btn-srs-current-part">
+          Lật thẻ từ vựng
         </button>
       </div>
 
@@ -136,22 +136,15 @@ export function renderTheoryView(root, db, navigate, params = {}) {
         ${chapterCards.map((ch) => {
           const chMast = ch.words.filter((w) => store.isMastered(w.id)).length;
           const pct = ch.words.length ? Math.round((chMast / ch.words.length) * 100) : 0;
-          const wbStat = store.state.workbookScores?.[`${normalizeBookId(selectedBookKey)}_${ch.lesson}`];
           return `
-            <div class="box-kind" style="display:flex;flex-direction:column;justify-content:space-between;gap:10px;padding:15px 16px;">
+            <div class="box-kind" style="display:flex;flex-direction:column;justify-content:space-between;gap:10px;padding:16px;">
               <div>
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:7px;">
-                  <div style="display:flex;align-items:center;gap:9px;min-width:0;">
-                    <div class="icon-vocab-badge" style="width:36px;height:36px;font-size:12.5px;">B${String(ch.lesson).padStart(2, "0")}</div>
-                    <div style="min-width:0;">
-                      <strong style="font-size:14.5px;display:block;line-height:1.3;">${ch.title}</strong>
-                      <span style="font-size:12px;color:var(--text-muted);">${chMast}/${ch.words.length} từ</span>
-                    </div>
-                  </div>
-                  ${wbStat ? `<span class="badge-orange" style="font-size:11px;flex-shrink:0;">BT ${wbStat.pct}%</span>` : ""}
+                <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:6px;">
+                  <strong style="font-size:15px;line-height:1.3;color:var(--text-main);">Bài ${String(ch.lesson).padStart(2, "0")} · ${ch.title}</strong>
+                  <span style="font-size:12.5px;color:var(--text-muted);white-space:nowrap;">${chMast}/${ch.words.length}</span>
                 </div>
 
-                <div class="progress-track" style="margin-bottom:9px;">
+                <div class="progress-track" style="margin-bottom:10px;">
                   <div class="progress-fill" style="width:${pct}%"></div>
                 </div>
 
@@ -160,9 +153,9 @@ export function renderTheoryView(root, db, navigate, params = {}) {
                     const pMast = pt.words.filter((w) => store.isMastered(w.id)).length;
                     const pDone = pt.words.length > 0 && pMast === pt.words.length;
                     return `
-                      <button type="button" class="chapter-part-btn ${pDone ? "is-done" : ""}" data-open-part="${pt.part}" data-ls="${ch.lesson}">
+                      <button type="button" class="chapter-part-btn ko ${pDone ? "is-done" : ""}" data-open-part="${pt.part}" data-ls="${ch.lesson}">
                         <span style="font-weight:600;color:var(--text-main);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${pt.title}</span>
-                        <span style="font-weight:650;font-size:12px;color:${pDone ? "var(--success)" : "var(--primary-1)"};flex-shrink:0;">${pMast}/${pt.words.length} ›</span>
+                        <span style="font-weight:650;font-size:12.5px;color:${pDone ? "var(--success)" : "var(--primary)"};flex-shrink:0;">${pMast}/${pt.words.length} ›</span>
                       </button>
                     `;
                   }).join("")}
@@ -170,43 +163,13 @@ export function renderTheoryView(root, db, navigate, params = {}) {
               </div>
 
               <div style="display:flex;gap:6px;padding-top:8px;border-top:1px solid var(--border-light);">
-                <button type="button" class="btn-outline-teal" data-open-tb="${ch.lesson}" style="flex:1;padding:6px 6px;font-size:12px;">
-                  Ngữ pháp
-                </button>
-                <button type="button" class="btn-soft-jade" data-open-wb="${ch.lesson}" style="flex:1;padding:6px 6px;font-size:12px;">
-                  Bài tập
-                </button>
-                <button type="button" class="btn-outline-teal" data-open-tr="${ch.lesson}" style="flex:1;padding:6px 6px;font-size:12px;">
-                  Dịch câu
-                </button>
+                <button type="button" class="btn-step-quiet" data-open-tb="${ch.lesson}" style="flex:1;">Ngữ pháp</button>
+                <button type="button" class="btn-step-quiet" data-open-wb="${ch.lesson}" style="flex:1;">Bài tập</button>
+                <button type="button" class="btn-step-quiet" data-open-tr="${ch.lesson}" style="flex:1;">Dịch câu</button>
               </div>
             </div>
           `;
         }).join("")}
-      </div>
-
-      <div class="grid-2" style="margin-top:20px;">
-        <div class="theory-card" id="card-frequent-topik">
-          <div style="display:flex;align-items:center;gap:12px;min-width:0;">
-            <div class="icon-grammar-badge">${ico("star", 22)}</div>
-            <div style="min-width:0;">
-              <strong style="font-size:15px;display:block;">Biểu hiện &amp; Quán dụng ngữ TOPIK</strong>
-              <span style="font-size:12.5px;color:var(--text-muted);">Hội thoại, phó từ nối câu, thành ngữ</span>
-            </div>
-          </div>
-          <span class="badge-orange">${FREQUENT_TOPIK_EXPRESSIONS.length} mục</span>
-        </div>
-
-        <div class="theory-card" id="card-open-hanja">
-          <div style="display:flex;align-items:center;gap:12px;min-width:0;">
-            <div class="icon-vocab-badge">${ico("sprout", 22)}</div>
-            <div style="min-width:0;">
-              <strong style="font-size:15px;display:block;">Gốc từ Âm Hán – Hàn</strong>
-              <span style="font-size:12.5px;color:var(--text-muted);">Mở rộng nhanh từ vựng TOPIK II</span>
-            </div>
-          </div>
-          <span class="meta-chip">${HANJA_ROOTS.length} gốc</span>
-        </div>
       </div>
     </div>
   `;
@@ -216,6 +179,7 @@ export function renderTheoryView(root, db, navigate, params = {}) {
   root.querySelector("#top-go-gram-sim").addEventListener("click", () => navigate("theory", { sub: "grammar-list", mode: "similar" }));
   root.querySelector("#top-go-hangeul").addEventListener("click", () => navigate("theory", { sub: "hangeul" }));
   root.querySelector("#top-go-hanja").addEventListener("click", () => navigate("theory", { sub: "hanja" }));
+  root.querySelector("#top-go-frequent").addEventListener("click", () => navigate("theory", { sub: "frequent" }));
 
   root.querySelectorAll("[data-pick-book]").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -272,9 +236,6 @@ export function renderTheoryView(root, db, navigate, params = {}) {
       });
     });
   });
-
-  root.querySelector("#card-frequent-topik").addEventListener("click", () => navigate("theory", { sub: "frequent" }));
-  root.querySelector("#card-open-hanja").addEventListener("click", () => navigate("theory", { sub: "hanja" }));
 }
 
 function renderVocabBookIndex(root, db, navigate, rawBookKey) {
@@ -340,25 +301,24 @@ function renderLessonDetail(root, db, navigate, rawBookKey, lessonNum, activeTab
 
         <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
           <div>
-            <div style="font-size:12.5px;font-weight:600;color:var(--primary-1);margin-bottom:2px;">${bookCur?.shortTitle || bookKey} · ${bookCur?.levelBadge || ""}</div>
-            <h1 style="margin:0;font-size:20px;font-weight:750;">Bài ${String(lessonNum).padStart(2, "0")}: ${lessonTitle} ${chapObj?.koTitle ? `<span class="ko" style="color:var(--text-muted);font-weight:600;">(${chapObj.koTitle})</span>` : ""}</h1>
+            <h1 style="margin:0;font-size:21px;font-weight:750;">Bài ${String(lessonNum).padStart(2, "0")}: ${lessonTitle} ${chapObj?.koTitle ? `<span class="ko" style="color:var(--text-muted);font-weight:600;">(${chapObj.koTitle})</span>` : ""}</h1>
           </div>
-          <button class="btn-primary" id="btn-quiz-part" style="padding:8px 15px;font-size:13.5px;">
-            ${ico("cards", 15)} Lật thẻ ${selectedPart === "all" ? `cả bài (${words.length})` : `Phần ${activePartObj.part} (${visibleWords.length})`}
+          <button type="button" class="btn-primary" id="btn-quiz-part">
+            Lật thẻ ${selectedPart === "all" ? `(${words.length})` : `Phần ${activePartObj.part}`}
           </button>
         </div>
 
         <div class="skill-pills-row">
-          <button class="btn-skill ${normTab === "vocab" ? "active" : ""}" data-tab="vocab">
+          <button type="button" class="btn-skill ${normTab === "vocab" ? "active" : ""}" data-tab="vocab">
             Từ vựng (${words.length})
           </button>
-          <button class="btn-skill ${normTab === "grammar" ? "active" : ""}" data-tab="grammar">
+          <button type="button" class="btn-skill ${normTab === "grammar" ? "active" : ""}" data-tab="grammar">
             Ngữ pháp &amp; Hội thoại
           </button>
-          <button class="btn-skill ${normTab === "workbook" ? "active" : ""}" data-tab="workbook">
-            Sách bài tập
+          <button type="button" class="btn-skill ${normTab === "workbook" ? "active" : ""}" data-tab="workbook">
+            Bài tập
           </button>
-          <button class="btn-skill ${normTab === "translate" ? "active" : ""}" data-tab="translate">
+          <button type="button" class="btn-skill ${normTab === "translate" ? "active" : ""}" data-tab="translate">
             Dịch câu
           </button>
         </div>
@@ -423,9 +383,9 @@ function renderLessonDetail(root, db, navigate, rawBookKey, lessonNum, activeTab
                     ${w.pronunciation ? `<span style="font-size:12.5px;color:var(--text-muted);">/${w.pronunciation}/</span>` : ""}
                   </div>
                   <div style="display:flex;align-items:center;gap:6px;">
-                    <button class="btn-audio" data-audio="${w.wordAudio || ""}" data-tts="${w.korean}" title="Nghe phát âm">${ico("speaker", 18)}</button>
-                    <button class="btn-audio" data-star="${w.id}" style="${starred ? "background:#FEF9C3;border-color:#FACC15;" : "opacity:0.55;"}" title="Đánh dấu sao">${ico("star", 18)}</button>
-                    <button class="btn-audio" data-master="${w.id}" style="${mastered ? "background:#DCFCE7;border-color:#4ADE80;" : "opacity:0.5;"}" title="Đánh dấu đã thuộc">${ico("check", 18)}</button>
+                    <button type="button" class="btn-audio" data-audio="${w.wordAudio || ""}" data-tts="${w.korean}" aria-label="Nghe ${w.korean}" title="Nghe phát âm">${ico("speaker", 18)}</button>
+                    <button type="button" class="btn-audio" data-star="${w.id}" style="${starred ? "background:#FEF9C3;border-color:#FACC15;" : "opacity:0.55;"}" aria-label="Lưu từ ${w.korean}" title="Đánh dấu sao">${ico("star", 18)}</button>
+                    <button type="button" class="btn-audio" data-master="${w.id}" style="${mastered ? "background:#DCFCE7;border-color:#4ADE80;" : "opacity:0.5;"}" aria-label="Đánh dấu thuộc ${w.korean}" title="Đánh dấu đã thuộc">${ico("check", 18)}</button>
                   </div>
                 </div>
 
@@ -439,29 +399,23 @@ function renderLessonDetail(root, db, navigate, rawBookKey, lessonNum, activeTab
                       <div class="ko" style="font-size:15px;font-weight:600;color:var(--text-main);">${w.exampleKo}</div>
                       ${!hideMeaning && w.exampleVi ? `<div style="font-size:13px;color:var(--text-muted);margin-top:2px;">${w.exampleVi}</div>` : ""}
                     </div>
-                    <button class="btn-audio" style="width:32px;height:32px;" data-audio="${w.exampleAudio || ""}" data-tts="${w.exampleKo}" title="Nghe câu ví dụ">${ico("play", 17)}</button>
+                    <button type="button" class="btn-audio" data-audio="${w.exampleAudio || ""}" data-tts="${w.exampleKo}" aria-label="Nghe câu ví dụ" title="Nghe câu ví dụ">${ico("play", 17)}</button>
                   </div>
                 ` : ""}
 
-                ${w.note ? `<div style="font-size:12.5px;color:var(--text-muted);display:flex;align-items:center;gap:5px;">${ico("bulb", 15)} <span>${w.note}</span></div>` : ""}
+                ${w.note ? `<div style="font-size:12.5px;color:var(--text-muted);">${w.note}</div>` : ""}
               </div>
             `;
           }).join("")}
         </div>
 
         ${selectedPart !== "all" ? `
-          <div style="margin-top:18px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;" class="box-kind">
-            <span style="font-size:14px;font-weight:600;">
-              Đang xem <strong>${activePartObj.title}</strong> (${visibleWords.length} từ vừa sức 1 phiên học).
-            </span>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;">
-              <button type="button" class="btn-primary" id="btn-bottom-fc">${ico("cards", 17)} Lật thẻ 3D ${visibleWords.length} từ này</button>
-              ${Number(selectedPart) < subParts.length ? `
-                <button type="button" class="btn-outline-teal" id="btn-next-subpart">Qua Phần ${Number(selectedPart) + 1} →</button>
-              ` : `
-                <button type="button" class="btn-orange" id="btn-go-wb-after-voc">Sang làm Sách Bài Tập →</button>
-              `}
-            </div>
+          <div style="margin-top:18px;display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;">
+            ${Number(selectedPart) < subParts.length ? `
+              <button type="button" class="btn-outline-teal" id="btn-next-subpart">Qua Phần ${Number(selectedPart) + 1} →</button>
+            ` : `
+              <button type="button" class="btn-outline-teal" id="btn-go-wb-after-voc">Làm bài tập →</button>
+            `}
           </div>
         ` : ""}
       `;
@@ -483,12 +437,6 @@ function renderLessonDetail(root, db, navigate, rawBookKey, lessonNum, activeTab
         renderContent();
       });
 
-      const bFc = body.querySelector("#btn-bottom-fc");
-      if (bFc) {
-        bFc.addEventListener("click", () => {
-          navigate("theory", { sub: "vocab-review", book: bookKey, lesson: lessonNum, part: Number(selectedPart), mode: "flashcard" });
-        });
-      }
       const bNextP = body.querySelector("#btn-next-subpart");
       if (bNextP) {
         bNextP.addEventListener("click", () => {
@@ -503,7 +451,7 @@ function renderLessonDetail(root, db, navigate, rawBookKey, lessonNum, activeTab
       }
 
       body.querySelectorAll("[data-audio]").forEach((btn) => {
-        btn.addEventListener("pointerdown", () => {
+        btn.addEventListener("click", () => {
           if (btn.dataset.audio) playAudio(btn.dataset.audio);
           else speakKoreanTTS(btn.dataset.tts);
         });
@@ -611,7 +559,42 @@ function renderVocabReviewArena(root, db, navigate, params = {}) {
   let mode = params.mode || "flashcard";
   let idx = 0;
   let flipped = false;
-  let score = 0;
+
+  const baseQuizKey = `${bookKey}_b${activeLesson}_p${activePart}`;
+  const distractorSource = lessonWords.length >= 4 ? lessonWords : fullBookPool;
+
+  function buildMcqDeck(cards) {
+    return cards.map((c) => {
+      const distractors = distractorSource
+        .filter((w) => w.id !== c.id && w.vietnamese !== c.vietnamese)
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 3);
+      const opts = [c, ...distractors].sort(() => Math.random() - 0.5);
+      return { card: c, options: opts };
+    });
+  }
+
+  let mcqDeck = buildMcqDeck(sortedDeck);
+  let mcqIdx = 0;
+  let mcqPicks = {};
+  let mcqSubmitted = false;
+  let mcqSummary = null;
+
+  let typingDeck = [...sortedDeck];
+  let typingIdx = 0;
+  let typingDrafts = {};
+  let typingSubmitted = false;
+  let typingSummary = null;
+
+  function buildMatchRound() {
+    const six = [...pool].sort(() => Math.random() - 0.5).slice(0, Math.min(6, pool.length));
+    const tiles = [
+      ...six.map((w) => ({ uid: `k_${w.id}`, pairId: w.id, text: w.korean, isKo: true })),
+      ...six.map((w) => ({ uid: `v_${w.id}`, pairId: w.id, text: w.vietnamese, isKo: false }))
+    ].sort(() => Math.random() - 0.5);
+    return { six, tiles };
+  }
+  let matchState = { ...buildMatchRound(), matchedIds: new Set(), wrongAttempts: 0, finished: false, score: 0 };
 
   function renderArena() {
     if (!sortedDeck.length) {
@@ -619,8 +602,8 @@ function renderVocabReviewArena(root, db, navigate, params = {}) {
       return;
     }
 
-    const finishedRound = mode === "flashcard" && idx >= sortedDeck.length;
-    const card = sortedDeck[idx % sortedDeck.length];
+    const finishedFlashcard = mode === "flashcard" && idx >= sortedDeck.length;
+    const card = sortedDeck[Math.min(idx, sortedDeck.length - 1)];
 
     root.innerHTML = `
       <div class="container-web">
@@ -650,11 +633,14 @@ function renderVocabReviewArena(root, db, navigate, params = {}) {
           </div>
         </div>
 
-        <div class="skill-pills-row">
-          <button class="btn-skill ${mode === "flashcard" ? "active" : ""}" data-mode="flashcard">Lật thẻ 3D</button>
-          <button class="btn-skill ${mode === "mcq" ? "active" : ""}" data-mode="mcq">Trắc nghiệm</button>
-          <button class="btn-skill ${mode === "typing" ? "active" : ""}" data-mode="typing">Nghe &amp; Gõ</button>
-          <button class="btn-skill ${mode === "match" ? "active" : ""}" data-mode="match">Ghép cặp</button>
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
+          <div class="skill-pills-row" style="margin-bottom:0;">
+            <button type="button" class="btn-skill ${mode === "flashcard" ? "active" : ""}" data-mode="flashcard">Lật thẻ 3D</button>
+            <button type="button" class="btn-skill ${mode === "mcq" ? "active" : ""}" data-mode="mcq">Trắc nghiệm</button>
+            <button type="button" class="btn-skill ${mode === "typing" ? "active" : ""}" data-mode="typing">Nghe &amp; Gõ</button>
+            <button type="button" class="btn-skill ${mode === "match" ? "active" : ""}" data-mode="match">Ghép cặp</button>
+          </div>
+          ${mode !== "flashcard" ? renderQuizHistoryPillHTML(`vocab_${mode}_${baseQuizKey}`) : ""}
         </div>
 
         <div id="arena-stage"></div>
@@ -681,34 +667,34 @@ function renderVocabReviewArena(root, db, navigate, params = {}) {
 
     const stage = root.querySelector("#arena-stage");
 
-    if (finishedRound) {
+    if (finishedFlashcard) {
       const hasNextPart = activePart < subParts.length;
+      const mastNow = sortedDeck.filter((w) => store.isMastered(w.id)).length;
       stage.innerHTML = `
-        <div class="box-kind card-pop" style="max-width:620px;margin:0 auto;text-align:center;padding:30px 24px;">
-          <span class="badge-orange" style="margin-bottom:8px;">${ico("trophy", 15)} Hoàn thành gọn 1 Phần nhỏ</span>
-          <h2 style="margin:6px 0 8px;">Bạn vừa lật xong ${sortedDeck.length} thẻ của ${activePartObj.title}!</h2>
-          <p style="color:var(--text-muted);font-size:14.5px;margin:0 0 20px;">
-            Chia nhỏ từng phần 8–15 từ giúp não ghi nhớ sâu mà không bị quá tải. Bạn muốn làm gì tiếp theo?
-          </p>
+        <div class="box-kind card-pop" style="max-width:560px;margin:0 auto;text-align:center;padding:28px 22px;">
+          <span class="badge-orange" style="margin-bottom:8px;">Đã thuộc ${mastNow}/${sortedDeck.length} từ</span>
+          <h2 style="margin:0 0 14px;font-size:20px;">Đã lật xong ${sortedDeck.length} thẻ (${activePartObj.title})</h2>
           <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;">
+            <button type="button" class="btn-primary" id="btn-done-go-mcq">Làm trắc nghiệm tính điểm →</button>
             ${hasNextPart ? `
-              <button type="button" class="btn-primary" id="btn-done-next-part">${ico("play", 16)} Học tiếp Phần ${activePart + 1} →</button>
-            ` : ""}
-            <button type="button" class="btn-orange" id="btn-done-go-wb">${ico("workbook", 16)} Sang làm Sách Bài Tập Bài ${String(activeLesson).padStart(2, "0")} →</button>
-            <button type="button" class="btn-outline-teal" id="btn-done-replay">${ico("refresh", 16)} Lật lại Phần này</button>
+              <button type="button" class="btn-outline-teal" id="btn-done-next-part">Phần ${activePart + 1} →</button>
+            ` : `
+              <button type="button" class="btn-outline-teal" id="btn-done-go-wb">Bài tập chương</button>
+            `}
+            <button type="button" class="btn-outline-teal" id="btn-done-replay">Lật lại</button>
           </div>
         </div>
       `;
       stage.querySelector("#btn-done-replay").addEventListener("click", () => { idx = 0; flipped = false; renderArena(); });
-      stage.querySelector("#btn-done-go-wb").addEventListener("click", () => {
+      stage.querySelector("#btn-done-go-mcq").addEventListener("click", () => {
+        navigate("theory", { sub: "vocab-review", book: bookKey, lesson: activeLesson, part: activePart, mode: "mcq" });
+      });
+      stage.querySelector("#btn-done-go-wb")?.addEventListener("click", () => {
         navigate("theory", { sub: "lesson-detail", book: bookKey, lesson: activeLesson, tab: "workbook" });
       });
-      const np = stage.querySelector("#btn-done-next-part");
-      if (np) {
-        np.addEventListener("click", () => {
-          navigate("theory", { sub: "vocab-review", book: bookKey, lesson: activeLesson, part: activePart + 1, mode: "flashcard" });
-        });
-      }
+      stage.querySelector("#btn-done-next-part")?.addEventListener("click", () => {
+        navigate("theory", { sub: "vocab-review", book: bookKey, lesson: activeLesson, part: activePart + 1, mode: "flashcard" });
+      });
       return;
     }
 
@@ -775,19 +761,19 @@ function renderVocabReviewArena(root, db, navigate, params = {}) {
           </div>
 
           <div class="srs-rating-grid">
-            <button class="box-kind clickable srs-btn" data-rate="0">
+            <button type="button" class="box-kind clickable srs-btn" data-rate="0">
               <div class="srs-btn-top"><kbd class="keycap keycap-danger">1</kbd><strong style="color:var(--danger);">Quên</strong></div>
               <small style="color:var(--text-muted);">5 phút</small>
             </button>
-            <button class="box-kind clickable srs-btn" data-rate="1">
+            <button type="button" class="box-kind clickable srs-btn" data-rate="1">
               <div class="srs-btn-top"><kbd class="keycap keycap-warn">2</kbd><strong style="color:#D97706;">Khó</strong></div>
               <small style="color:var(--text-muted);">12 giờ</small>
             </button>
-            <button class="box-kind clickable srs-btn" data-rate="2">
+            <button type="button" class="box-kind clickable srs-btn" data-rate="2">
               <div class="srs-btn-top"><kbd class="keycap keycap-teal">3</kbd><strong style="color:var(--primary-1);">Tốt</strong></div>
               <small style="color:var(--text-muted);">1–3 ngày</small>
             </button>
-            <button class="box-kind clickable srs-btn" data-rate="3">
+            <button type="button" class="box-kind clickable srs-btn" data-rate="3">
               <div class="srs-btn-top"><kbd class="keycap keycap-ok">4</kbd><strong style="color:var(--success);">Dễ</strong></div>
               <small style="color:var(--text-muted);">7+ ngày</small>
             </button>
@@ -795,21 +781,19 @@ function renderVocabReviewArena(root, db, navigate, params = {}) {
         </div>
       `;
 
-      stage.querySelector(".fc-play-trigger").addEventListener("pointerdown", (e) => {
+      stage.querySelector(".fc-play-trigger").addEventListener("click", (e) => {
         e.stopPropagation();
         playCardAudio();
       });
-      stage.querySelector(".fc-play-trigger").addEventListener("click", (e) => e.stopPropagation());
 
       const exTrig = stage.querySelector(".fc-ex-trigger");
       if (exTrig) {
-        exTrig.addEventListener("pointerdown", (e) => {
+        exTrig.addEventListener("click", (e) => {
           e.stopPropagation();
           if (card.exampleAudio) playAudio(card.exampleAudio);
           else if (card.exampleKo) speakKoreanTTS(card.exampleKo);
           else playCardAudio();
         });
-        exTrig.addEventListener("click", (e) => e.stopPropagation());
       }
 
       stage.querySelector("#fc-3d-inner").addEventListener("click", toggleFlip3D);
@@ -843,74 +827,364 @@ function renderVocabReviewArena(root, db, navigate, params = {}) {
       };
       window.addEventListener("keydown", window._cjduzArenaKeyHandler);
     } else if (mode === "mcq") {
-      const distractors = lessonWords
-        .filter((w) => w.id !== card.id && w.vietnamese !== card.vietnamese)
-        .sort(() => Math.random() - 0.5)
-        .slice(0, 3);
-      const options = [card, ...distractors].sort(() => Math.random() - 0.5);
+      // =====================================================================
+      // END-OF-QUIZ GRADED VOCABULARY MCQ (NO INFINITE LOOP, FULL SCORE SHEET)
+      // =====================================================================
+      const totalQ = mcqDeck.length;
+      const answeredCnt = mcqDeck.filter((q) => mcqPicks[q.card.id] !== undefined).length;
+
+      function submitMcqQuiz() {
+        let correctCount = 0;
+        mcqDeck.forEach((q) => {
+          const ok = mcqPicks[q.card.id] === q.card.id;
+          if (ok) correctCount += 1;
+          store.rateCard(q.card.id, ok ? 2 : 0);
+        });
+        const finalScore = totalQ > 0 ? Math.round((correctCount / totalQ) * 100) : 0;
+        mcqSubmitted = true;
+        mcqSummary = { score: finalScore, correctCount, totalCount: totalQ };
+        store.recordScoreHistory({
+          quizKey: `vocab_mcq_${baseQuizKey}`,
+          category: "Trắc nghiệm từ vựng",
+          title: `Trắc nghiệm · ${scopeLabel}`,
+          score: finalScore,
+          maxScore: 100,
+          correctCount,
+          totalCount: totalQ,
+          route: "theory",
+          params: { sub: "vocab-review", book: bookKey, lesson: activeLesson, part: activePart, mode: "mcq" }
+        });
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        renderArena();
+      }
+
+      if (mcqSubmitted && mcqSummary) {
+        if (window._cjduzArenaKeyHandler) {
+          window.removeEventListener("keydown", window._cjduzArenaKeyHandler);
+          window._cjduzArenaKeyHandler = null;
+        }
+        const wrongCards = mcqDeck.filter((q) => mcqPicks[q.card.id] !== q.card.id).map((q) => q.card);
+        const hasNextPart = activePart < subParts.length;
+
+        stage.innerHTML = `
+          <div style="max-width:740px;margin:0 auto;display:flex;flex-direction:column;gap:16px;">
+            <div class="prediction-banner">
+              <div>
+                <span class="badge-orange" style="margin-bottom:6px;">Đã lưu vào Lịch sử điểm</span>
+                <h2 style="margin:0 0 4px;font-size:21px;color:var(--primary-1);">
+                  Điểm số: ${mcqSummary.score} / 100đ · Đúng ${mcqSummary.correctCount}/${mcqSummary.totalCount} câu
+                </h2>
+                <div style="font-size:13.5px;color:var(--text-muted);">${scopeLabel}</div>
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                ${wrongCards.length > 0 ? `
+                  <button type="button" class="btn-orange" id="btn-mcq-retry-wrong">Ôn lại ${wrongCards.length} câu sai</button>
+                ` : ""}
+                <button type="button" class="btn-primary" id="btn-mcq-retake-all">Làm lại bài này</button>
+                ${hasNextPart ? `
+                  <button type="button" class="btn-outline-teal" id="btn-mcq-next-part">Phần ${activePart + 1} →</button>
+                ` : ""}
+              </div>
+            </div>
+
+            <div class="box-kind">
+              <h3 style="margin:0 0 12px;font-size:17px;">Đáp án chi tiết (${mcqDeck.length} câu)</h3>
+              <div style="display:flex;flex-direction:column;gap:10px;">
+                ${mcqDeck.map((q, qi) => {
+                  const pickedId = mcqPicks[q.card.id];
+                  const pickedOpt = q.options.find((o) => o.id === pickedId);
+                  const isOk = pickedId === q.card.id;
+                  return `
+                    <div style="padding:12px 14px;border-radius:12px;border:1px solid ${isOk ? "rgba(22,163,74,0.35)" : "rgba(225,29,72,0.35)"};background:${isOk ? "rgba(22,163,74,0.06)" : "rgba(225,29,72,0.05)"};display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+                      <div style="min-width:0;flex:1;">
+                        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                          <span class="meta-chip">Câu ${qi + 1}</span>
+                          <strong class="ko" style="font-size:18px;color:var(--primary-1);">${q.card.korean}</strong>
+                          <span style="font-weight:700;color:#14532D;">→ ${q.card.vietnamese}</span>
+                        </div>
+                        ${!isOk ? `
+                          <div style="font-size:13px;color:var(--danger);margin-top:4px;font-weight:600;">
+                            Bạn chọn: ${pickedOpt ? pickedOpt.vietnamese : "(Chưa chọn)"}
+                          </div>
+                        ` : ""}
+                        ${q.card.exampleKo ? `<div class="ko" style="font-size:13px;color:var(--text-muted);margin-top:3px;">${q.card.exampleKo} — ${q.card.exampleVi || ""}</div>` : ""}
+                      </div>
+                      <button type="button" class="btn-audio" aria-label="Nghe ${q.card.korean}" data-rev-aud="${q.card.wordAudio || ""}" data-rev-tts="${q.card.korean}">${ico("speaker", 16)}</button>
+                    </div>
+                  `;
+                }).join("")}
+              </div>
+            </div>
+          </div>
+        `;
+
+        stage.querySelector("#btn-mcq-retake-all").addEventListener("click", () => {
+          mcqDeck = buildMcqDeck(sortedDeck);
+          mcqIdx = 0;
+          mcqPicks = {};
+          mcqSubmitted = false;
+          mcqSummary = null;
+          renderArena();
+        });
+        stage.querySelector("#btn-mcq-retry-wrong")?.addEventListener("click", () => {
+          mcqDeck = buildMcqDeck(wrongCards);
+          mcqIdx = 0;
+          mcqPicks = {};
+          mcqSubmitted = false;
+          mcqSummary = null;
+          renderArena();
+        });
+        stage.querySelector("#btn-mcq-next-part")?.addEventListener("click", () => {
+          navigate("theory", { sub: "vocab-review", book: bookKey, lesson: activeLesson, part: activePart + 1, mode: "mcq" });
+        });
+        stage.querySelectorAll("[data-rev-aud]").forEach((b) => {
+          b.addEventListener("click", () => {
+            if (b.dataset.revAud) playAudio(b.dataset.revAud);
+            else speakKoreanTTS(b.dataset.revTts.split("(")[0].trim());
+          });
+        });
+        return;
+      }
+
+      const curQ = mcqDeck[mcqIdx];
+      const curPicked = mcqPicks[curQ.card.id];
 
       stage.innerHTML = `
         <div class="flashcard-stage">
-          <div class="box-kind" style="text-align:center;padding:26px 20px;">
-            <div style="font-size:14px;color:var(--text-muted);margin-bottom:8px;">Điểm: <strong>${score}</strong> · Chọn nghĩa đúng (${(idx % sortedDeck.length) + 1}/${sortedDeck.length}):</div>
-            <div class="ko" style="font-size:34px;font-weight:800;color:var(--primary-1);margin-bottom:10px;">${card.korean}</div>
-            <button class="btn-outline-teal" id="mcq-audio" style="margin-bottom:20px;">${ico("speaker", 17)} Nghe phát âm <kbd class="keycap">R</kbd></button>
-            <div class="grid-2" style="text-align:left;">
-              ${options.map((opt, i) => `
-                <button class="box-kind clickable" data-ans="${opt.id}" data-mcq-idx="${i}" style="font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px;">
+          <div class="box-kind" style="padding:24px 20px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+              <span style="font-size:14px;font-weight:700;color:var(--primary-1);">Câu ${mcqIdx + 1} / ${totalQ}</span>
+              <span style="font-size:13px;color:var(--text-muted);">Đã chọn <strong style="color:var(--text-main);">${answeredCnt}/${totalQ}</strong> câu · Chấm điểm khi nộp bài</span>
+            </div>
+
+            <div style="display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin-bottom:16px;">
+              ${mcqDeck.map((q, qi) => {
+                const hasP = mcqPicks[q.card.id] !== undefined;
+                const isCur = qi === mcqIdx;
+                return `
+                  <button type="button" data-jump-mcq="${qi}" style="min-width:34px;height:34px;border-radius:8px;border:${isCur ? "2px solid var(--text-main)" : "1px solid var(--border-card)"};background:${hasP ? "var(--primary)" : "#FFFFFF"};color:${hasP ? "#FFFFFF" : "var(--text-main)"};font-weight:700;font-size:12.5px;cursor:pointer;">
+                    ${qi + 1}
+                  </button>
+                `;
+              }).join("")}
+            </div>
+
+            <div style="text-align:center;">
+              <div class="ko" style="font-size:34px;font-weight:800;color:var(--primary-1);margin-bottom:10px;">${curQ.card.korean}</div>
+              <button type="button" class="btn-outline-teal" id="mcq-audio" style="margin-bottom:18px;">
+                ${ico("speaker", 17)} Nghe phát âm <kbd class="keycap">R</kbd>
+              </button>
+            </div>
+
+            <div class="grid-2" style="text-align:left;gap:10px;">
+              ${curQ.options.map((opt, i) => `
+                <button type="button" class="mcq-opt-btn ${curPicked === opt.id ? "is-selected" : ""}" data-ans="${opt.id}" data-mcq-idx="${i}" style="display:flex;align-items:center;gap:8px;">
                   <kbd class="keycap">${i + 1}</kbd>
                   <span>${opt.vietnamese}</span>
                 </button>
               `).join("")}
             </div>
-            <div id="mcq-feedback" style="margin-top:14px;font-weight:600;"></div>
+
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-top:20px;padding-top:14px;border-top:1px solid var(--border-light);">
+              <button type="button" class="btn-outline-teal" id="mcq-prev-btn" ${mcqIdx === 0 ? "disabled" : ""}>← Câu trước</button>
+              <button type="button" class="${answeredCnt === totalQ || mcqIdx === totalQ - 1 ? "btn-primary" : "btn-soft-jade"}" id="mcq-submit-btn">
+                Nộp bài &amp; Chấm điểm (${answeredCnt}/${totalQ})
+              </button>
+              <button type="button" class="btn-outline-teal" id="mcq-next-btn" ${mcqIdx === totalQ - 1 ? "disabled" : ""}>Câu tiếp →</button>
+            </div>
           </div>
         </div>
       `;
-      stage.querySelector("#mcq-audio").addEventListener("click", () => {
-        if (card.wordAudio) playAudio(card.wordAudio); else speakKoreanTTS(card.korean.split("(")[0].trim());
-      });
-      let answeredMcq = false;
+
+      const playCurMcqAudio = () => {
+        if (curQ.card.wordAudio) playAudio(curQ.card.wordAudio);
+        else speakKoreanTTS(curQ.card.korean.split("(")[0].trim());
+      };
+      stage.querySelector("#mcq-audio").addEventListener("click", playCurMcqAudio);
+
+      const selectMcqOption = (pickedId) => {
+        mcqPicks[curQ.card.id] = pickedId;
+        const nextUnanswered = mcqDeck.findIndex((q, qi) => qi > mcqIdx && mcqPicks[q.card.id] === undefined);
+        if (nextUnanswered !== -1) {
+          mcqIdx = nextUnanswered;
+        } else if (mcqIdx < totalQ - 1) {
+          mcqIdx += 1;
+        }
+        renderArena();
+      };
+
       stage.querySelectorAll("[data-ans]").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          if (answeredMcq) return;
-          answeredMcq = true;
-          const ok = btn.dataset.ans === card.id;
-          const fb = stage.querySelector("#mcq-feedback");
-          store.rateCard(card.id, ok ? 2 : 0);
-          if (ok) {
-            score += 10;
-            btn.style.borderColor = "var(--success)";
-            btn.style.background = "rgba(34,197,94,0.12)";
-            fb.innerHTML = `<span style="color:var(--success)">${ico("check", 16)} Chính xác! ${card.exampleKo ? `Ví dụ: ${card.exampleKo}` : ""}</span>`;
-            setTimeout(() => { idx += 1; renderArena(); }, 800);
-          } else {
-            btn.style.borderColor = "var(--danger)";
-            fb.innerHTML = `<span style="color:var(--danger)">${ico("cross", 16)} Đáp án đúng là: "${card.vietnamese}".</span> <button class="btn-primary" id="mcq-next" style="margin-left:10px;padding:5px 14px;">Câu tiếp →</button>`;
-            stage.querySelector("#mcq-next").addEventListener("click", () => { idx += 1; renderArena(); });
-          }
-        });
+        btn.addEventListener("click", () => selectMcqOption(btn.dataset.ans));
       });
+      stage.querySelectorAll("[data-jump-mcq]").forEach((b) => {
+        b.addEventListener("click", () => { mcqIdx = Number(b.dataset.jumpMcq); renderArena(); });
+      });
+      stage.querySelector("#mcq-prev-btn").addEventListener("click", () => {
+        if (mcqIdx > 0) { mcqIdx -= 1; renderArena(); }
+      });
+      stage.querySelector("#mcq-next-btn").addEventListener("click", () => {
+        if (mcqIdx < totalQ - 1) { mcqIdx += 1; renderArena(); }
+      });
+      stage.querySelector("#mcq-submit-btn").addEventListener("click", submitMcqQuiz);
+
+      if (window._cjduzArenaKeyHandler) {
+        window.removeEventListener("keydown", window._cjduzArenaKeyHandler);
+      }
+      window._cjduzArenaKeyHandler = (ev) => {
+        if (!document.body.contains(stage)) {
+          window.removeEventListener("keydown", window._cjduzArenaKeyHandler);
+          return;
+        }
+        if (ev.isComposing || ev.keyCode === 229) return;
+        const tag = (document.activeElement?.tagName || "").toUpperCase();
+        if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || document.getElementById("quick-modal-bg") || document.getElementById("auth-modal-bg")) return;
+        if (["1", "2", "3", "4"].includes(ev.key)) {
+          const opt = curQ.options[Number(ev.key) - 1];
+          if (opt) { ev.preventDefault(); selectMcqOption(opt.id); }
+        } else if (ev.key === "ArrowLeft" && mcqIdx > 0) {
+          ev.preventDefault(); mcqIdx -= 1; renderArena();
+        } else if (ev.key === "ArrowRight" && mcqIdx < totalQ - 1) {
+          ev.preventDefault(); mcqIdx += 1; renderArena();
+        } else if (ev.key === "r" || ev.key === "R") {
+          ev.preventDefault(); playCurMcqAudio();
+        }
+      };
+      window.addEventListener("keydown", window._cjduzArenaKeyHandler);
     } else if (mode === "typing") {
+      // =====================================================================
+      // END-OF-QUIZ GRADED TYPING ARENA (1..N, NO INFINITE LOOP, SCORE SAVED)
+      // =====================================================================
       if (window._cjduzArenaKeyHandler) {
         window.removeEventListener("keydown", window._cjduzArenaKeyHandler);
         window._cjduzArenaKeyHandler = null;
       }
-      const cleanTargetWord = card.korean.split("(")[0].trim().replace(/\?|\./g, "");
-      stage.innerHTML = `
-        <div class="flashcard-stage">
-          <div class="box-kind" style="padding:26px;">
-            <div style="text-align:center;">
-              <div style="font-size:14px;color:var(--text-muted);margin-bottom:6px;">Nghe âm thanh &amp; nghĩa tiếng Việt rồi gõ lại chữ Hangeul:</div>
-              <div style="font-size:23px;font-weight:800;margin-bottom:10px;">${card.vietnamese}</div>
-              <button class="btn-primary" id="type-play-btn" style="margin-bottom:16px;">${ico("speaker", 17)} Phát âm thanh gợi ý</button>
+
+      const totalT = typingDeck.length;
+      const cleanTarget = (s) => (s || "").split("(")[0].trim().replace(/[?.!,]/g, "");
+
+      function submitTypingQuiz() {
+        const liveInp = stage.querySelector("#ko-type-input");
+        if (liveInp && typingDeck[typingIdx]) {
+          typingDrafts[typingDeck[typingIdx].id] = liveInp.value;
+        }
+        let correctCount = 0;
+        typingDeck.forEach((c) => {
+          const u = cleanTarget(typingDrafts[c.id] || "");
+          const ok = u.length > 0 && u === cleanTarget(c.korean);
+          if (ok) correctCount += 1;
+          store.rateCard(c.id, ok ? 3 : 0);
+        });
+        const finalScore = totalT > 0 ? Math.round((correctCount / totalT) * 100) : 0;
+        typingSubmitted = true;
+        typingSummary = { score: finalScore, correctCount, totalCount: totalT };
+        store.recordScoreHistory({
+          quizKey: `vocab_typing_${baseQuizKey}`,
+          category: "Nghe & Gõ từ vựng",
+          title: `Nghe & Gõ · ${scopeLabel}`,
+          score: finalScore,
+          maxScore: 100,
+          correctCount,
+          totalCount: totalT,
+          route: "theory",
+          params: { sub: "vocab-review", book: bookKey, lesson: activeLesson, part: activePart, mode: "typing" }
+        });
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        renderArena();
+      }
+
+      if (typingSubmitted && typingSummary) {
+        const wrongTyping = typingDeck.filter((c) => cleanTarget(typingDrafts[c.id] || "") !== cleanTarget(c.korean));
+        stage.innerHTML = `
+          <div style="max-width:740px;margin:0 auto;display:flex;flex-direction:column;gap:16px;">
+            <div class="prediction-banner">
+              <div>
+                <span class="badge-orange" style="margin-bottom:6px;">Đã lưu vào Lịch sử điểm</span>
+                <h2 style="margin:0 0 4px;font-size:21px;color:var(--primary-1);">
+                  Điểm số: ${typingSummary.score} / 100đ · Đúng ${typingSummary.correctCount}/${typingSummary.totalCount} từ
+                </h2>
+                <div style="font-size:13.5px;color:var(--text-muted);">${scopeLabel}</div>
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                ${wrongTyping.length > 0 ? `
+                  <button type="button" class="btn-orange" id="btn-typ-retry-wrong">Gõ lại ${wrongTyping.length} từ sai</button>
+                ` : ""}
+                <button type="button" class="btn-primary" id="btn-typ-retake">Làm lại bài này</button>
+              </div>
             </div>
 
-            <div style="display:flex;gap:8px;flex-wrap:wrap;">
-              <input id="ko-type-input" class="ko" type="text" placeholder="Gõ chữ tiếng Hàn..." style="flex:1 1 170px;min-width:0;width:100%;padding:12px 14px;font-size:18px;font-weight:700;" />
-              <button class="btn-primary" id="type-check-btn" style="white-space:nowrap;flex-shrink:0;">Kiểm tra</button>
+            <div class="box-kind">
+              <h3 style="margin:0 0 12px;font-size:17px;">Đáp án chi tiết (${totalT} từ)</h3>
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                ${typingDeck.map((c, ci) => {
+                  const targetW = cleanTarget(c.korean);
+                  const userW = (typingDrafts[c.id] || "").trim();
+                  const ok = cleanTarget(userW) === targetW;
+                  return `
+                    <div style="padding:11px 14px;border-radius:11px;border:1px solid ${ok ? "rgba(22,163,74,0.35)" : "rgba(225,29,72,0.35)"};background:${ok ? "rgba(22,163,74,0.06)" : "rgba(225,29,72,0.05)"};display:flex;justify-content:space-between;align-items:center;gap:10px;">
+                      <div>
+                        <div>
+                          <span class="meta-chip">Từ ${ci + 1}</span>
+                          <strong style="margin-left:6px;">${c.vietnamese}</strong> → <strong class="ko" style="font-size:18px;color:var(--primary-1);">${targetW}</strong>
+                        </div>
+                        ${!ok ? `<div class="ko" style="font-size:13px;color:var(--danger);margin-top:3px;">Bạn gõ: ${userW || "(Bỏ trống)"}</div>` : ""}
+                      </div>
+                      <button type="button" class="btn-audio" aria-label="Nghe ${targetW}" data-taud="${c.wordAudio || ""}" data-ttts="${targetW}">${ico("speaker", 16)}</button>
+                    </div>
+                  `;
+                }).join("")}
+              </div>
             </div>
-            <div id="type-feedback" style="margin-top:12px;font-weight:600;text-align:center;"></div>
+          </div>
+        `;
+        stage.querySelector("#btn-typ-retake").addEventListener("click", () => {
+          typingDeck = [...sortedDeck];
+          typingIdx = 0;
+          typingDrafts = {};
+          typingSubmitted = false;
+          typingSummary = null;
+          renderArena();
+        });
+        stage.querySelector("#btn-typ-retry-wrong")?.addEventListener("click", () => {
+          typingDeck = [...wrongTyping];
+          typingIdx = 0;
+          typingDrafts = {};
+          typingSubmitted = false;
+          typingSummary = null;
+          renderArena();
+        });
+        stage.querySelectorAll("[data-taud]").forEach((b) => {
+          b.addEventListener("click", () => {
+            if (b.dataset.taud) playAudio(b.dataset.taud);
+            else speakKoreanTTS(b.dataset.ttts);
+          });
+        });
+        return;
+      }
+
+      const tCard = typingDeck[typingIdx];
+      const cleanTargetWord = cleanTarget(tCard.korean);
+      const filledCount = typingDeck.filter((c) => (typingDrafts[c.id] || "").trim().length > 0).length;
+
+      stage.innerHTML = `
+        <div class="flashcard-stage">
+          <div class="box-kind" style="padding:24px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+              <span style="font-size:14px;font-weight:700;color:var(--primary-1);">Từ ${typingIdx + 1} / ${totalT}</span>
+              <span style="font-size:13px;color:var(--text-muted);">Đã gõ ${filledCount}/${totalT} · Chấm điểm cuối bài</span>
+            </div>
+
+            <div style="text-align:center;">
+              <div style="font-size:23px;font-weight:800;margin-bottom:10px;">${tCard.vietnamese}</div>
+              <button type="button" class="btn-soft-jade" id="type-play-btn" style="margin-bottom:16px;">${ico("speaker", 17)} Nghe gợi ý</button>
+            </div>
+
+            <input id="ko-type-input" class="ko" type="text" value="${(typingDrafts[tCard.id] || "").replace(/"/g, "&quot;")}" placeholder="Gõ từ tiếng Hàn (Enter để qua từ tiếp)..." style="width:100%;padding:12px 15px;font-size:18px;font-weight:700;margin-bottom:14px;" />
+
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+              <button type="button" class="btn-outline-teal" id="typ-prev-btn" ${typingIdx === 0 ? "disabled" : ""}>← Từ trước</button>
+              <button type="button" class="btn-primary" id="typ-submit-btn">Nộp bài &amp; Chấm điểm</button>
+              <button type="button" class="btn-outline-teal" id="typ-next-btn" ${typingIdx === totalT - 1 ? "disabled" : ""}>Từ tiếp →</button>
+            </div>
 
             <div class="kr-keyboard">
               ${HANGEUL_DATA.keyboardRows.map((row) => `
@@ -928,70 +1202,107 @@ function renderVocabReviewArena(root, db, navigate, params = {}) {
       `;
 
       const inp = stage.querySelector("#ko-type-input");
-      const playFn = () => { if (card.wordAudio) playAudio(card.wordAudio); else speakKoreanTTS(cleanTargetWord); };
+      const playFn = () => { if (tCard.wordAudio) playAudio(tCard.wordAudio); else speakKoreanTTS(cleanTargetWord); };
       stage.querySelector("#type-play-btn").addEventListener("click", playFn);
       playFn();
+      inp.focus();
 
+      inp.addEventListener("input", (e) => {
+        typingDrafts[tCard.id] = e.target.value;
+      });
       stage.querySelectorAll("[data-jamo]").forEach((k) => {
-        k.addEventListener("click", () => { inp.value = appendJamoToText(inp.value, k.dataset.jamo); inp.focus(); });
+        k.addEventListener("click", () => {
+          inp.value = appendJamoToText(inp.value, k.dataset.jamo);
+          typingDrafts[tCard.id] = inp.value;
+          inp.focus();
+        });
       });
       stage.querySelectorAll("[data-special]").forEach((k) => {
         k.addEventListener("click", () => {
           if (k.dataset.special === "space") inp.value += " ";
           if (k.dataset.special === "back") inp.value = inp.value.slice(0, -1);
+          typingDrafts[tCard.id] = inp.value;
           inp.focus();
         });
       });
 
-      const verify = () => {
-        const cleanUser = inp.value.trim().replace(/\?|\./g, "");
-        const fb = stage.querySelector("#type-feedback");
-        if (cleanUser === cleanTargetWord) {
-          store.rateCard(card.id, 3);
-          fb.innerHTML = `<span style="color:var(--success)">${ico("check", 16)} Chính xác 100%: <span class="ko">${cleanTargetWord}</span></span>`;
-          setTimeout(() => { idx += 1; renderArena(); }, 900);
+      const advanceOrSubmit = () => {
+        typingDrafts[tCard.id] = inp.value;
+        if (typingIdx < totalT - 1) {
+          typingIdx += 1;
+          renderArena();
         } else {
-          store.rateCard(card.id, 0);
-          fb.innerHTML = `<span style="color:var(--danger)">Đáp án đúng: <strong class="ko" style="font-size:19px;">${cleanTargetWord}</strong></span> <button class="btn-outline-teal" id="type-next" style="margin-left:8px;padding:4px 12px;">Từ tiếp →</button>`;
-          stage.querySelector("#type-next").addEventListener("click", () => { idx += 1; renderArena(); });
+          submitTypingQuiz();
         }
       };
-      stage.querySelector("#type-check-btn").addEventListener("click", verify);
-      inp.addEventListener("keydown", (e) => {
-        if (e.isComposing || e.keyCode === 229) return;
-        if (e.key === "Enter") verify();
+      bindHangulEnter(inp, advanceOrSubmit);
+      stage.querySelector("#typ-prev-btn").addEventListener("click", () => {
+        typingDrafts[tCard.id] = inp.value;
+        if (typingIdx > 0) { typingIdx -= 1; renderArena(); }
       });
+      stage.querySelector("#typ-next-btn").addEventListener("click", () => {
+        typingDrafts[tCard.id] = inp.value;
+        if (typingIdx < totalT - 1) { typingIdx += 1; renderArena(); }
+      });
+      stage.querySelector("#typ-submit-btn").addEventListener("click", submitTypingQuiz);
     } else if (mode === "match") {
+      // =====================================================================
+      // END-OF-ROUND GRADED MATCH GAME (NO SILENT LOOP, SCORE SAVED)
+      // =====================================================================
       if (window._cjduzArenaKeyHandler) {
         window.removeEventListener("keydown", window._cjduzArenaKeyHandler);
         window._cjduzArenaKeyHandler = null;
       }
-      const six = [...pool].sort(() => Math.random() - 0.5).slice(0, 6);
-      const tiles = [
-        ...six.map((w) => ({ uid: `k_${w.id}`, pairId: w.id, text: w.korean, isKo: true })),
-        ...six.map((w) => ({ uid: `v_${w.id}`, pairId: w.id, text: w.vietnamese, isKo: false }))
-      ].sort(() => Math.random() - 0.5);
+
+      if (matchState.finished) {
+        const hasNextPart = activePart < subParts.length;
+        stage.innerHTML = `
+          <div class="box-kind card-pop" style="max-width:600px;margin:0 auto;text-align:center;padding:28px 24px;">
+            <span class="badge-orange" style="margin-bottom:8px;">Đã lưu vào Lịch sử điểm</span>
+            <h2 style="margin:0 0 6px;font-size:22px;color:var(--primary-1);">Điểm ghép cặp: ${matchState.score} / 100đ</h2>
+            <p style="margin:0 0 18px;font-size:14px;color:var(--text-muted);">
+              Ghép đúng ${matchState.six.length}/${matchState.six.length} cặp từ · Số lần chọn nhầm: ${matchState.wrongAttempts}
+            </p>
+            <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;">
+              <button type="button" class="btn-primary" id="btn-match-new">Chơi ván mới</button>
+              ${hasNextPart ? `<button type="button" class="btn-outline-teal" id="btn-match-next-part">Phần ${activePart + 1} →</button>` : ""}
+            </div>
+          </div>
+        `;
+        stage.querySelector("#btn-match-new").addEventListener("click", () => {
+          matchState = { ...buildMatchRound(), matchedIds: new Set(), wrongAttempts: 0, finished: false, score: 0 };
+          renderArena();
+        });
+        stage.querySelector("#btn-match-next-part")?.addEventListener("click", () => {
+          navigate("theory", { sub: "vocab-review", book: bookKey, lesson: activeLesson, part: activePart + 1, mode: "match" });
+        });
+        return;
+      }
 
       let firstPick = null;
-      let matchedCount = 0;
-
       stage.innerHTML = `
         <div class="box-kind">
           <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
-            <strong style="font-size:14px;">Ghép từ tiếng Hàn với nghĩa tương ứng (${activePartObj.title}):</strong>
-            <button class="btn-outline-teal nw" id="match-reload" style="padding:5px 12px;font-size:12.5px;">${ico("refresh", 15)} Đổi ván</button>
+            <strong style="font-size:14.5px;">Ghép ${matchState.six.length} cặp từ tiếng Hàn – Việt (${activePartObj.title})</strong>
+            <button type="button" class="btn-outline-teal nw" id="match-reload">Đổi ván</button>
           </div>
           <div class="match-board-grid" id="match-grid">
-            ${tiles.map((t) => `
-              <button type="button" class="box-kind clickable ${t.isKo ? "ko" : ""}" data-uid="${t.uid}" data-pair="${t.pairId}" style="text-align:center;font-weight:${t.isKo ? "750" : "600"};font-size:${t.isKo ? "clamp(16px,4.3vw,19px)" : "13.5px"};min-height:66px;padding:10px;">
-                ${t.text}
-              </button>
-            `).join("")}
+            ${matchState.tiles.map((t) => {
+              const done = matchState.matchedIds.has(t.pairId);
+              return `
+                <button type="button" class="box-kind clickable ${t.isKo ? "ko" : ""}" data-uid="${t.uid}" data-pair="${t.pairId}" ${done ? "disabled" : ""} style="text-align:center;font-weight:${t.isKo ? "750" : "600"};font-size:${t.isKo ? "clamp(16px,4.3vw,19px)" : "14px"};min-height:66px;padding:10px;${done ? "background:rgba(22,163,74,0.12);border-color:var(--success);" : ""}">
+                  ${t.text}
+                </button>
+              `;
+            }).join("")}
           </div>
         </div>
       `;
 
-      stage.querySelector("#match-reload").addEventListener("click", renderArena);
+      stage.querySelector("#match-reload").addEventListener("click", () => {
+        matchState = { ...buildMatchRound(), matchedIds: new Set(), wrongAttempts: 0, finished: false, score: 0 };
+        renderArena();
+      });
       stage.querySelectorAll("[data-uid]").forEach((btn) => {
         btn.addEventListener("click", () => {
           if (btn.disabled) return;
@@ -1003,19 +1314,29 @@ function renderVocabReviewArena(root, db, navigate, params = {}) {
           }
           if (firstPick === btn) return;
           if (firstPick.dataset.pair === btn.dataset.pair) {
-            firstPick.disabled = true;
-            btn.disabled = true;
-            firstPick.style.background = "rgba(34,197,94,0.16)";
-            btn.style.background = "rgba(34,197,94,0.16)";
-            firstPick.style.borderColor = "var(--success)";
-            btn.style.borderColor = "var(--success)";
-            store.rateCard(btn.dataset.pair, 2);
+            const pid = btn.dataset.pair;
+            matchState.matchedIds.add(pid);
+            store.rateCard(pid, 2);
             firstPick = null;
-            matchedCount += 1;
-            if (matchedCount === six.length) {
-              setTimeout(renderArena, 650);
+            if (matchState.matchedIds.size === matchState.six.length) {
+              const finalScore = Math.max(40, 100 - matchState.wrongAttempts * 10);
+              matchState.finished = true;
+              matchState.score = finalScore;
+              store.recordScoreHistory({
+                quizKey: `vocab_match_${baseQuizKey}`,
+                category: "Ghép cặp từ vựng",
+                title: `Ghép cặp · ${scopeLabel}`,
+                score: finalScore,
+                maxScore: 100,
+                correctCount: matchState.six.length,
+                totalCount: matchState.six.length,
+                route: "theory",
+                params: { sub: "vocab-review", book: bookKey, lesson: activeLesson, part: activePart, mode: "match" }
+              });
             }
+            renderArena();
           } else {
+            matchState.wrongAttempts += 1;
             const prev = firstPick;
             firstPick = null;
             btn.style.borderColor = "var(--danger)";
@@ -1023,7 +1344,7 @@ function renderVocabReviewArena(root, db, navigate, params = {}) {
               prev.style.borderColor = "var(--border-card)";
               prev.style.background = "#FFFFFF";
               btn.style.borderColor = "var(--border-card)";
-            }, 380);
+            }, 350);
           }
         });
       });

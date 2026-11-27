@@ -80,6 +80,8 @@ function createFreshState(roadmapProfile = DEFAULT_ROADMAP_PROFILE) {
     partStats: {},
     mistakes: [],
     examHistory: [],
+    scoreHistory: [],
+    quizBestScores: {},
     customYoutubeClips: [],
     updatedAt: 0
   };
@@ -126,15 +128,19 @@ function normalizeThemeId(themeId) {
 
 function loadInitialState() {
   const base = createFreshState();
-  if (typeof sessionStorage !== "undefined") {
-    try {
-      const raw = sessionStorage.getItem(LOCAL_PREVIEW_STATE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        return { ...base, ...parsed, uiTheme: normalizeThemeId(parsed.uiTheme), onboardingCompleted: true };
-      }
-    } catch {}
-  }
+  try {
+    const rawLocal = isLocalPreviewHost() && typeof localStorage !== "undefined"
+      ? localStorage.getItem(LOCAL_PREVIEW_STATE_KEY)
+      : null;
+    const rawSession = typeof sessionStorage !== "undefined"
+      ? sessionStorage.getItem(LOCAL_PREVIEW_STATE_KEY)
+      : null;
+    const raw = rawLocal || rawSession;
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      return { ...base, ...parsed, uiTheme: normalizeThemeId(parsed.uiTheme), onboardingCompleted: true };
+    }
+  } catch {}
   return base;
 }
 
@@ -250,6 +256,11 @@ export const store = {
     try {
       if (this.hasCloudAccount()) {
         localStorage.setItem(AUTH_TOKEN_KEY, JSON.stringify(this.session));
+      } else if (isLocalPreviewHost() && typeof localStorage !== "undefined") {
+        localStorage.setItem(LOCAL_PREVIEW_STATE_KEY, JSON.stringify(this.state));
+        if (typeof sessionStorage !== "undefined") {
+          sessionStorage.setItem(LOCAL_PREVIEW_STATE_KEY, JSON.stringify(this.state));
+        }
       } else if (typeof sessionStorage !== "undefined") {
         sessionStorage.setItem(LOCAL_PREVIEW_STATE_KEY, JSON.stringify(this.state));
       }
@@ -321,6 +332,7 @@ export const store = {
     try {
       localStorage.removeItem(AUTH_TOKEN_KEY);
       localStorage.removeItem("cjduz_auth_session_v2");
+      localStorage.removeItem(LOCAL_PREVIEW_STATE_KEY);
       if (typeof sessionStorage !== "undefined") sessionStorage.removeItem(LOCAL_PREVIEW_STATE_KEY);
     } catch {}
     applyDocumentTheme(DEFAULT_THEME_ID);
@@ -366,7 +378,7 @@ export const store = {
     this.save();
   },
 
-  recordWorkbookScore(bookId, lessonNum, correct, total, answersSnapshot = null) {
+  recordWorkbookScore(bookId, lessonNum, correct, total, answersSnapshot = null, submitted = true) {
     if (!this.state.workbookScores) this.state.workbookScores = {};
     if (!this.state.workbookAnswers) this.state.workbookAnswers = {};
     if (!this.state.chapterHomeworkDone) this.state.chapterHomeworkDone = {};
@@ -374,13 +386,22 @@ export const store = {
     const key = `${normBook}_${lessonNum}`;
     const pct = total > 0 ? Math.round((correct / total) * 100) : 0;
     const prev = this.state.workbookScores[key];
-    if (!prev || pct >= (prev.pct || 0) || total >= (prev.total || 0)) {
-      this.state.workbookScores[key] = { correct, total, pct, updatedAt: Date.now() };
-    }
+    this.state.workbookScores[key] = {
+      correct: prev ? Math.max(prev.correct || 0, correct) : correct,
+      lastCorrect: correct,
+      total,
+      pct: prev ? Math.max(prev.pct || 0, pct) : pct,
+      lastPct: pct,
+      submitted: Boolean(submitted),
+      updatedAt: Date.now()
+    };
     if (answersSnapshot && typeof answersSnapshot === "object") {
-      this.state.workbookAnswers[key] = { ...answersSnapshot };
+      this.state.workbookAnswers[key] = {
+        submitted: Boolean(submitted),
+        picks: { ...answersSnapshot }
+      };
     }
-    if (correct > 0 || (answersSnapshot && Object.keys(answersSnapshot).length > 0)) {
+    if (submitted && total > 0) {
       this.state.chapterHomeworkDone[key] = true;
       if (normBook === "q1") this.state.chapterHomeworkDone[`sc1_${lessonNum}`] = true;
     }
@@ -488,12 +509,93 @@ export const store = {
       .map((c) => c.id);
   },
 
-  recordQuestionResult(partId, partTitle, qObj, userChoice) {
+  resetChapterQuiz(bookId, lessonNum, kind = "workbook") {
+    const normBook = bookId === "sc1" ? "q1" : (bookId === "sc2" ? "q2" : bookId);
+    const key = `${normBook}_${lessonNum}`;
+    if (kind === "workbook") {
+      if (this.state.workbookAnswers) delete this.state.workbookAnswers[key];
+      if (this.state.workbookScores?.[key]) {
+        this.state.workbookScores[key].submitted = false;
+      }
+    } else if (kind === "topik") {
+      if (this.state.topikDrillAnswers) delete this.state.topikDrillAnswers[key];
+    }
+    this.save();
+  },
+
+  recordScoreHistory({
+    quizKey = "",
+    category = "Bài tập",
+    title = "",
+    score = 0,
+    maxScore = 100,
+    correctCount = 0,
+    totalCount = 0,
+    route = "home",
+    params = {},
+    deferSave = false
+  }) {
+    if (!Array.isArray(this.state.scoreHistory)) this.state.scoreHistory = [];
+    if (!this.state.quizBestScores) this.state.quizBestScores = {};
+    const safeMax = Math.max(1, Number(maxScore || 100));
+    const safeScore = Math.max(0, Math.round(Number(score || 0)));
+    const pct = Math.min(100, Math.round((safeScore / safeMax) * 100));
+    const now = new Date();
+    const pad = (n) => String(n).padStart(2, "0");
+    const dateStr = `${pad(now.getHours())}:${pad(now.getMinutes())} · ${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()}`;
+    const entry = {
+      id: `sh_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      quizKey,
+      category,
+      title,
+      score: safeScore,
+      maxScore: safeMax,
+      pct,
+      correctCount: Number(correctCount || 0),
+      totalCount: Number(totalCount || 0),
+      route,
+      params,
+      date: dateStr,
+      timestamp: Date.now()
+    };
+    this.state.scoreHistory.unshift(entry);
+    if (this.state.scoreHistory.length > 120) {
+      this.state.scoreHistory = this.state.scoreHistory.slice(0, 120);
+    }
+    if (quizKey) {
+      const prev = this.state.quizBestScores[quizKey];
+      this.state.quizBestScores[quizKey] = {
+        bestScore: prev ? Math.max(prev.bestScore ?? 0, safeScore) : safeScore,
+        maxScore: safeMax,
+        bestPct: prev ? Math.max(prev.bestPct ?? 0, pct) : pct,
+        lastScore: safeScore,
+        lastPct: pct,
+        correctCount: Number(correctCount || 0),
+        totalCount: Number(totalCount || 0),
+        attempts: (prev?.attempts || 0) + 1,
+        updatedAt: Date.now()
+      };
+    }
+    if (!deferSave) {
+      this.touchStreak();
+      this.save();
+    }
+    return entry;
+  },
+
+  getQuizSummary(quizKey) {
+    if (!quizKey) return null;
+    return this.state.quizBestScores?.[quizKey] || null;
+  },
+
+  recordQuestionResult(partId, partTitle, qObj, userChoice, opts = {}) {
     if (!this.state.partStats[partId]) {
       this.state.partStats[partId] = { correct: 0, total: 0, title: partTitle };
     }
     this.state.partStats[partId].total += 1;
-    this.state.partStats[partId].title = partTitle;
+    if (partTitle) {
+      this.state.partStats[partId].title = partTitle;
+    }
     const isCorrect = userChoice === qObj.answer;
     if (isCorrect) {
       this.state.partStats[partId].correct += 1;
@@ -520,8 +622,10 @@ export const store = {
         this.state.mistakes.unshift(entry);
       }
     }
-    this.touchStreak();
-    this.save();
+    if (!opts.deferSave) {
+      this.touchStreak();
+      this.save();
+    }
     return isCorrect;
   },
 
@@ -618,7 +722,7 @@ export function evaluateRoadmapScore(db) {
   const drillCorrect = partVals.reduce((a, v) => a + (v.correct || 0), 0);
   const drillAcc = drillTotal > 0 ? Math.round((drillCorrect / drillTotal) * 100) : 0;
 
-  const matchingExams = (s.examHistory || []).filter((h) => h.maxScore === scale.maxScore);
+  const matchingExams = (s.examHistory || []).filter((h) => h.isFullExam !== false && h.maxScore === scale.maxScore);
   let examPct = drillTotal > 0 ? Math.min(100, Math.round(drillAcc * Math.min(1, 0.5 + drillTotal / 30))) : 0;
   if (matchingExams.length > 0) {
     const recentAvgScore = matchingExams.slice(0, 3).reduce((a, h) => a + Number(h.score || 0), 0) / Math.min(3, matchingExams.length);
@@ -876,4 +980,58 @@ export function speakKoreanTTS(text, rate = 0.96) {
   };
 
   playChunkAt(0);
+}
+
+/**
+ * Safely binds Enter key on Korean Hangul inputs without firing prematurely
+ * while committing a syllable via macOS/Windows/Mobile Korean IME.
+ */
+export function bindHangulEnter(inputEl, onSubmit) {
+  if (!inputEl || typeof onSubmit !== "function") return;
+  let composing = false;
+  let lastCompEndAt = 0;
+  inputEl.addEventListener("compositionstart", () => {
+    composing = true;
+  });
+  inputEl.addEventListener("compositionend", () => {
+    composing = false;
+    lastCompEndAt = Date.now();
+  });
+  inputEl.addEventListener("keydown", (e) => {
+    if (e.isComposing || e.keyCode === 229 || composing || (Date.now() - lastCompEndAt < 70)) {
+      return;
+    }
+    if (e.key === "Enter") {
+      e.preventDefault();
+      onSubmit(e);
+    }
+  });
+}
+
+/**
+ * Renders concise feedback status with expandable "Xem giải thích" disclosure
+ * so full grammar/listening/reading explanations stay accessible without cluttering cards.
+ */
+export function renderExplainDisclosure({ isCorrect, statusHtml, explainHtml = "", transcriptHtml = "" }) {
+  const hasDetail = Boolean((explainHtml && String(explainHtml).trim()) || (transcriptHtml && String(transcriptHtml).trim()));
+  return `
+    <div class="quiz-feedback-box ${isCorrect ? "is-ok" : "is-err"}">
+      <div class="quiz-feedback-head">${statusHtml}</div>
+      ${hasDetail ? `
+        <details class="explain-details">
+          <summary>Xem giải thích</summary>
+          <div class="explain-body">
+            ${transcriptHtml ? `<div class="ko" style="margin-bottom:5px;"><strong>Lời thoại:</strong> ${transcriptHtml}</div>` : ""}
+            ${explainHtml ? `<div>${explainHtml}</div>` : ""}
+          </div>
+        </details>
+      ` : ""}
+    </div>
+  `;
+}
+
+export function renderQuizHistoryPillHTML(quizKey) {
+  const info = store.getQuizSummary(quizKey);
+  if (!info) return "";
+  return `<span class="badge-orange nw" title="Đã làm ${info.attempts} lần">Gần nhất: ${info.lastScore}/${info.maxScore}đ · Cao nhất: ${info.bestScore}/${info.maxScore}đ</span>`;
 }

@@ -49,7 +49,7 @@ export function buildUrl(route, params = {}) {
       if (params.partId) return `/luyen-tap/cau-truc/${lvSlug}/${sk}/${encodeURIComponent(params.partId)}`;
       return `/luyen-tap/cau-truc/${lvSlug}/${sk}`;
     }
-    const sk = params.skill || "translate";
+    const sk = params.skill === "dictation" ? "listening" : (params.skill || "translate");
     if (sk === "translate") return `/luyen-tap/dich-cau/bai-${Number(params.lesson || 1)}`;
     return `/luyen-tap/ky-nang/${encodeURIComponent(sk)}`;
   }
@@ -136,6 +136,12 @@ export function parseUrl(pathname = "/") {
 
   if (segs[0] === "luyen-tap") {
     if (segs.length === 1) return { route: "practice", params: { sub: "skills", skill: "translate" } };
+    if (segs[1] === "topik-1" || segs[1] === "topik-2") {
+      const sub = segs[1] === "topik-2" ? "topik2" : "topik1";
+      const skill = segs[2] || "listening";
+      const partId = segs[3] || null;
+      return { route: "practice", params: { sub, skill, partId } };
+    }
     if (segs[1] === "cau-truc") {
       const sub = segs[2] === "topik-2" ? "topik2" : "topik1";
       const skill = segs[3] || "listening";
@@ -147,7 +153,9 @@ export function parseUrl(pathname = "/") {
       return { route: "practice", params: { sub: "skills", skill: "translate", lesson: m ? Number(m[1]) : 1 } };
     }
     if (segs[1] === "ky-nang") {
-      return { route: "practice", params: { sub: "skills", skill: segs[2] || "translate" } };
+      const rawSk = segs[2] || "translate";
+      const normSk = rawSk === "dictation" ? "listening" : rawSk;
+      return { route: "practice", params: { sub: "skills", skill: normSk } };
     }
     return { route: "practice", params: { sub: "skills", skill: "translate" } };
   }

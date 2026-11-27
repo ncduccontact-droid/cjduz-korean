@@ -1,6 +1,6 @@
-import { store, playAudio, preloadAudioUrls, speakKoreanTTS } from "../store.js?v=20261127-10";
-import { WONGOKJI_PROMPTS, TOPIK_SPEAKING_TASKS } from "../topik-bank.js?v=20261127-10";
-import { ico } from "../icons.js?v=20261127-10";
+import { store, playAudio, preloadAudioUrls, speakKoreanTTS, renderExplainDisclosure, renderQuizHistoryPillHTML } from "../store.js?v=20261127-12";
+import { WONGOKJI_PROMPTS, TOPIK_SPEAKING_TASKS } from "../topik-bank.js?v=20261127-12";
+import { ico } from "../icons.js?v=20261127-12";
 
 export function renderTopikPracticeView(root, db, navigate, params = {}, registerCleanup = () => {}) {
   const sys = db.topikFullSystem || { taxonomy: { topik1: {}, topik2: {} }, itemPool: {} };
@@ -114,13 +114,17 @@ export function renderTopikPracticeView(root, db, navigate, params = {}, registe
   function renderPartMasteryDrill(part) {
     let queue = [...part.questions];
     let loopRound = 0;
+    let submitted = false;
     const pickedMap = {};
+    const partQuizKey = `part_${part.id}`;
     preloadAudioUrls(queue.slice(0, 12).map((q) => q.audioSrc).filter(Boolean));
 
     function drawDrill() {
-      const wrongList = queue.filter((q) => pickedMap[q.id] !== undefined && pickedMap[q.id] !== q.answer);
+      const wrongList = submitted ? queue.filter((q) => pickedMap[q.id] !== q.answer) : [];
       const correctCnt = queue.filter((q) => pickedMap[q.id] === q.answer).length;
       const doneCnt = queue.filter((q) => pickedMap[q.id] !== undefined).length;
+      const pctScore = queue.length > 0 ? Math.round((correctCnt / queue.length) * 100) : 0;
+      const histPill = renderQuizHistoryPillHTML(partQuizKey);
 
       root.innerHTML = `
         <div class="container-web">
@@ -130,34 +134,47 @@ export function renderTopikPracticeView(root, db, navigate, params = {}, registe
             <span>${part.title}</span>
           </div>
 
-          <div class="prediction-banner" style="margin-bottom:20px;padding:16px 22px;">
+          <div class="prediction-banner" style="margin-bottom:18px;padding:16px 20px;">
             <div>
-              <span class="badge-orange" style="margin-bottom:6px;">${part.code} · ${part.range} ${loopRound > 0 ? `· Vòng ôn câu sai #${loopRound}` : ""}</span>
-              <div style="margin-top:4px;">
-                <strong style="color:var(--primary-1);">${ico("target", 17)} Mẹo giải nhanh dạng này:</strong>
-                <span style="font-size:14.5px;margin-left:6px;">${part.tip}</span>
+              <span class="badge-orange" style="margin-bottom:6px;">${part.code} · ${part.range} ${loopRound > 0 ? `· Ôn câu sai #${loopRound}` : ""}</span>
+              <div style="margin-top:4px;font-size:14.5px;color:var(--text-secondary);">
+                <strong style="color:var(--primary-1);">Mẹo làm bài:</strong> ${part.tip}
               </div>
+              ${histPill ? `<div style="margin-top:6px;">${histPill}</div>` : ""}
             </div>
-            <div>
-              <div style="font-weight:800;color:var(--primary-1);margin-bottom:6px;text-align:right;">Đúng ${correctCnt}/${queue.length} câu</div>
-              ${wrongList.length > 0 ? `
-                <button type="button" class="btn-orange" id="btn-loop-wrong">${ico("refresh", 16)} Luyện lại ${wrongList.length} câu sai đến khi thuộc</button>
-              ` : (doneCnt === queue.length && queue.length > 0 ? `
-                <span style="background:rgba(58,202,116,0.18);color:#15803D;padding:6px 14px;border-radius:99px;font-weight:800;display:inline-flex;align-items:center;gap:6px;">${ico("trophy", 17)} Đã nhuần nhuyễn 100%!</span>
-              ` : "")}
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
+              <strong style="color:var(--primary-1);font-size:15px;">
+                ${submitted
+                  ? `Điểm số: ${pctScore}/100đ · Đúng ${correctCnt}/${queue.length} câu`
+                  : `Đã chọn ${doneCnt}/${queue.length} câu`}
+              </strong>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                ${!submitted ? `
+                  <button type="button" class="btn-primary" data-submit-part-drill="1" ${doneCnt === 0 ? "disabled" : ""}>
+                    Nộp bài &amp; Chấm điểm
+                  </button>
+                ` : `
+                  ${wrongList.length > 0 ? `
+                    <button type="button" class="btn-orange" id="btn-loop-wrong">Ôn ${wrongList.length} câu sai</button>
+                  ` : ""}
+                  <button type="button" class="btn-outline-teal" id="btn-reset-part-drill">Làm lại</button>
+                `}
+              </div>
             </div>
           </div>
 
-          <div style="display:flex;flex-direction:column;gap:18px;">
+          <div style="display:flex;flex-direction:column;gap:16px;">
             ${queue.map((q, qi) => {
               const picked = pickedMap[q.id];
+              const answered = picked !== undefined;
+              const ansNum = ["①", "②", "③", "④"][q.answer] || `${q.answer + 1}`;
               return `
                 <div class="box-kind">
                   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:10px;flex-wrap:wrap;">
-                    <strong class="ko" style="color:var(--primary-1);">Câu ${qi + 1}/${queue.length}: ${q.question}</strong>
+                    <strong class="ko" style="color:var(--primary-1);font-size:16px;">Câu ${qi + 1}/${queue.length}. ${q.question}</strong>
                     ${(q.audioSrc || q.audioText) ? `
-                      <button type="button" class="btn-primary" data-q-audio="${q.audioSrc || ""}" data-q-tts="${q.audioText || ""}" style="padding:6px 14px;font-size:13.5px;">
-                        ${ico("speaker", 16)} Phát Audio giọng Hàn chuẩn
+                      <button type="button" class="btn-primary" data-q-audio="${q.audioSrc || ""}" data-q-tts="${q.audioText || ""}">
+                        ${ico("speaker", 16)} Nghe câu hỏi
                       </button>
                     ` : ""}
                   </div>
@@ -166,61 +183,106 @@ export function renderTopikPracticeView(root, db, navigate, params = {}, registe
                     <pre class="ko" style="white-space:pre-wrap;background:#F8FAFB;padding:14px;border-radius:10px;font-size:16px;margin:0 0 12px;border-left:3px solid var(--primary);">${q.passage}</pre>
                   ` : ""}
 
-                  <div class="grid-2">
+                  <div class="grid-2" style="gap:10px;">
                     ${q.options.map((opt, oi) => {
-                      let bg = "#FFFFFF";
-                      let border = "#E5E7EB";
-                      if (picked !== undefined) {
-                        if (oi === q.answer) { bg = "rgba(58,202,116,0.16)"; border = "var(--success)"; }
-                        else if (oi === picked) { bg = "rgba(255,90,96,0.14)"; border = "var(--danger)"; }
+                      let cls = "mcq-opt-btn";
+                      if (submitted) {
+                        if (oi === q.answer) cls += " is-correct";
+                        else if (oi === picked) cls += " is-wrong";
+                      } else if (oi === picked) {
+                        cls += " is-selected";
                       }
                       return `
-                        <button type="button" class="ko" data-qid="${q.id}" data-oi="${oi}" style="text-align:left;padding:11px 14px;border-radius:10px;border:1.5px solid ${border};background:${bg};cursor:pointer;font-size:15.5px;font-weight:500;">
+                        <button type="button" class="ko ${cls}" data-qid="${q.id}" data-oi="${oi}" ${submitted ? "disabled" : ""}>
                           ${["①", "②", "③", "④"][oi] || `${oi + 1}.`} ${opt}
                         </button>
                       `;
                     }).join("")}
                   </div>
 
-                  ${picked !== undefined ? `
-                    <div style="margin-top:12px;background:var(--primary-3);padding:10px 14px;border-radius:10px;font-size:14px;color:var(--primary-4);">
-                      <strong>${picked === q.answer ? `${ico("check", 15)} Chính xác!` : `${ico("cross", 15)} Sai (Đã lưu vào Sổ tay câu sai)!`}</strong>
-                      ${q.audioText ? `<div class="ko" style="margin-top:4px;"><strong>Transcript:</strong> ${q.audioText}</div>` : ""}
-                      <div style="margin-top:4px;"><strong>Giải thích:</strong> ${q.explain}</div>
-                    </div>
-                  ` : ""}
+                  ${submitted ? renderExplainDisclosure({
+                    isCorrect: picked === q.answer,
+                    statusHtml: picked === q.answer
+                      ? "Chính xác"
+                      : (answered ? `Chưa đúng · Đáp án ${ansNum}` : `Chưa chọn · Đáp án ${ansNum}`),
+                    explainHtml: q.explain,
+                    transcriptHtml: q.audioText || ""
+                  }) : ""}
                 </div>
               `;
             }).join("")}
+
+            ${!submitted && queue.length > 0 ? `
+              <div style="display:flex;justify-content:flex-end;align-items:center;gap:10px;flex-wrap:wrap;">
+                <span style="font-size:14px;color:var(--text-muted);">Đã chọn <strong>${doneCnt}/${queue.length}</strong> câu</span>
+                <button type="button" class="btn-primary" data-submit-part-drill="1" ${doneCnt === 0 ? "disabled" : ""}>
+                  Nộp bài &amp; Chấm điểm
+                </button>
+              </div>
+            ` : ""}
           </div>
         </div>
       `;
 
+      const submitPartDrillNow = () => {
+        submitted = true;
+        const cleanPartLabel = part.title.startsWith(part.code) ? part.title : `${part.code} · ${part.title}`;
+        const corr = queue.filter((q) => pickedMap[q.id] === q.answer).length;
+        const finalPct = queue.length > 0 ? Math.round((corr / queue.length) * 100) : 0;
+        queue.forEach((qObj) => {
+          if (pickedMap[qObj.id] !== undefined) {
+            store.recordQuestionResult(part.id, cleanPartLabel, qObj, pickedMap[qObj.id], { deferSave: true });
+          }
+        });
+        store.recordScoreHistory({
+          quizKey: loopRound === 0 ? partQuizKey : `${partQuizKey}_retry`,
+          category: "Luyện dạng TOPIK",
+          title: `${levelKey === "topik1" ? "TOPIK I" : "TOPIK II"} · ${cleanPartLabel}${loopRound > 0 ? " (Ôn câu sai)" : ""}`,
+          score: finalPct,
+          maxScore: 100,
+          correctCount: corr,
+          totalCount: queue.length,
+          route: "practice",
+          params: { sub: levelKey, skill, partId: part.id }
+        });
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        drawDrill();
+      };
+
+      root.querySelectorAll("[data-submit-part-drill]").forEach((b) => {
+        b.addEventListener("click", submitPartDrillNow);
+      });
       root.querySelector("#bc-back-parts").addEventListener("click", () => {
         navigate("practice", { sub: levelKey, skill });
       });
-      const loopBtn = root.querySelector("#btn-loop-wrong");
-      if (loopBtn) {
-        loopBtn.addEventListener("click", () => {
-          queue = [...wrongList];
-          queue.forEach((w) => { delete pickedMap[w.id]; });
-          loopRound += 1;
-          window.scrollTo({ top: 0, behavior: "smooth" });
-          drawDrill();
-        });
-      }
+      root.querySelector("#btn-loop-wrong")?.addEventListener("click", () => {
+        queue = [...wrongList];
+        queue.forEach((w) => { delete pickedMap[w.id]; });
+        submitted = false;
+        loopRound += 1;
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        drawDrill();
+      });
+      root.querySelector("#btn-reset-part-drill")?.addEventListener("click", () => {
+        queue = [...part.questions];
+        Object.keys(pickedMap).forEach((k) => { delete pickedMap[k]; });
+        submitted = false;
+        loopRound = 0;
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        drawDrill();
+      });
       root.querySelectorAll("[data-q-audio]").forEach((b) => {
-        b.addEventListener("pointerdown", () => {
+        b.addEventListener("click", () => {
           if (b.dataset.qAudio) playAudio(b.dataset.qAudio);
           else speakKoreanTTS(b.dataset.qTts, 0.95);
         });
       });
       root.querySelectorAll("[data-qid]").forEach((btn) => {
         btn.addEventListener("click", () => {
+          if (submitted) return;
           const qObj = queue.find((x) => x.id === btn.dataset.qid);
-          const oi = Number(btn.dataset.oi);
-          pickedMap[qObj.id] = oi;
-          store.recordQuestionResult(part.id, part.title, qObj, oi);
+          if (!qObj) return;
+          pickedMap[qObj.id] = Number(btn.dataset.oi);
           drawDrill();
         });
       });
@@ -315,19 +377,41 @@ export function renderTopikPracticeView(root, db, navigate, params = {}, registe
       container.querySelector("#btn-toggle-model").addEventListener("click", () => { showModel = !showModel; drawStudio(); });
       container.querySelector("#btn-check-writing").addEventListener("click", () => {
         const issues = [];
+        let estScore = 0;
+        if (usedCells >= pr.minChars && usedCells <= pr.maxChars) {
+          estScore += 45;
+        } else if (usedCells >= Math.floor(pr.minChars * 0.5)) {
+          estScore += 25;
+        } else if (usedCells > 0) {
+          estScore += 10;
+        }
         if (usedCells < pr.minChars) issues.push(`${ico("warn", 15)} Chưa đủ độ dài tối thiểu (${usedCells}/${pr.minChars} ô).`);
         if (usedCells > pr.maxChars) issues.push(`${ico("warn", 15)} Vượt quá giới hạn ô cho phép (${usedCells}/${pr.maxChars} ô).`);
         if (/(아요|어요|습니다|ㅂ니다)[.?!]/.test(draft)) {
           issues.push(`${ico("cross", 15)} Phát hiện đuôi hội thoại (-아/어요 hoặc -습니다)! Câu 53–54 bắt buộc dùng văn phong viết (-다/는다).`);
         } else if (draft.trim().length > 20) {
+          estScore += 30;
           issues.push(`${ico("check", 15)} Văn phong viết (-다/는다) chuẩn quy định NIIED.`);
         }
         if (/(따라서|그러나|반면에|한편|또한)/.test(draft)) {
+          estScore += 25;
           issues.push(`${ico("check", 15)} Có sử dụng từ nối học thuật mạch lạc.`);
         } else {
           issues.push(`${ico("bulb", 15)} Gợi ý: Bổ sung các phó từ liên kết như '한편', '반면에', '따라서'.`);
         }
-        feedbackHtml = `<strong>Kết quả Check quy chuẩn bài viết:</strong><ul style="margin:6px 0 0;padding-left:18px;list-style:none;">${issues.map((i) => `<li style="margin-bottom:4px;">${i}</li>`).join("")}</ul>`;
+        store.recordScoreHistory({
+          quizKey: `wongokji_${promptIdx}`,
+          category: "Viết 원고지",
+          title: `Viết 원고지 · ${pr.badge}: ${pr.title}`,
+          score: estScore,
+          maxScore: 100,
+          correctCount: estScore >= 60 ? 1 : 0,
+          totalCount: 1,
+          route: "practice",
+          params: { sub: "topik2", skill: "writing" }
+        });
+        const pill = renderQuizHistoryPillHTML(`wongokji_${promptIdx}`);
+        feedbackHtml = `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;"><strong>Điểm quy chuẩn ước tính: ${estScore}/100đ</strong>${pill}</div><ul style="margin:6px 0 0;padding-left:18px;list-style:none;">${issues.map((i) => `<li style="margin-bottom:4px;">${i}</li>`).join("")}</ul>`;
         drawStudio();
       });
     }

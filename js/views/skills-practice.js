@@ -1,9 +1,9 @@
-import { store, playAudio, preloadAudioUrls, stopAllAudio, speakKoreanTTS } from "../store.js?v=20261127-10";
-import { ico } from "../icons.js?v=20261127-10";
-import { analyzePronunciationRules, conjugateKoreanPredicate } from "../korean-engine.js?v=20261127-10";
-import { renderChapterExercises } from "../chapter-exercises.js?v=20261127-10";
-import { renderShortsShadowingStudio } from "../shorts-shadowing.js?v=20261127-10";
-import { renderGrammarStudioView } from "../grammar-studio.js?v=20261127-10";
+import { store, playAudio, preloadAudioUrls, stopAllAudio, speakKoreanTTS, bindHangulEnter, renderExplainDisclosure, renderQuizHistoryPillHTML } from "../store.js?v=20261127-12";
+import { ico } from "../icons.js?v=20261127-12";
+import { analyzePronunciationRules, conjugateKoreanPredicate } from "../korean-engine.js?v=20261127-12";
+import { renderChapterExercises } from "../chapter-exercises.js?v=20261127-12";
+import { renderShortsShadowingStudio } from "../shorts-shadowing.js?v=20261127-12";
+import { renderGrammarStudioView } from "../grammar-studio.js?v=20261127-12";
 
 const READING_PASSAGES = [
   {
@@ -98,7 +98,8 @@ const ROLEPLAY_SCENARIOS = [
 ];
 
 export function renderSkillsPracticeView(root, db, navigate, params = {}) {
-  let activeSkill = params.skill || "translate"; // translate | grammar | listening | reading | shadowing | textbook-shadow | roleplay
+  const rawSkill = params.skill || "translate";
+  let activeSkill = rawSkill === "dictation" ? "listening" : rawSkill;
   let chBook = params.book || "q1";
   let chLesson = Number(params.lesson || 1);
 
@@ -114,34 +115,31 @@ export function renderSkillsPracticeView(root, db, navigate, params = {}) {
 
     root.innerHTML = `
       <div class="container-web">
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
-          <div class="skill-pills-row" style="margin-bottom:0;flex:1;min-width:0;">
-            <button class="btn-skill ${activeSkill === "translate" ? "active" : ""}" data-sk="translate">
-              ${ico("pen", 15)} Dịch câu &amp; Bài tập
-            </button>
-            <button class="btn-skill ${activeSkill === "grammar" ? "active" : ""}" data-sk="grammar">
-              ${ico("layers", 15)} Ngữ pháp
-            </button>
-            <button class="btn-skill ${activeSkill === "listening" ? "active" : ""}" data-sk="listening">${ico("headphones", 15)} Nghe chép</button>
-            <button class="btn-skill ${activeSkill === "reading" ? "active" : ""}" data-sk="reading">${ico("book", 15)} Đọc hiểu</button>
-            <button class="btn-skill ${activeSkill === "roleplay" ? "active" : ""}" data-sk="roleplay">${ico("chat", 15)} Giao tiếp</button>
-            <button class="btn-skill ${activeSkill === "shadowing" || activeSkill === "textbook-shadow" ? "active" : ""}" data-sk="shadowing">
-              ${ico("lock", 14)} Shadowing
-            </button>
-          </div>
-
-          <div style="display:flex;gap:6px;flex-wrap:wrap;">
-            <button type="button" class="btn-outline-teal" id="sw-to-topik1" style="padding:5px 10px;font-size:12.5px;">TOPIK I</button>
-            <button type="button" class="btn-outline-teal" id="sw-to-topik2" style="padding:5px 10px;font-size:12.5px;">TOPIK II</button>
-          </div>
+        <div class="skill-pills-row" style="margin-bottom:14px;">
+          <button type="button" class="btn-skill ${activeSkill === "translate" ? "active" : ""}" data-sk="translate">
+            Bài tập &amp; Dịch câu
+          </button>
+          <button type="button" class="btn-skill ${activeSkill === "grammar" ? "active" : ""}" data-sk="grammar">
+            Ngữ pháp
+          </button>
+          <button type="button" class="btn-skill ${activeSkill === "listening" ? "active" : ""}" data-sk="listening">
+            Nghe chép
+          </button>
+          <button type="button" class="btn-skill ${activeSkill === "reading" ? "active" : ""}" data-sk="reading">
+            Đọc hiểu
+          </button>
+          <button type="button" class="btn-skill ${activeSkill === "roleplay" ? "active" : ""}" data-sk="roleplay">
+            Giao tiếp
+          </button>
+          <button type="button" class="btn-skill ${activeSkill === "shadowing" || activeSkill === "textbook-shadow" ? "active" : ""}" data-sk="shadowing">
+            ${ico("lock", 14)} Shadowing
+          </button>
         </div>
 
         <div id="skill-stage"></div>
       </div>
     `;
 
-    root.querySelector("#sw-to-topik1").addEventListener("click", () => navigate("mock-test", { sub: "topik1", viewMode: "segments", skill: "listening" }));
-    root.querySelector("#sw-to-topik2").addEventListener("click", () => navigate("mock-test", { sub: "topik2", viewMode: "segments", skill: "listening" }));
     root.querySelectorAll("[data-sk]").forEach((btn) => {
       btn.addEventListener("click", () => {
         if (btn.dataset.sk === "grammar") {
@@ -221,6 +219,8 @@ function renderListeningModule(stage, db) {
   let showScript = false;
   let loopActive = false;
   let loopAudioRef = null;
+  let dictSummary = false;
+  const dictResults = {};
 
   function stopLoop() {
     loopActive = false;
@@ -232,8 +232,73 @@ function renderListeningModule(stage, db) {
   }
 
   function render() {
-    const list = tracks.filter((t) => t.group === selectedGroup);
-    const cur = list[idx % list.length];
+    const list = tracks.filter((t) => t.group === selectedGroup).slice(0, 15);
+    const dictQuizKey = `dict_${selectedGroup}`;
+    const doneCnt = list.filter((t) => dictResults[t.id] !== undefined).length;
+    const corrCnt = list.filter((t) => dictResults[t.id] === true).length;
+    const pctScore = list.length > 0 ? Math.round((corrCnt / list.length) * 100) : 0;
+    const histPill = renderQuizHistoryPillHTML(dictQuizKey);
+
+    const finishDictation = () => {
+      stopLoop();
+      dictSummary = true;
+      store.recordScoreHistory({
+        quizKey: dictQuizKey,
+        category: "Nghe chép",
+        title: `Nghe chép · ${selectedGroup}`,
+        score: pctScore,
+        maxScore: 100,
+        correctCount: corrCnt,
+        totalCount: list.length,
+        route: "practice",
+        params: { sub: "skills", skill: "listening" }
+      });
+      render();
+    };
+
+    if (dictSummary) {
+      stage.innerHTML = `
+        <div class="box-kind">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
+            <div>
+              <h3 style="margin:0 0 4px;font-size:19px;color:var(--primary-1);">
+                Điểm Nghe chép: ${pctScore}/100đ · Đúng ${corrCnt}/${list.length} câu
+              </h3>
+              ${renderQuizHistoryPillHTML(dictQuizKey)}
+            </div>
+            <button type="button" class="btn-primary" id="btn-dict-restart">Làm lại bài nghe</button>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            ${list.map((t, ti) => {
+              const ok = dictResults[t.id] === true;
+              return `
+                <div style="padding:11px 14px;border-radius:10px;background:${ok ? "rgba(22,163,74,0.08)" : "rgba(225,29,72,0.06)"};border:1px solid ${ok ? "rgba(22,163,74,0.3)" : "rgba(225,29,72,0.26)"};display:flex;justify-content:space-between;align-items:center;gap:8px;">
+                  <div>
+                    <div class="ko" style="font-weight:700;font-size:15.5px;">${ti + 1}. ${t.ko}</div>
+                    <div style="font-size:13px;color:var(--text-muted);">${t.vi}</div>
+                  </div>
+                  <button type="button" class="btn-audio" data-d-aud="${t.audio}">${ico("speaker", 15)}</button>
+                </div>
+              `;
+            }).join("")}
+          </div>
+        </div>
+      `;
+      stage.querySelector("#btn-dict-restart")?.addEventListener("click", () => {
+        list.forEach((t) => { delete dictResults[t.id]; });
+        dictSummary = false;
+        idx = 0;
+        render();
+      });
+      stage.querySelectorAll("[data-d-aud]").forEach((b) => {
+        b.addEventListener("click", () => playAudio(b.dataset.dAud));
+      });
+      return;
+    }
+
+    idx = Math.min(Math.max(0, idx), Math.max(0, list.length - 1));
+    const cur = list[idx];
+    const isLast = idx === list.length - 1;
     const maskedKo = cur.ko.includes(cur.targetWord)
       ? cur.ko.replace(cur.targetWord, " ( _______ ) ")
       : "Nghe và chép lại câu tiếng Hàn bạn nghe được:";
@@ -246,10 +311,12 @@ function renderListeningModule(stage, db) {
             <select id="listen-group-sel" class="box-select">
               ${groups.map((g) => `<option value="${g}" ${g === selectedGroup ? "selected" : ""}>${g}</option>`).join("")}
             </select>
-            <span style="font-size:13.5px;color:var(--text-muted);">Câu ${(idx % list.length) + 1} / ${list.length}</span>
+            <span style="font-size:13.5px;color:var(--text-muted);">Câu ${idx + 1} / ${list.length}</span>
+            ${histPill}
           </div>
 
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            ${doneCnt > 0 ? `<button type="button" class="btn-soft-jade" id="btn-dict-finish">Tổng kết (${doneCnt}/${list.length})</button>` : ""}
             <span style="font-size:13.5px;color:var(--text-muted);">Tốc độ:</span>
             ${[0.75, 1.0, 1.25].map((sp) => `
               <button type="button" class="btn-outline-teal" data-sp="${sp}" style="padding:4px 12px;font-size:13px;${speed === sp ? "background:var(--primary);color:#FFF;" : ""}">${sp}x</button>
@@ -279,7 +346,9 @@ function renderListeningModule(stage, db) {
           <div style="display:flex;gap:10px;flex-wrap:wrap;">
             <input id="dict-input" class="ko" placeholder="Nhập từ tiếng Hàn nghe được..." style="flex:1 1 200px;min-width:0;width:100%;padding:11px 16px;font-size:17px;font-weight:600;" />
             <button class="btn-orange" id="btn-dict-check" style="white-space:nowrap;flex-shrink:0;">Kiểm tra</button>
-            <button class="btn-outline-teal" id="btn-listen-next" style="white-space:nowrap;flex-shrink:0;">Câu tiếp →</button>
+            <button class="${isLast ? "btn-primary" : "btn-outline-teal"}" id="btn-listen-next" style="white-space:nowrap;flex-shrink:0;">
+              ${isLast ? "Hoàn thành &amp; Chấm điểm →" : "Câu tiếp →"}
+            </button>
           </div>
           <div id="dict-feedback" style="margin-top:12px;font-weight:600;"></div>
         </div>
@@ -289,9 +358,11 @@ function renderListeningModule(stage, db) {
     stage.querySelector("#listen-group-sel").addEventListener("change", (e) => {
       stopLoop();
       selectedGroup = e.target.value;
+      dictSummary = false;
       idx = 0;
       render();
     });
+    stage.querySelector("#btn-dict-finish")?.addEventListener("click", finishDictation);
 
     stage.querySelectorAll("[data-sp]").forEach((b) => {
       b.addEventListener("click", () => {
@@ -326,6 +397,7 @@ function renderListeningModule(stage, db) {
       const val = stage.querySelector("#dict-input").value.trim().replace(/[.?!]/g, "");
       const fb = stage.querySelector("#dict-feedback");
       const ok = val === cur.targetWord || val === cur.ko.replace(/[.?!]/g, "");
+      dictResults[cur.id] = ok;
       if (ok) {
         fb.innerHTML = `<span style="color:var(--success)">${ico("check", 16)} Chính xác! Câu đầy đủ: <span class="ko">${cur.ko}</span></span>`;
       } else {
@@ -334,11 +406,16 @@ function renderListeningModule(stage, db) {
     };
 
     stage.querySelector("#btn-dict-check").addEventListener("click", checkFn);
-    stage.querySelector("#dict-input").addEventListener("keydown", (e) => {
-      if (e.isComposing || e.keyCode === 229) return;
-      if (e.key === "Enter") checkFn();
-    });
+    bindHangulEnter(stage.querySelector("#dict-input"), checkFn);
     stage.querySelector("#btn-listen-next").addEventListener("click", () => {
+      const rawVal = stage.querySelector("#dict-input")?.value.trim().replace(/[.?!]/g, "") || "";
+      if (dictResults[cur.id] === undefined && rawVal) {
+        dictResults[cur.id] = rawVal === cur.targetWord || rawVal === cur.ko.replace(/[.?!]/g, "");
+      }
+      if (isLast) {
+        finishDictation();
+        return;
+      }
       stopLoop();
       idx += 1;
       showScript = false;
@@ -355,7 +432,7 @@ function renderReadingModule(stage, db) {
   let showVi = false;
   let isPlayingPassage = false;
   let selectedWordInfo = null;
-  let answers = {};
+  const passageState = {};
 
   preloadAudioUrls(READING_PASSAGES.map((p) => p.audioSrc).filter(Boolean));
 
@@ -387,6 +464,16 @@ function renderReadingModule(stage, db) {
 
   function render() {
     const p = READING_PASSAGES[pIdx];
+    if (!passageState[p.id]) passageState[p.id] = { submitted: false, picks: {} };
+    const pState = passageState[p.id];
+    const answers = pState.picks;
+    const isSubmitted = pState.submitted;
+    const doneCnt = p.questions.filter((q) => answers[q.id] !== undefined).length;
+    const corrCnt = p.questions.filter((q) => answers[q.id] === q.answer).length;
+    const pctScore = p.questions.length > 0 ? Math.round((corrCnt / p.questions.length) * 100) : 0;
+    const readQuizKey = `reading_${p.id}`;
+    const histPill = renderQuizHistoryPillHTML(readQuizKey);
+
     stage.innerHTML = `
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
         ${READING_PASSAGES.map((item, i) => `
@@ -438,40 +525,92 @@ function renderReadingModule(stage, db) {
 
         <!-- Right: Reading Comprehension Check -->
         <div class="box-kind">
-          <h3 style="margin:0 0 12px;font-size:17px;">Câu hỏi đọc hiểu</h3>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+            <div>
+              <h3 style="margin:0;font-size:17px;">
+                ${isSubmitted ? `Kết quả: ${pctScore}/100đ (${corrCnt}/${p.questions.length} câu)` : "Câu hỏi đọc hiểu"}
+              </h3>
+              ${histPill ? `<div style="margin-top:4px;">${histPill}</div>` : ""}
+            </div>
+            ${isSubmitted ? `
+              <button type="button" class="btn-outline-teal" id="btn-read-reset" style="min-height:38px;padding:6px 13px;font-size:13px;">Làm lại</button>
+            ` : ""}
+          </div>
           <div style="display:flex;flex-direction:column;gap:14px;">
             ${p.questions.map((q) => {
               const picked = answers[q.id];
+              const answered = picked !== undefined;
+              const ansNum = `${q.answer + 1}`;
               return `
-                <div style="background:#F8FAFB;padding:13px 14px;border-radius:12px;">
-                  <strong class="ko" style="display:block;margin-bottom:8px;font-size:15px;">${q.question}</strong>
-                  <div style="display:flex;flex-direction:column;gap:7px;">
+                <div style="background:#F8FAFB;padding:14px;border-radius:12px;">
+                  <strong class="ko" style="display:block;margin-bottom:10px;font-size:15.5px;">${q.question}</strong>
+                  <div class="mcq-stack">
                     ${q.options.map((opt, oi) => {
-                      let bg = "#FFFFFF";
-                      let border = "#E5E7EB";
-                      if (picked !== undefined) {
-                        if (oi === q.answer) { bg = "rgba(58,202,116,0.16)"; border = "var(--success)"; }
-                        else if (oi === picked) { bg = "rgba(255,90,96,0.14)"; border = "var(--danger)"; }
+                      let cls = "mcq-opt-btn";
+                      if (isSubmitted) {
+                        if (oi === q.answer) cls += " is-correct";
+                        else if (oi === picked) cls += " is-wrong";
+                      } else if (oi === picked) {
+                        cls += " is-selected";
                       }
                       return `
-                        <button type="button" class="ko" data-qid="${q.id}" data-oi="${oi}" style="text-align:left;padding:8px 12px;border-radius:8px;border:1.5px solid ${border};background:${bg};cursor:pointer;font-weight:500;">
+                        <button type="button" class="ko ${cls}" data-qid="${q.id}" data-oi="${oi}" ${isSubmitted ? "disabled" : ""}>
                           ${oi + 1}. ${opt}
                         </button>
                       `;
                     }).join("")}
                   </div>
-                  ${picked !== undefined ? `
-                    <div style="margin-top:9px;font-size:13px;color:var(--primary-4);background:var(--primary-3);padding:8px 11px;border-radius:8px;">
-                      ${picked === q.answer ? `${ico("check", 14)} Chính xác!` : `${ico("cross", 14)} Chưa đúng`} — ${q.explain}
-                    </div>
-                  ` : ""}
+                  ${isSubmitted ? renderExplainDisclosure({
+                    isCorrect: picked === q.answer,
+                    statusHtml: picked === q.answer
+                      ? "Chính xác"
+                      : (answered ? `Chưa đúng · Đáp án ${ansNum}` : `Chưa chọn · Đáp án ${ansNum}`),
+                    explainHtml: q.explain
+                  }) : ""}
                 </div>
               `;
             }).join("")}
+
+            ${!isSubmitted ? `
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding-top:4px;">
+                <span style="font-size:13.5px;color:var(--text-muted);">Đã chọn <strong>${doneCnt}/${p.questions.length}</strong> câu</span>
+                <button type="button" class="btn-primary" id="btn-read-submit" ${doneCnt === 0 ? "disabled" : ""}>
+                  Nộp bài &amp; Chấm điểm
+                </button>
+              </div>
+            ` : ""}
           </div>
         </div>
       </div>
     `;
+
+    stage.querySelector("#btn-read-submit")?.addEventListener("click", () => {
+      pState.submitted = true;
+      const corr = p.questions.filter((q) => answers[q.id] === q.answer).length;
+      const finalPct = p.questions.length > 0 ? Math.round((corr / p.questions.length) * 100) : 0;
+      p.questions.forEach((qObj) => {
+        if (answers[qObj.id] !== undefined) {
+          store.recordQuestionResult("reading_comprehension", "Đọc hiểu văn bản", qObj, answers[qObj.id], { deferSave: true });
+        }
+      });
+      store.recordScoreHistory({
+        quizKey: readQuizKey,
+        category: "Đọc hiểu",
+        title: `Đọc hiểu · ${p.level}: ${p.title}`,
+        score: finalPct,
+        maxScore: 100,
+        correctCount: corr,
+        totalCount: p.questions.length,
+        route: "practice",
+        params: { sub: "skills", skill: "reading" }
+      });
+      render();
+    });
+
+    stage.querySelector("#btn-read-reset")?.addEventListener("click", () => {
+      passageState[p.id] = { submitted: false, picks: {} };
+      render();
+    });
 
     stage.querySelectorAll("[data-p]").forEach((b) => {
       b.addEventListener("click", () => {
@@ -531,10 +670,10 @@ function renderReadingModule(stage, db) {
 
     stage.querySelectorAll("[data-qid]").forEach((btn) => {
       btn.addEventListener("click", () => {
+        if (isSubmitted) return;
         const qObj = p.questions.find((x) => x.id === btn.dataset.qid);
-        const oi = Number(btn.dataset.oi);
-        answers[qObj.id] = oi;
-        store.recordQuestionResult("reading_comprehension", "Đọc hiểu văn bản", qObj, oi);
+        if (!qObj) return;
+        answers[qObj.id] = Number(btn.dataset.oi);
         render();
       });
     });
